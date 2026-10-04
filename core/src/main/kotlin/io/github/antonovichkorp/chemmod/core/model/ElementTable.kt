@@ -2,6 +2,7 @@ package io.github.antonovichkorp.chemmod.core.model
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import java.io.InputStream
 
 class ElementTable private constructor(elements: List<Element>) {
@@ -19,7 +20,7 @@ class ElementTable private constructor(elements: List<Element>) {
     fun all(): Collection<Element> = bySymbol.values
 
     companion object {
-        private val mapper = ObjectMapper()
+        private val mapper = ObjectMapper().registerKotlinModule()
 
         fun fromJson(input: InputStream): ElementTable {
             val elements: List<Element> = mapper.readValue(input, object : TypeReference<List<Element>>() {})
