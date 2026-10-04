@@ -26,6 +26,14 @@
 
 ## Проверка
 
+Полная быстрая проверка одной командой (компиляция, unit-тесты и реальные вызовы CLI):
+
+```bash
+./scripts/smoke-test.sh
+```
+
+Отдельные команды:
+
 ```bash
 ./gradlew check
 ./gradlew :core-cli:run --args="lookup CCO"

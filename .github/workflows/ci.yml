@@ -23,7 +23,7 @@ jobs:
         run: |
           set -o pipefail
           set +e
-          ./gradlew --no-daemon check installDist 2>&1 | tee build.log
+          ./scripts/smoke-test.sh 2>&1 | tee build.log
           status=${PIPESTATUS[0]}
           set -e
           {
