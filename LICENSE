@@ -1,0 +1,87 @@
+ChemMod Source-Visible License, Version 1.0
+
+Copyright (c) 2026 antonovichkorp1985-maker. All rights reserved.
+
+1. Definitions
+
+"Software" means the ChemMod source code, object code, documentation, artwork,
+and other original materials made available in this repository or in an
+official ChemMod release, excluding Third-Party Materials.
+
+"Official Release" means an unmodified binary release published by the
+copyright holder through the official ChemMod repository.
+
+"Third-Party Materials" means components identified as third-party software or
+content, including the components listed in THIRD_PARTY_NOTICES.md. Those
+materials remain governed by their own licenses.
+
+2. Limited permission
+
+Subject to this License, the copyright holder grants you a limited, personal,
+revocable, non-exclusive, non-transferable permission only to:
+
+(a) access and view the source code for evaluation, security review, education,
+    or personal reference; and
+(b) download and run an Official Release for personal, non-commercial gameplay,
+    including non-commercial multiplayer gameplay.
+
+Incidental technical copies created automatically and temporarily by a web
+browser solely to display the source code are permitted. A private backup copy
+of an Official Release is permitted solely for the licensee's own use.
+
+3. Restrictions
+
+No other permission or license is granted. In particular, unless you have
+separate prior written permission from the copyright holder, you must not:
+
+(a) copy, reproduce, republish, upload, transmit, mirror, or redistribute the
+    Software, its source code, or any substantial portion of it;
+(b) modify, adapt, translate, compile from source, create derivative works from,
+    or prepare a fork of the Software;
+(c) incorporate the Software or any part of it into another project, mod,
+    modpack, library, product, service, dataset, or training corpus;
+(d) sell, rent, sublicense, monetize, commercially exploit, or use the Software
+    for any commercial purpose;
+(e) distribute an Official Release or a modified binary; instead, you may link
+    to the official release page;
+(f) remove or alter copyright, license, attribution, or proprietary notices; or
+(g) use the ChemMod name, logo, or branding to imply endorsement or to identify
+    an unofficial build.
+
+The availability of repository functions such as download, clone, or fork does
+not grant permission to use those functions beyond the permissions expressly
+stated in this License.
+
+4. Mandatory legal rights
+
+Nothing in this License restricts rights that applicable law does not permit the
+copyright holder to restrict. Any use under such a mandatory exception must be
+limited to what that law requires and must preserve all notices where possible.
+
+5. Termination
+
+This permission terminates automatically and immediately if you breach this
+License. Upon termination, you must stop using the Software and delete all
+copies in your possession or control, except where retention is required by
+law.
+
+6. No trademark license
+
+No trademark or branding rights are granted by this License.
+
+7. Disclaimer of warranty and limitation of liability
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+PURPOSE, NON-INFRINGEMENT, CORRECTNESS, OR COMPATIBILITY. TO THE MAXIMUM EXTENT
+PERMITTED BY LAW, THE COPYRIGHT HOLDER SHALL NOT BE LIABLE FOR ANY CLAIM,
+DAMAGES, OR OTHER LIABILITY ARISING FROM OR RELATED TO THE SOFTWARE OR ITS USE.
+
+8. Entire license and separate permissions
+
+This License is the complete grant for the Software. Any additional permission
+must be in a separate written agreement signed by the copyright holder. Failure
+to enforce a provision once is not a waiver of that provision.
+
+For permission requests, use the contact channels published in the official
+ChemMod repository.

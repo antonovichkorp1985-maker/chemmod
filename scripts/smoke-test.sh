@@ -60,6 +60,18 @@ jar tf "$mod_jar" | grep -q '^META-INF/jarjar/metadata.json$' || {
     echo "Smoke-test failure: embedded core/runtime metadata is missing from $mod_jar" >&2
     exit 1
 }
+jar tf "$mod_jar" | grep -q '^META-INF/LICENSE_chemmod$' || {
+    echo "Smoke-test failure: ChemMod license is missing from $mod_jar" >&2
+    exit 1
+}
+jar tf "$mod_jar" | grep -q '^META-INF/THIRD_PARTY_NOTICES.md$' || {
+    echo "Smoke-test failure: third-party notices are missing from $mod_jar" >&2
+    exit 1
+}
+unzip -p "$mod_jar" META-INF/neoforge.mods.toml | grep -q 'ChemMod Source-Visible License 1.0' || {
+    echo "Smoke-test failure: mod metadata does not identify the ChemMod license" >&2
+    exit 1
+}
 echo "NeoForge test jar: $mod_jar"
 
 echo "==> Smoke test passed"

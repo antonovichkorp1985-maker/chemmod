@@ -46,4 +46,12 @@ tasks.processResources {
     filesMatching("META-INF/neoforge.mods.toml") {
         expand(properties)
     }
+
+    from(rootProject.file("LICENSE")) {
+        into("META-INF")
+        rename("LICENSE", "LICENSE_chemmod")
+    }
+    from(rootProject.file("THIRD_PARTY_NOTICES.md")) {
+        into("META-INF")
+    }
 }
