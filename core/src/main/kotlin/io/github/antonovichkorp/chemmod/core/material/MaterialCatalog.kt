@@ -87,7 +87,8 @@ class MaterialCatalog private constructor(
             )
         }
 
-        fun default(): MaterialCatalog {
+        @JvmStatic
+        fun bundled(): MaterialCatalog {
             val stream = MaterialCatalog::class.java.getResourceAsStream("/chemmod/materials/catalog.json")
                 ?: error("Bundled material catalog is missing")
             return stream.use(::fromJson)

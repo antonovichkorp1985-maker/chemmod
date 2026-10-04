@@ -9,7 +9,7 @@ import kotlin.test.assertTrue
 class MaterialCatalogTest {
     @Test
     fun `bundled catalog loads and compiles canonical copper processes`() {
-        val catalog = MaterialCatalog.default()
+        val catalog = MaterialCatalog.bundled()
 
         assertEquals(MaterialCatalog.CURRENT_SCHEMA, catalog.schemaVersion)
         assertEquals("H2O", catalog.species.getValue(SpeciesId.of("chemmod:water")).formula)

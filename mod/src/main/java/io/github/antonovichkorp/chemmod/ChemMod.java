@@ -266,7 +266,7 @@ public final class ChemMod {
     }
 
     private static final class CatalogHolder {
-        private static final MaterialCatalog INSTANCE = MaterialCatalog.Companion.default();
+        private static final MaterialCatalog INSTANCE = MaterialCatalog.bundled();
     }
 
     private static String safeMessage(Exception exception) {
