@@ -24,6 +24,11 @@ public final class ChemItems {
         () -> new SubstanceVialItem(new Item.Properties().stacksTo(16))
     );
 
+    private static final List<String> TEST_SUBSTANCES = List.of(
+        "вода", "водород", "кислород", "углекислый_газ", "метан", "метанол",
+        "этанол", "диметиловый_эфир", "пропан", "уксусная_кислота", "хлор"
+    );
+
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> MAIN_TAB = TABS.register(
         "main",
         () -> CreativeModeTab.builder()
@@ -31,11 +36,6 @@ public final class ChemItems {
             .icon(() -> vial("вода"))
             .displayItems((parameters, output) -> TEST_SUBSTANCES.forEach(alias -> output.accept(vial(alias))))
             .build()
-    );
-
-    private static final List<String> TEST_SUBSTANCES = List.of(
-        "вода", "водород", "кислород", "углекислый_газ", "метан", "метанол",
-        "этанол", "диметиловый_эфир", "пропан", "уксусная_кислота", "хлор"
     );
 
     private ChemItems() {}
