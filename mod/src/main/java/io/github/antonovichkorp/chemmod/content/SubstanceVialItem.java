@@ -46,13 +46,8 @@ public final class SubstanceVialItem extends Item {
         }
 
         if (!level.isClientSide) {
-            WaterSampleProfile profile = WaterSampleProfile.at(level, position);
-            ItemStack filled = ChemItems.vialFromStructure(
-                "O",
-                1_000_000L,
-                profile.purityPpm(),
-                profile.id()
-            );
+            WaterSampleData analysis = WaterSampleAnalyzer.analyze(level, position);
+            ItemStack filled = ChemItems.waterSample(1_000_000L, analysis);
             if (held.getCount() == 1 && !player.getAbilities().instabuild) {
                 player.setItemInHand(hand, filled);
             } else {
@@ -109,18 +104,28 @@ public final class SubstanceVialItem extends Item {
                     String.format(Locale.ROOT, "%.4f", (1_000_000 - contents.purityPpm()) / 10_000.0)
                 ).withStyle(ChatFormatting.YELLOW));
             }
-            WaterSampleProfile waterProfile = WaterSampleProfile.byId(contents.sampleProfile());
-            if (waterProfile != null) {
+            WaterSampleData waterSample = contents.waterSample();
+            if (waterSample.isAnalyzed()) {
                 tooltip.add(Component.translatable(
                     "tooltip.chemmod.water_source",
-                    Component.translatable("water_profile.chemmod." + waterProfile.id())
+                    Component.translatable("water_profile.chemmod." + waterSample.profile())
                 ).withStyle(ChatFormatting.BLUE));
-                for (WaterSampleProfile.Impurity impurity : waterProfile.impurities()) {
+                for (WaterSampleData.Impurity impurity : waterSample.impurities()) {
                     tooltip.add(Component.translatable(
                         "tooltip.chemmod.impurity_entry",
                         Component.translatable("impurity.chemmod." + impurity.id()),
                         String.format(Locale.ROOT, "%.4f", impurity.ppm() / 10_000.0)
                     ).withStyle(ChatFormatting.DARK_GRAY));
+                }
+                if (!waterSample.factors().isEmpty()) {
+                    tooltip.add(Component.translatable("tooltip.chemmod.environmental_factors")
+                        .withStyle(ChatFormatting.DARK_AQUA));
+                    for (String factor : waterSample.factors()) {
+                        tooltip.add(Component.translatable(
+                            "tooltip.chemmod.environmental_factor",
+                            Component.translatable("water_factor.chemmod." + factor)
+                        ).withStyle(ChatFormatting.DARK_GRAY));
+                    }
                 }
             }
             tooltip.add(Component.translatable(

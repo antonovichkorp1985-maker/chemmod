@@ -6,67 +6,52 @@ import net.minecraft.world.level.Level;
 import java.util.List;
 import java.util.Locale;
 
-/**
- * Deterministic, deliberately coarse gameplay model for water collected from a biome.
- * Impurity groups are honest aggregates until the chemistry core supports the ions,
- * microorganisms, and suspended mixtures needed for a more detailed analysis.
- */
+/** Baseline water composition selected by biome before local environmental modifiers. */
 public enum WaterSampleProfile {
-    OCEAN("ocean", 965_000, List.of(
-        new Impurity("dissolved_salts", 32_000),
-        new Impurity("suspended_solids", 1_000),
-        new Impurity("organic_matter", 1_000),
-        new Impurity("dissolved_gases", 1_000)
-    )),
-    SWAMP("swamp", 985_000, List.of(
-        new Impurity("organic_matter", 8_000),
-        new Impurity("suspended_solids", 4_000),
-        new Impurity("dissolved_minerals", 2_000),
-        new Impurity("dissolved_gases", 1_000)
-    )),
-    RIVER("river", 995_000, List.of(
-        new Impurity("dissolved_minerals", 2_000),
-        new Impurity("suspended_solids", 1_500),
-        new Impurity("organic_matter", 1_000),
-        new Impurity("dissolved_gases", 500)
-    )),
-    SNOWMELT("snowmelt", 998_000, List.of(
-        new Impurity("dissolved_gases", 800),
-        new Impurity("dissolved_minerals", 800),
-        new Impurity("suspended_solids", 200),
-        new Impurity("organic_matter", 200)
-    )),
-    FRESHWATER("freshwater", 997_000, List.of(
-        new Impurity("dissolved_minerals", 1_500),
-        new Impurity("dissolved_gases", 500),
-        new Impurity("suspended_solids", 500),
-        new Impurity("organic_matter", 500)
-    ));
+    OCEAN("ocean", 32_000, 0, 1_000, 1_000, 1_000),
+    SWAMP("swamp", 0, 2_000, 4_000, 8_000, 1_000),
+    RIVER("river", 0, 2_000, 1_500, 1_000, 500),
+    SNOWMELT("snowmelt", 0, 800, 200, 200, 800),
+    FRESHWATER("freshwater", 0, 1_500, 500, 500, 500);
 
     private final String id;
-    private final int purityPpm;
-    private final List<Impurity> impurities;
+    private final int dissolvedSaltsPpm;
+    private final int dissolvedMineralsPpm;
+    private final int suspendedSolidsPpm;
+    private final int organicMatterPpm;
+    private final int dissolvedGasesPpm;
 
-    WaterSampleProfile(String id, int purityPpm, List<Impurity> impurities) {
+    WaterSampleProfile(
+        String id,
+        int dissolvedSaltsPpm,
+        int dissolvedMineralsPpm,
+        int suspendedSolidsPpm,
+        int organicMatterPpm,
+        int dissolvedGasesPpm
+    ) {
         this.id = id;
-        this.purityPpm = purityPpm;
-        this.impurities = impurities;
-        int impurityTotal = impurities.stream().mapToInt(Impurity::ppm).sum();
-        if (impurityTotal != 1_000_000 - purityPpm) {
-            throw new IllegalArgumentException("Water profile " + id + " does not close its ppm balance");
-        }
+        this.dissolvedSaltsPpm = dissolvedSaltsPpm;
+        this.dissolvedMineralsPpm = dissolvedMineralsPpm;
+        this.suspendedSolidsPpm = suspendedSolidsPpm;
+        this.organicMatterPpm = organicMatterPpm;
+        this.dissolvedGasesPpm = dissolvedGasesPpm;
     }
 
     public String id() {
         return id;
     }
 
-    public int purityPpm() {
-        return purityPpm;
-    }
-
-    public List<Impurity> impurities() {
-        return impurities;
+    public WaterSampleData baseline() {
+        return new WaterSampleData(
+            id,
+            dissolvedSaltsPpm,
+            dissolvedMineralsPpm,
+            suspendedSolidsPpm,
+            organicMatterPpm,
+            dissolvedGasesPpm,
+            0,
+            List.of()
+        );
     }
 
     public static WaterSampleProfile at(Level level, BlockPos position) {
@@ -89,12 +74,5 @@ public enum WaterSampleProfile {
             if (profile.id.equals(id)) return profile;
         }
         return null;
-    }
-
-    public record Impurity(String id, int ppm) {
-        public Impurity {
-            if (id == null || id.isBlank()) throw new IllegalArgumentException("Impurity ID cannot be blank");
-            if (ppm <= 0) throw new IllegalArgumentException("Impurity ppm must be positive");
-        }
     }
 }

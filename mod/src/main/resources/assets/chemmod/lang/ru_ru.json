@@ -55,5 +55,15 @@
   "impurity.chemmod.suspended_solids": "взвешенные частицы",
   "impurity.chemmod.organic_matter": "органические вещества",
   "impurity.chemmod.dissolved_gases": "растворённые газы",
+  "impurity.chemmod.nutrients": "питательные вещества",
+  "tooltip.chemmod.environmental_factors": "Влияние окружения:",
+  "tooltip.chemmod.environmental_factor": "  • %s",
+  "water_factor.chemmod.nearby_sediment": "почва и осадок рядом",
+  "water_factor.chemmod.nearby_vegetation": "растительность рядом",
+  "water_factor.chemmod.nearby_agriculture": "грядки или посевы рядом",
+  "water_factor.chemmod.nearby_ores": "обнажённые руды рядом",
+  "water_factor.chemmod.geothermal_activity": "лава или магма рядом",
+  "water_factor.chemmod.underground": "вымывание минералов под землёй",
+  "water_factor.chemmod.rain_runoff": "дождевой сток",
   "tooltip.chemmod.schema": "Схема данных: v%s"
 }

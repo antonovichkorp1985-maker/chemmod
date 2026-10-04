@@ -55,5 +55,15 @@
   "impurity.chemmod.suspended_solids": "suspended solids",
   "impurity.chemmod.organic_matter": "organic matter",
   "impurity.chemmod.dissolved_gases": "dissolved gases",
+  "impurity.chemmod.nutrients": "nutrients",
+  "tooltip.chemmod.environmental_factors": "Local influences:",
+  "tooltip.chemmod.environmental_factor": "  • %s",
+  "water_factor.chemmod.nearby_sediment": "nearby soil and sediment",
+  "water_factor.chemmod.nearby_vegetation": "nearby vegetation",
+  "water_factor.chemmod.nearby_agriculture": "nearby farmland or crops",
+  "water_factor.chemmod.nearby_ores": "nearby exposed ores",
+  "water_factor.chemmod.geothermal_activity": "nearby lava or magma",
+  "water_factor.chemmod.underground": "underground mineral leaching",
+  "water_factor.chemmod.rain_runoff": "rain runoff",
   "tooltip.chemmod.schema": "Data schema: v%s"
 }

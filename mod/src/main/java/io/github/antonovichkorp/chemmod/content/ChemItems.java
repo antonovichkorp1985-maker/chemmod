@@ -55,25 +55,14 @@ public final class ChemItems {
     }
 
     public static ItemStack vialFromStructure(String structure, long micromoles, int purityPpm) {
-        return vialFromStructure(
-            structure,
-            micromoles,
-            purityPpm,
-            SubstanceContents.LABORATORY_PROFILE
-        );
+        ItemStack stack = new ItemStack(SUBSTANCE_VIAL.get());
+        stack.set(ChemComponents.SUBSTANCE.get(), new SubstanceContents(structure, micromoles, purityPpm));
+        return stack;
     }
 
-    public static ItemStack vialFromStructure(
-        String structure,
-        long micromoles,
-        int purityPpm,
-        String sampleProfile
-    ) {
+    public static ItemStack waterSample(long micromoles, WaterSampleData analysis) {
         ItemStack stack = new ItemStack(SUBSTANCE_VIAL.get());
-        stack.set(
-            ChemComponents.SUBSTANCE.get(),
-            new SubstanceContents(structure, micromoles, purityPpm, sampleProfile)
-        );
+        stack.set(ChemComponents.SUBSTANCE.get(), new SubstanceContents("O", micromoles, analysis));
         return stack;
     }
 }

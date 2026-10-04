@@ -11,11 +11,10 @@ public record SubstanceContents(
     String structure,
     long micromoles,
     int purityPpm,
-    String sampleProfile
+    WaterSampleData waterSample
 ) {
-    public static final int CURRENT_SCHEMA = 2;
-    public static final String LABORATORY_PROFILE = "laboratory";
-    public static final String UNSPECIFIED_PROFILE = "unspecified";
+    public static final int CURRENT_SCHEMA = 3;
+    private static final String UNSPECIFIED_PROFILE = "unspecified";
 
     public static final Codec<SubstanceContents> CODEC = RecordCodecBuilder.create(instance -> instance.group(
         Codec.INT.optionalFieldOf("schema_version", 1).forGetter(SubstanceContents::schemaVersion),
@@ -23,7 +22,9 @@ public record SubstanceContents(
         Codec.LONG.fieldOf("micromoles").forGetter(SubstanceContents::micromoles),
         Codec.INT.fieldOf("purity_ppm").forGetter(SubstanceContents::purityPpm),
         Codec.STRING.optionalFieldOf("sample_profile", UNSPECIFIED_PROFILE)
-            .forGetter(SubstanceContents::sampleProfile)
+            .forGetter(value -> UNSPECIFIED_PROFILE),
+        WaterSampleData.CODEC.optionalFieldOf("water_sample", WaterSampleData.NONE)
+            .forGetter(SubstanceContents::waterSample)
     ).apply(instance, SubstanceContents::fromSerialized));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, SubstanceContents> STREAM_CODEC = StreamCodec.composite(
@@ -35,17 +36,17 @@ public record SubstanceContents(
         SubstanceContents::micromoles,
         ByteBufCodecs.VAR_INT,
         SubstanceContents::purityPpm,
-        ByteBufCodecs.STRING_UTF8,
-        SubstanceContents::sampleProfile,
+        WaterSampleData.STREAM_CODEC,
+        SubstanceContents::waterSample,
         SubstanceContents::new
     );
 
     public SubstanceContents(String structure, long micromoles, int purityPpm) {
-        this(CURRENT_SCHEMA, structure, micromoles, purityPpm, LABORATORY_PROFILE);
+        this(CURRENT_SCHEMA, structure, micromoles, purityPpm, WaterSampleData.NONE);
     }
 
-    public SubstanceContents(String structure, long micromoles, int purityPpm, String sampleProfile) {
-        this(CURRENT_SCHEMA, structure, micromoles, purityPpm, sampleProfile);
+    public SubstanceContents(String structure, long micromoles, WaterSampleData waterSample) {
+        this(CURRENT_SCHEMA, structure, micromoles, waterSample.purityPpm(), waterSample);
     }
 
     private static SubstanceContents fromSerialized(
@@ -53,16 +54,25 @@ public record SubstanceContents(
         String structure,
         long micromoles,
         int purityPpm,
-        String sampleProfile
+        String legacyProfile,
+        WaterSampleData waterSample
     ) {
         if (serializedSchema < 1 || serializedSchema > CURRENT_SCHEMA) {
             throw new IllegalArgumentException("Unsupported substance schema version: " + serializedSchema);
         }
-        String migratedProfile = sampleProfile;
-        if (serializedSchema == 1 && "O".equals(structure) && purityPpm == 997_000) {
-            migratedProfile = WaterSampleProfile.FRESHWATER.id();
+
+        WaterSampleData migrated = waterSample;
+        if (serializedSchema < CURRENT_SCHEMA && !migrated.isAnalyzed()) {
+            String profileId = legacyProfile;
+            if (serializedSchema == 1 && "O".equals(structure) && purityPpm == 997_000) {
+                profileId = WaterSampleProfile.FRESHWATER.id();
+            }
+            WaterSampleProfile profile = WaterSampleProfile.byId(profileId);
+            if (profile != null && profile.baseline().purityPpm() == purityPpm) {
+                migrated = profile.baseline();
+            }
         }
-        return new SubstanceContents(CURRENT_SCHEMA, structure, micromoles, purityPpm, migratedProfile);
+        return new SubstanceContents(CURRENT_SCHEMA, structure, micromoles, purityPpm, migrated);
     }
 
     public SubstanceContents {
@@ -78,13 +88,16 @@ public record SubstanceContents(
         if (purityPpm < 0 || purityPpm > 1_000_000) {
             throw new IllegalArgumentException("Purity must be between 0 and 1,000,000 ppm");
         }
-        if (sampleProfile == null || sampleProfile.isBlank()) {
-            throw new IllegalArgumentException("Sample profile cannot be blank");
+        if (waterSample == null) {
+            throw new IllegalArgumentException("Water sample data cannot be null");
         }
-        if (!LABORATORY_PROFILE.equals(sampleProfile)
-            && !UNSPECIFIED_PROFILE.equals(sampleProfile)
-            && WaterSampleProfile.byId(sampleProfile) == null) {
-            throw new IllegalArgumentException("Unknown sample profile: " + sampleProfile);
+        if (waterSample.isAnalyzed()) {
+            if (!"O".equals(structure)) {
+                throw new IllegalArgumentException("Water analysis can only be attached to H2O");
+            }
+            if (purityPpm != waterSample.purityPpm()) {
+                throw new IllegalArgumentException("Water purity does not match measured impurities");
+            }
         }
     }
 }
