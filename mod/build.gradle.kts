@@ -33,11 +33,11 @@ neoForge {
 
 dependencies {
     implementation(project(":core"))
-    additionalRuntimeClasspath(project(":core"))
+    add("additionalRuntimeClasspath", project(":core"))
 
     jarJar(project(":core"))
     jarJar("org.jetbrains.kotlin:kotlin-stdlib:2.0.21")
-    additionalRuntimeClasspath("org.jetbrains.kotlin:kotlin-stdlib:2.0.21")
+    add("additionalRuntimeClasspath", "org.jetbrains.kotlin:kotlin-stdlib:2.0.21")
 }
 
 tasks.processResources {
