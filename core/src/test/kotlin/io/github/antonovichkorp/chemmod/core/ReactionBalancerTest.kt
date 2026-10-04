@@ -20,6 +20,14 @@ class ReactionBalancerTest {
     }
 
     @Test
+    fun `accepts common formula notation in equations`() {
+        val reaction = ReactionEquationParser.balance("C2H5OH + O2 -> CO2 + H2O")
+
+        assertEquals(listOf(1, 3).big(), reaction.reactantCoefficients)
+        assertEquals(listOf(2, 3).big(), reaction.productCoefficients)
+    }
+
+    @Test
     fun `balances methane combustion`() {
         val reaction = ReactionEquationParser.balance("C + O=O -> O=C=O + O")
 

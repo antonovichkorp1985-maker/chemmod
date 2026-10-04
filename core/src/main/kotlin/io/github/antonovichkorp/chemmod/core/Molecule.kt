@@ -17,6 +17,10 @@ class Molecule private constructor(val graph: MoleculeGraph) {
     companion object {
         private val defaultParser by lazy { SmilesLikeParser(ElementTable.default()) }
 
+        /** Parse the structural notation used by the chemistry engine. */
         fun fromSMILESlike(input: String): Molecule = Molecule(defaultParser.parse(input))
+
+        /** Resolve a common name/formula alias first, then parse its structure. */
+        fun fromInput(input: String): Molecule = fromSMILESlike(CommonSubstances.resolve(input))
     }
 }

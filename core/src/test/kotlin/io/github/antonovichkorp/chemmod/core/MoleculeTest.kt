@@ -67,6 +67,23 @@ class MoleculeTest {
     }
 
     @Test
+    fun `common names and familiar formulae resolve to structures`() {
+        assertEquals("H2O", Molecule.fromInput("вода").formula())
+        assertEquals("H2O", Molecule.fromInput("H2O").formula())
+        assertEquals("CO2", Molecule.fromInput("CO2").formula())
+        assertEquals("C2H6O", Molecule.fromInput("этанол").formula())
+        assertEquals(
+            Molecule.fromSMILESlike("CCO").canonicalKey(),
+            Molecule.fromInput("ethanol").canonicalKey(),
+        )
+    }
+
+    @Test
+    fun `cyclic substances do not receive an uncalibrated boiling prediction`() {
+        assertEquals(null, Molecule.fromInput("циклопропан").properties().boilingPointC)
+    }
+
+    @Test
     fun `water and methanol fixtures`() {
         val water = Molecule.fromSMILESlike("O")
         val methanol = Molecule.fromSMILESlike("CO")

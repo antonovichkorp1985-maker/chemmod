@@ -24,6 +24,7 @@ object PropertyPredictor {
         val oxygenAtoms = graph.atoms.filter { it.element.symbol == "O" }
 
         val boilingPoint = when {
+            hasCycle(graph) -> null // M0 has no calibrated ring-strain/group correction yet.
             formula == mapOf("O" to 1, "H" to 2) -> 100.0
             oxygenAtoms.size == 1 && isHydroxyl(graph, oxygenAtoms.single().id) ->
                 65.0 - (carbon - 1).coerceAtLeast(0)
@@ -50,4 +51,22 @@ object PropertyPredictor {
 
     private fun isHydroxyl(graph: MoleculeGraph, oxygenId: Int): Boolean =
         graph.bondsOf(oxygenId).size == 1 && graph.implicitHydrogens(oxygenId) + graph.atom(oxygenId).explicitHydrogens > 0
+
+    private fun hasCycle(graph: MoleculeGraph): Boolean {
+        val unseen = graph.atoms.map { it.id }.toMutableSet()
+        var components = 0
+        while (unseen.isNotEmpty()) {
+            components++
+            val pending = ArrayDeque<Int>()
+            pending.add(unseen.first())
+            while (pending.isNotEmpty()) {
+                val atom = pending.removeFirst()
+                if (!unseen.remove(atom)) continue
+                graph.neighbors(atom).forEach { (neighbor, _) ->
+                    if (neighbor.id in unseen) pending.add(neighbor.id)
+                }
+            }
+        }
+        return graph.bonds.size > graph.atoms.size - components
+    }
 }

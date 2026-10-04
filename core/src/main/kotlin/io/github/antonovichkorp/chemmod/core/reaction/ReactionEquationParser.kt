@@ -20,7 +20,7 @@ object ReactionEquationParser {
     private fun parseSide(side: String): List<Molecule> {
         val tokens = side.trim().split(Regex("\\s+\\+\\s+")).filter(String::isNotBlank)
         if (tokens.isEmpty()) throw ReactionBalanceException("Reaction side cannot be empty")
-        return tokens.map(Molecule::fromSMILESlike)
+        return tokens.map(Molecule::fromInput)
     }
 
     private fun formatSide(molecules: List<Molecule>, coefficients: List<java.math.BigInteger>): String =

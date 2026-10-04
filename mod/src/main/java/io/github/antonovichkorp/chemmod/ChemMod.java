@@ -2,6 +2,8 @@ package io.github.antonovichkorp.chemmod;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
+import io.github.antonovichkorp.chemmod.core.CommonSubstance;
+import io.github.antonovichkorp.chemmod.core.CommonSubstances;
 import io.github.antonovichkorp.chemmod.core.Molecule;
 import io.github.antonovichkorp.chemmod.core.ValidationIssue;
 import io.github.antonovichkorp.chemmod.core.properties.PredictedProperties;
@@ -73,7 +75,8 @@ public final class ChemMod {
 
     private static int lookup(CommandSourceStack source, String input) {
         try {
-            Molecule molecule = Molecule.Companion.fromSMILESlike(input);
+            CommonSubstance known = CommonSubstances.INSTANCE.find(input);
+            Molecule molecule = Molecule.Companion.fromInput(input);
             if (!molecule.validate().isEmpty()) {
                 String issues = molecule.validate().stream()
                     .map(ValidationIssue::getMessage)
@@ -90,8 +93,12 @@ public final class ChemMod {
                 ? Component.translatable("command.chemmod.value.none").getString()
                 : String.join(", ", properties.getFlags());
 
+            Component displayName = known == null
+                ? Component.translatable("substance.chemmod.custom")
+                : Component.translatable("substance.chemmod." + known.getCanonicalName());
             source.sendSuccess(
-                () -> Component.translatable("command.chemmod.lookup.header", input).withStyle(ChatFormatting.AQUA),
+                () -> Component.translatable("command.chemmod.lookup.header", displayName, input)
+                    .withStyle(ChatFormatting.AQUA),
                 false
             );
             source.sendSuccess(
