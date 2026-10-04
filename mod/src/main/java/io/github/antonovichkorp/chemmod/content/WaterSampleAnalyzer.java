@@ -17,7 +17,16 @@ public final class WaterSampleAnalyzer {
     private WaterSampleAnalyzer() {}
 
     public static WaterSampleData analyze(Level level, BlockPos source) {
-        WaterSampleData baseline = WaterSampleProfile.at(level, source).baseline();
+        return analyze(level, source, WaterSampleProfile.at(level, source), null);
+    }
+
+    public static WaterSampleData analyze(
+        Level level,
+        BlockPos source,
+        WaterSampleProfile profile,
+        String sourceEvidenceFactor
+    ) {
+        WaterSampleData baseline = profile.baseline();
         int sedimentBlocks = 0;
         int vegetationBlocks = 0;
         int agricultureBlocks = 0;
@@ -40,6 +49,9 @@ public final class WaterSampleAnalyzer {
         }
 
         Set<String> factors = new LinkedHashSet<>();
+        if (sourceEvidenceFactor != null && !sourceEvidenceFactor.isBlank()) {
+            factors.add(sourceEvidenceFactor);
+        }
         int minerals = baseline.dissolvedMineralsPpm();
         int solids = baseline.suspendedSolidsPpm();
         int organic = baseline.organicMatterPpm();

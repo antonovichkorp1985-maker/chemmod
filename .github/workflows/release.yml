@@ -34,4 +34,4 @@ jobs:
             "$artifact" "$artifact.sha256" \
             --prerelease \
             --title "ChemMod $GITHUB_REF_NAME — техническая тестовая сборка" \
-            --notes "Тестовая сборка ChemMod для Minecraft 1.21.1 / NeoForge 21.1.251. Состав воды теперь зависит не только от биома, но и от блоков рядом, глубины и дождя. Анализ учитывает осадок, растительность, сельское хозяйство, руды и геотермальную активность; результат и причины сохраняются в колбе. Схема data component v3 мигрирует старые колбы. Эталонные creative-образцы имеют чистоту 100%. CLI в релиз не входит. ChemMod — All Rights Reserved."
+            --notes "Тестовая сборка ChemMod для Minecraft 1.21.1 / NeoForge 21.1.251. Добавлен optional-адаптер TerraFirmaCraft 4.x: колба распознаёт TFC salt water, river water, spring water и fresh-water варианты без обязательной зависимости от TFC. Тип жидкости задаёт базовый профиль, после чего учитываются биом и локальное окружение. Эталонные creative-образцы имеют чистоту 100%. CLI в релиз не входит. ChemMod — All Rights Reserved."

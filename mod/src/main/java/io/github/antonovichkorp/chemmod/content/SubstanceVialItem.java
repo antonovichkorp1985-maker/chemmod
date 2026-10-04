@@ -3,12 +3,12 @@ package io.github.antonovichkorp.chemmod.content;
 import io.github.antonovichkorp.chemmod.core.CommonSubstance;
 import io.github.antonovichkorp.chemmod.core.CommonSubstances;
 import io.github.antonovichkorp.chemmod.core.Molecule;
+import io.github.antonovichkorp.chemmod.integration.WaterFluidAdapters;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.tags.FluidTags;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.player.Player;
@@ -41,12 +41,19 @@ public final class SubstanceVialItem extends Item {
         }
         BlockPos position = hit.getBlockPos();
         var fluid = level.getFluidState(position);
-        if (!fluid.is(FluidTags.WATER) || !fluid.isSource()) {
+        var classifiedWater = WaterFluidAdapters.classify(level, position, fluid);
+        if (classifiedWater.isEmpty() || !fluid.isSource()) {
             return InteractionResultHolder.pass(held);
         }
 
         if (!level.isClientSide) {
-            WaterSampleData analysis = WaterSampleAnalyzer.analyze(level, position);
+            var classification = classifiedWater.get();
+            WaterSampleData analysis = WaterSampleAnalyzer.analyze(
+                level,
+                position,
+                classification.profile(),
+                classification.evidenceFactor()
+            );
             ItemStack filled = ChemItems.waterSample(1_000_000L, analysis);
             if (held.getCount() == 1 && !player.getAbilities().instabuild) {
                 player.setItemInHand(hand, filled);

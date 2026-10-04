@@ -48,6 +48,7 @@
   "water_profile.chemmod.ocean": "ocean water",
   "water_profile.chemmod.swamp": "swamp water",
   "water_profile.chemmod.river": "river water",
+  "water_profile.chemmod.spring": "mineral spring water",
   "water_profile.chemmod.snowmelt": "snowmelt",
   "water_profile.chemmod.freshwater": "fresh water",
   "impurity.chemmod.dissolved_salts": "dissolved salts",
@@ -65,5 +66,6 @@
   "water_factor.chemmod.geothermal_activity": "nearby lava or magma",
   "water_factor.chemmod.underground": "underground mineral leaching",
   "water_factor.chemmod.rain_runoff": "rain runoff",
+  "water_factor.chemmod.terrafirmacraft_fluid": "TerraFirmaCraft water type",
   "tooltip.chemmod.schema": "Data schema: v%s"
 }

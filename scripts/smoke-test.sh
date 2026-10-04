@@ -72,6 +72,14 @@ unzip -p "$mod_jar" META-INF/neoforge.mods.toml | grep -q 'license="All Rights R
     echo "Smoke-test failure: mod metadata does not identify All Rights Reserved" >&2
     exit 1
 }
+unzip -p "$mod_jar" META-INF/neoforge.mods.toml | grep -q 'modId="tfc"' || {
+    echo "Smoke-test failure: optional TerraFirmaCraft adapter metadata is missing" >&2
+    exit 1
+}
+jar tf "$mod_jar" | grep -q 'TerraFirmaCraftWaterAdapter.class$' || {
+    echo "Smoke-test failure: optional TerraFirmaCraft water adapter is missing" >&2
+    exit 1
+}
 echo "NeoForge test jar: $mod_jar"
 
 echo "==> Smoke test passed"

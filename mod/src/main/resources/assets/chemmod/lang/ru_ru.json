@@ -48,6 +48,7 @@
   "water_profile.chemmod.ocean": "океаническая вода",
   "water_profile.chemmod.swamp": "болотная вода",
   "water_profile.chemmod.river": "речная вода",
+  "water_profile.chemmod.spring": "минеральная родниковая вода",
   "water_profile.chemmod.snowmelt": "талая снеговая вода",
   "water_profile.chemmod.freshwater": "пресная вода",
   "impurity.chemmod.dissolved_salts": "растворённые соли",
@@ -65,5 +66,6 @@
   "water_factor.chemmod.geothermal_activity": "лава или магма рядом",
   "water_factor.chemmod.underground": "вымывание минералов под землёй",
   "water_factor.chemmod.rain_runoff": "дождевой сток",
+  "water_factor.chemmod.terrafirmacraft_fluid": "тип воды TerraFirmaCraft",
   "tooltip.chemmod.schema": "Схема данных: v%s"
 }
