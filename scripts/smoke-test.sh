@@ -4,7 +4,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 echo "==> Compiling and running unit tests"
-./gradlew --no-daemon check installDist :mod:jarJar
+./gradlew --no-daemon check installDist :mod:build
 
 chem="core-cli/build/install/chem/bin/chem"
 
@@ -46,9 +46,9 @@ assert_contains "$balance_output" "C2H6O + 3 O2 -> 2 CO2 + 3 H2O"
 assert_contains "$balance_output" "Atoms and formal charge conserved: true"
 
 echo "==> Checking distributable NeoForge mod"
-mod_jar=$(find mod/build -type f -name '*-all.jar' -print -quit)
+mod_jar=$(find mod/build/libs -maxdepth 1 -type f -name 'chemmod-*.jar' ! -name '*sources*' -print -quit)
 [[ -n "$mod_jar" ]] || {
-    echo "Smoke-test failure: :mod:jarJar did not produce a distributable *-all.jar" >&2
+    echo "Smoke-test failure: :mod:build did not produce a distributable mod jar" >&2
     find mod/build -type f -name '*.jar' -print >&2 || true
     exit 1
 }
