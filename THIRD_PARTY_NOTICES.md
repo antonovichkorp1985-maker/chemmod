@@ -1,7 +1,7 @@
 # Third-party notices
 
-The ChemMod Source-Visible License applies only to original ChemMod materials.
-It does not replace or restrict the licenses of the components below.
+ChemMod's All Rights Reserved terms apply only to original ChemMod materials.
+They do not replace or restrict the licenses of the components below.
 
 ## Kotlin standard library
 

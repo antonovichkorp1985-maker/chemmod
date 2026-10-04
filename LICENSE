@@ -1,87 +1,60 @@
-ChemMod Source-Visible License, Version 1.0
+ALL RIGHTS RESERVED
 
 Copyright (c) 2026 antonovichkorp1985-maker. All rights reserved.
 
-1. Definitions
+ChemMod is proprietary software. No rights are granted except the limited
+permissions stated below.
 
-"Software" means the ChemMod source code, object code, documentation, artwork,
-and other original materials made available in this repository or in an
-official ChemMod release, excluding Third-Party Materials.
+PERMITTED
 
-"Official Release" means an unmodified binary release published by the
-copyright holder through the official ChemMod repository.
+1. You may access and view the ChemMod source code in the official repository
+   for evaluation, security review, education, or personal reference.
+2. You may download, install, and run an unmodified official ChemMod binary
+   release for personal, non-commercial gameplay, including non-commercial
+   multiplayer gameplay.
+3. You may keep one private backup copy of an official binary release.
+4. Incidental temporary copies made automatically by a web browser solely to
+   display the source code are permitted.
 
-"Third-Party Materials" means components identified as third-party software or
-content, including the components listed in THIRD_PARTY_NOTICES.md. Those
-materials remain governed by their own licenses.
+NOT PERMITTED
 
-2. Limited permission
-
-Subject to this License, the copyright holder grants you a limited, personal,
-revocable, non-exclusive, non-transferable permission only to:
-
-(a) access and view the source code for evaluation, security review, education,
-    or personal reference; and
-(b) download and run an Official Release for personal, non-commercial gameplay,
-    including non-commercial multiplayer gameplay.
-
-Incidental technical copies created automatically and temporarily by a web
-browser solely to display the source code are permitted. A private backup copy
-of an Official Release is permitted solely for the licensee's own use.
-
-3. Restrictions
-
-No other permission or license is granted. In particular, unless you have
-separate prior written permission from the copyright holder, you must not:
-
-(a) copy, reproduce, republish, upload, transmit, mirror, or redistribute the
-    Software, its source code, or any substantial portion of it;
-(b) modify, adapt, translate, compile from source, create derivative works from,
-    or prepare a fork of the Software;
-(c) incorporate the Software or any part of it into another project, mod,
-    modpack, library, product, service, dataset, or training corpus;
-(d) sell, rent, sublicense, monetize, commercially exploit, or use the Software
-    for any commercial purpose;
-(e) distribute an Official Release or a modified binary; instead, you may link
-    to the official release page;
-(f) remove or alter copyright, license, attribution, or proprietary notices; or
-(g) use the ChemMod name, logo, or branding to imply endorsement or to identify
-    an unofficial build.
+Without separate prior written permission from the copyright holder, you may
+not copy, reproduce, modify, adapt, translate, compile from source, fork,
+republish, upload, mirror, redistribute, sublicense, sell, monetize, or create
+derivative works from ChemMod or any substantial part of it. You may not include
+ChemMod source code, assets, or binaries in another project, mod, modpack,
+product, service, dataset, or training corpus. Link to the official release page
+instead of redistributing a release.
 
 The availability of repository functions such as download, clone, or fork does
-not grant permission to use those functions beyond the permissions expressly
-stated in this License.
+not grant permission to use those functions beyond the permissions above. No
+trademark or branding rights are granted.
 
-4. Mandatory legal rights
+THIRD-PARTY MATERIALS
 
-Nothing in this License restricts rights that applicable law does not permit the
+This notice applies only to original ChemMod materials. Components identified
+in THIRD_PARTY_NOTICES.md remain governed by their own licenses.
+
+MANDATORY RIGHTS
+
+Nothing in this notice restricts rights that applicable law does not permit the
 copyright holder to restrict. Any use under such a mandatory exception must be
-limited to what that law requires and must preserve all notices where possible.
+limited to what the law requires and preserve all notices where possible.
 
-5. Termination
+TERMINATION
 
-This permission terminates automatically and immediately if you breach this
-License. Upon termination, you must stop using the Software and delete all
-copies in your possession or control, except where retention is required by
-law.
+The limited permissions above terminate automatically if you breach these
+terms. You must then stop using ChemMod and delete all copies in your possession
+or control, except where retention is required by law.
 
-6. No trademark license
+DISCLAIMER
 
-No trademark or branding rights are granted by this License.
+CHEMMOD IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+INCLUDING WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE,
+NON-INFRINGEMENT, CORRECTNESS, OR COMPATIBILITY. TO THE MAXIMUM EXTENT PERMITTED
+BY LAW, THE COPYRIGHT HOLDER SHALL NOT BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER
+LIABILITY ARISING FROM OR RELATED TO CHEMMOD OR ITS USE.
 
-7. Disclaimer of warranty and limitation of liability
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
-PURPOSE, NON-INFRINGEMENT, CORRECTNESS, OR COMPATIBILITY. TO THE MAXIMUM EXTENT
-PERMITTED BY LAW, THE COPYRIGHT HOLDER SHALL NOT BE LIABLE FOR ANY CLAIM,
-DAMAGES, OR OTHER LIABILITY ARISING FROM OR RELATED TO THE SOFTWARE OR ITS USE.
-
-8. Entire license and separate permissions
-
-This License is the complete grant for the Software. Any additional permission
-must be in a separate written agreement signed by the copyright holder. Failure
-to enforce a provision once is not a waiver of that provision.
-
-For permission requests, use the contact channels published in the official
-ChemMod repository.
+Additional permission requires a separate written agreement from the copyright
+holder. Permission requests may use the contact channels published in the
+official ChemMod repository.

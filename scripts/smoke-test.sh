@@ -68,8 +68,8 @@ jar tf "$mod_jar" | grep -q '^META-INF/THIRD_PARTY_NOTICES.md$' || {
     echo "Smoke-test failure: third-party notices are missing from $mod_jar" >&2
     exit 1
 }
-unzip -p "$mod_jar" META-INF/neoforge.mods.toml | grep -q 'ChemMod Source-Visible License 1.0' || {
-    echo "Smoke-test failure: mod metadata does not identify the ChemMod license" >&2
+unzip -p "$mod_jar" META-INF/neoforge.mods.toml | grep -q 'license="All Rights Reserved"' || {
+    echo "Smoke-test failure: mod metadata does not identify All Rights Reserved" >&2
     exit 1
 }
 echo "NeoForge test jar: $mod_jar"
