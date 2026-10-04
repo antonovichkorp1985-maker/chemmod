@@ -34,7 +34,10 @@ public final class ChemItems {
         () -> CreativeModeTab.builder()
             .title(Component.translatable("itemGroup.chemmod"))
             .icon(() -> vial("вода"))
-            .displayItems((parameters, output) -> TEST_SUBSTANCES.forEach(alias -> output.accept(vial(alias))))
+            .displayItems((parameters, output) -> {
+                output.accept(new ItemStack(SUBSTANCE_VIAL.get()));
+                TEST_SUBSTANCES.forEach(alias -> output.accept(vial(alias)));
+            })
             .build()
     );
 

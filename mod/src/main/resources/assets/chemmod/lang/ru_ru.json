@@ -33,7 +33,7 @@
   "itemGroup.chemmod": "ChemMod",
   "item.chemmod.substance_vial.empty": "Пустая лабораторная колба",
   "item.chemmod.substance_vial.filled": "Колба: %s",
-  "tooltip.chemmod.vial.empty": "Нет данных о веществе",
+  "tooltip.chemmod.vial.empty": "Пусто — используйте на источнике воды, чтобы взять пробу",
   "tooltip.chemmod.formula": "Формула: %s",
   "tooltip.chemmod.amount": "Количество: %s моль",
   "tooltip.chemmod.purity": "Чистота: %s%%",
@@ -41,5 +41,7 @@
   "tooltip.chemmod.structure": "Внутренняя структура: %s",
   "tooltip.chemmod.canonical_id": "Канонический ID: %s",
   "tooltip.chemmod.hold_shift": "Включите расширенные подсказки (F3+H) для технических данных",
-  "tooltip.chemmod.invalid": "Некорректные данные вещества: %s"
+  "tooltip.chemmod.invalid": "Некорректные данные вещества: %s",
+  "tooltip.chemmod.impurities": "Растворённые примеси: %s%%",
+  "tooltip.chemmod.schema": "Схема данных: v%s"
 }

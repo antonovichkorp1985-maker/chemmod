@@ -33,7 +33,7 @@
   "itemGroup.chemmod": "ChemMod",
   "item.chemmod.substance_vial.empty": "Empty laboratory vial",
   "item.chemmod.substance_vial.filled": "Vial of %s",
-  "tooltip.chemmod.vial.empty": "No substance data",
+  "tooltip.chemmod.vial.empty": "Empty — use on a water source to collect a sample",
   "tooltip.chemmod.formula": "Formula: %s",
   "tooltip.chemmod.amount": "Amount: %s mol",
   "tooltip.chemmod.purity": "Purity: %s%%",
@@ -41,5 +41,7 @@
   "tooltip.chemmod.structure": "Internal structure: %s",
   "tooltip.chemmod.canonical_id": "Canonical ID: %s",
   "tooltip.chemmod.hold_shift": "Enable advanced tooltips (F3+H) for technical data",
-  "tooltip.chemmod.invalid": "Invalid substance data: %s"
+  "tooltip.chemmod.invalid": "Invalid substance data: %s",
+  "tooltip.chemmod.impurities": "Dissolved impurities: %s%%",
+  "tooltip.chemmod.schema": "Data schema: v%s"
 }
