@@ -73,7 +73,7 @@ class MaterialCatalog private constructor(
 
         fun fromJson(input: InputStream): MaterialCatalog {
             val text = input.bufferedReader(Charsets.UTF_8).use { it.readText() }
-            val document = JSON.decodeFromString<CatalogDocument>(text)
+            val document = JSON.decodeFromString(CatalogDocument.serializer(), text)
             require(document.schemaVersion == CURRENT_SCHEMA) {
                 "Unsupported material catalog schema: ${document.schemaVersion}"
             }
