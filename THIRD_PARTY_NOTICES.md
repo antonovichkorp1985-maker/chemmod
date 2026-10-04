@@ -13,6 +13,16 @@ Licensed under the Apache License, Version 2.0:
 
 The embedded library JAR retains its own license and notice metadata.
 
+## kotlinx.serialization
+
+ChemMod release JARs embed kotlinx.serialization Core and JSON 1.7.3.
+
+Copyright © 2017–2024 JetBrains s.r.o. and kotlinx.serialization contributors.
+Licensed under the Apache License, Version 2.0:
+<https://www.apache.org/licenses/LICENSE-2.0>
+
+The embedded library JARs retain their own license and notice metadata.
+
 ## Gradle Wrapper
 
 The repository contains Gradle Wrapper files from the Gradle project. They are

@@ -37,7 +37,11 @@ dependencies {
 
     jarJar(project(":core"))
     jarJar("org.jetbrains.kotlin:kotlin-stdlib:2.0.21")
+    jarJar("org.jetbrains.kotlinx:kotlinx-serialization-core-jvm:1.7.3")
+    jarJar("org.jetbrains.kotlinx:kotlinx-serialization-json-jvm:1.7.3")
     add("additionalRuntimeClasspath", "org.jetbrains.kotlin:kotlin-stdlib:2.0.21")
+    add("additionalRuntimeClasspath", "org.jetbrains.kotlinx:kotlinx-serialization-core-jvm:1.7.3")
+    add("additionalRuntimeClasspath", "org.jetbrains.kotlinx:kotlinx-serialization-json-jvm:1.7.3")
 }
 
 tasks.processResources {

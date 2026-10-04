@@ -6,6 +6,7 @@ import io.github.antonovichkorp.chemmod.core.CommonSubstance;
 import io.github.antonovichkorp.chemmod.core.CommonSubstances;
 import io.github.antonovichkorp.chemmod.core.Molecule;
 import io.github.antonovichkorp.chemmod.core.ValidationIssue;
+import io.github.antonovichkorp.chemmod.core.material.MaterialCatalog;
 import io.github.antonovichkorp.chemmod.core.properties.PredictedProperties;
 import io.github.antonovichkorp.chemmod.core.reaction.BalancedReaction;
 import io.github.antonovichkorp.chemmod.core.reaction.ReactionEquationParser;
@@ -73,6 +74,11 @@ public final class ChemMod {
                         )
                 )
                 .then(
+                    Commands.literal("catalog")
+                        .requires(source -> source.hasPermission(2))
+                        .executes(context -> inspectCatalog(context.getSource()))
+                )
+                .then(
                     Commands.literal("test")
                         .requires(source -> source.hasPermission(2))
                         .executes(context -> runSelfTest(context.getSource()))
@@ -85,6 +91,7 @@ public final class ChemMod {
         source.sendSuccess(() -> Component.translatable("command.chemmod.help.lookup"), false);
         source.sendSuccess(() -> Component.translatable("command.chemmod.help.balance"), false);
         source.sendSuccess(() -> Component.translatable("command.chemmod.help.give"), false);
+        source.sendSuccess(() -> Component.translatable("command.chemmod.help.catalog"), false);
         source.sendSuccess(() -> Component.translatable("command.chemmod.help.test"), false);
         return 1;
     }
@@ -180,6 +187,36 @@ public final class ChemMod {
         }
     }
 
+    private static int inspectCatalog(CommandSourceStack source) {
+        try {
+            MaterialCatalog catalog = catalog();
+            source.sendSuccess(
+                () -> Component.translatable(
+                    "command.chemmod.catalog.summary",
+                    catalog.getSchemaVersion(),
+                    catalog.getSpecies().size(),
+                    catalog.getMinerals().size(),
+                    catalog.getDeposits().size(),
+                    catalog.getMaterials().size(),
+                    catalog.getCompiledProcesses().size()
+                ).withStyle(ChatFormatting.AQUA),
+                false
+            );
+            String processes = catalog.getCompiledProcesses().keySet().stream()
+                .map(Object::toString)
+                .sorted()
+                .collect(Collectors.joining(", "));
+            source.sendSuccess(
+                () -> Component.translatable("command.chemmod.catalog.processes", processes),
+                false
+            );
+            return 1;
+        } catch (Exception exception) {
+            source.sendFailure(Component.translatable("command.chemmod.catalog.failure", safeMessage(exception)));
+            return 0;
+        }
+    }
+
     private static int runSelfTest(CommandSourceStack source) {
         try {
             Molecule ethanol = Molecule.Companion.fromSMILESlike("CCO");
@@ -195,6 +232,9 @@ public final class ChemMod {
             );
             if (!combustion.isConserved()) {
                 throw new IllegalStateException("combustion is not conserved");
+            }
+            if (catalog().getCompiledProcesses().isEmpty()) {
+                throw new IllegalStateException("material catalog compiled no processes");
             }
 
             String mass = String.format(Locale.ROOT, "%.3f", ethanol.molarMass());
@@ -219,6 +259,14 @@ public final class ChemMod {
             source.sendFailure(Component.translatable("command.chemmod.test.failure", safeMessage(exception)));
             return 0;
         }
+    }
+
+    private static MaterialCatalog catalog() {
+        return CatalogHolder.INSTANCE;
+    }
+
+    private static final class CatalogHolder {
+        private static final MaterialCatalog INSTANCE = MaterialCatalog.Companion.default();
     }
 
     private static String safeMessage(Exception exception) {

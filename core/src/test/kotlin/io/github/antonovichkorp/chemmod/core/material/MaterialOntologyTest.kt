@@ -7,7 +7,6 @@ import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 class MaterialOntologyTest {
-    private val copperSpecies = SpeciesId.of("chemmod:copper")
     private val copperMineral = MineralId.of("chemmod:native_copper")
     private val copperMaterial = MaterialId.of("chemmod:copper")
 
@@ -23,7 +22,12 @@ class MaterialOntologyTest {
 
     @Test
     fun `species mineral deposit and material remain separate domain concepts`() {
-        val mineral = MineralDefinition(copperMineral, mapOf(copperSpecies to 1), hardnessMohs = 3.0)
+        val mineral = MineralDefinition(
+            copperMineral,
+            chemicalFormula = "Cu",
+            elementStoichiometry = mapOf("Cu" to 1),
+            hardnessMohs = 3.0,
+        )
         val deposit = DepositDefinition(
             id = DepositId.of("chemmod:overworld_native_copper"),
             mineralWeights = mapOf(mineral.id to 100),

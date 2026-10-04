@@ -30,21 +30,29 @@ data class ChemicalSpecies private constructor(
     }
 }
 
-/** A naturally occurring crystalline substance, not an inventory stack. */
+/** A naturally occurring crystalline substance, not a molecule or inventory stack. */
 data class MineralDefinition(
     val id: MineralId,
-    val speciesStoichiometry: Map<SpeciesId, Int>,
+    val chemicalFormula: String,
+    val elementStoichiometry: Map<String, Int>,
     val hardnessMohs: Double? = null,
     val schemaVersion: Int = CURRENT_SCHEMA,
 ) {
     init {
-        require(speciesStoichiometry.isNotEmpty()) { "Mineral $id needs at least one species" }
-        require(speciesStoichiometry.values.all { it > 0 }) { "Mineral stoichiometry must be positive" }
+        require(chemicalFormula.isNotBlank()) { "Mineral $id needs a chemical formula" }
+        require(elementStoichiometry.isNotEmpty()) { "Mineral $id needs an elemental composition" }
+        require(elementStoichiometry.keys.all { it.matches(ELEMENT_SYMBOL) }) {
+            "Mineral element keys must be chemical symbols"
+        }
+        require(elementStoichiometry.values.all { it > 0 }) { "Mineral stoichiometry must be positive" }
         require(hardnessMohs == null || hardnessMohs in 0.0..10.0) { "Mohs hardness must be 0..10" }
         require(schemaVersion > 0) { "Schema version must be positive" }
     }
 
-    companion object { const val CURRENT_SCHEMA = 1 }
+    companion object {
+        const val CURRENT_SCHEMA = 1
+        private val ELEMENT_SYMBOL = Regex("[A-Z][a-z]?")
+    }
 }
 
 /** Canonical world-generation policy for a mixture of minerals. */

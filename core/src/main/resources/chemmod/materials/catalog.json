@@ -1,0 +1,146 @@
+{
+  "schemaVersion": 1,
+  "species": [
+    {
+      "id": "chemmod:water",
+      "structure": "O"
+    },
+    {
+      "id": "chemmod:oxygen",
+      "structure": "O=O"
+    },
+    {
+      "id": "chemmod:carbon_dioxide",
+      "structure": "O=C=O"
+    }
+  ],
+  "minerals": [
+    {
+      "id": "chemmod:native_copper",
+      "chemicalFormula": "Cu",
+      "elementStoichiometry": {
+        "Cu": 1
+      },
+      "hardnessMohs": 3.0
+    }
+  ],
+  "deposits": [
+    {
+      "id": "chemmod:overworld_native_copper",
+      "mineralWeights": {
+        "chemmod:native_copper": 100
+      },
+      "dimensionTags": [
+        "minecraft:is_overworld"
+      ],
+      "minY": -32,
+      "maxY": 80,
+      "attemptsPerChunk": 1
+    }
+  ],
+  "materials": [
+    {
+      "id": "chemmod:copper",
+      "source": {
+        "type": "mineral",
+        "id": "chemmod:native_copper"
+      },
+      "supportedForms": [
+        "ore",
+        "crushed_ore",
+        "dust",
+        "liquid",
+        "ingot",
+        "nugget",
+        "block",
+        "plate",
+        "rod",
+        "wire"
+      ]
+    }
+  ],
+  "processes": [
+    {
+      "id": "chemmod:crush_native_copper",
+      "machineTag": "chemmod:crushing",
+      "inputs": [
+        {
+          "material": "chemmod:copper",
+          "form": "ore",
+          "massMicrograms": 1000000
+        }
+      ],
+      "outputs": [
+        {
+          "material": "chemmod:copper",
+          "form": "crushed_ore",
+          "massMicrograms": 1000000
+        }
+      ],
+      "durationTicks": 200
+    },
+    {
+      "id": "chemmod:grind_native_copper",
+      "machineTag": "chemmod:grinding",
+      "inputs": [
+        {
+          "material": "chemmod:copper",
+          "form": "crushed_ore",
+          "massMicrograms": 1000000
+        }
+      ],
+      "outputs": [
+        {
+          "material": "chemmod:copper",
+          "form": "dust",
+          "massMicrograms": 1000000
+        }
+      ],
+      "durationTicks": 200
+    },
+    {
+      "id": "chemmod:melt_copper",
+      "machineTag": "chemmod:melting",
+      "inputs": [
+        {
+          "material": "chemmod:copper",
+          "form": "dust",
+          "massMicrograms": 1000000
+        }
+      ],
+      "outputs": [
+        {
+          "material": "chemmod:copper",
+          "form": "liquid",
+          "massMicrograms": 1000000
+        }
+      ],
+      "durationTicks": 400,
+      "conditions": {
+        "minimumTemperatureKelvin": 1357.77
+      }
+    },
+    {
+      "id": "chemmod:cast_copper_ingot",
+      "machineTag": "chemmod:casting",
+      "inputs": [
+        {
+          "material": "chemmod:copper",
+          "form": "liquid",
+          "massMicrograms": 1000000
+        }
+      ],
+      "outputs": [
+        {
+          "material": "chemmod:copper",
+          "form": "ingot",
+          "massMicrograms": 1000000
+        }
+      ],
+      "durationTicks": 200,
+      "conditions": {
+        "maximumTemperatureKelvin": 1357.77
+      }
+    }
+  ]
+}
