@@ -13,4 +13,4 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "chemmod"
-include("core", "core-cli")
+include("core", "core-cli", "mod")

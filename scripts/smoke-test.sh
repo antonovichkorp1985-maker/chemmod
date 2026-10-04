@@ -4,7 +4,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 echo "==> Compiling and running unit tests"
-./gradlew --no-daemon check installDist
+./gradlew --no-daemon check installDist :mod:jarJar
 
 chem="core-cli/build/install/chem/bin/chem"
 
@@ -44,5 +44,22 @@ balance_output=$("$chem" balance "CCO + O=O -> O=C=O + O")
 echo "$balance_output"
 assert_contains "$balance_output" "C2H6O + 3 O2 -> 2 CO2 + 3 H2O"
 assert_contains "$balance_output" "Atoms and formal charge conserved: true"
+
+echo "==> Checking distributable NeoForge mod"
+mod_jar=$(find mod/build/libs -maxdepth 1 -type f -name '*-all.jar' -print -quit)
+[[ -n "$mod_jar" ]] || {
+    echo "Smoke-test failure: :mod:jarJar did not produce a distributable *-all.jar" >&2
+    find mod/build/libs -maxdepth 1 -type f -print >&2 || true
+    exit 1
+}
+jar tf "$mod_jar" | grep -q '^META-INF/neoforge.mods.toml$' || {
+    echo "Smoke-test failure: mod metadata is missing from $mod_jar" >&2
+    exit 1
+}
+jar tf "$mod_jar" | grep -q '^META-INF/jarjar/metadata.json$' || {
+    echo "Smoke-test failure: embedded core/runtime metadata is missing from $mod_jar" >&2
+    exit 1
+}
+echo "NeoForge test jar: $mod_jar"
 
 echo "==> Smoke test passed"

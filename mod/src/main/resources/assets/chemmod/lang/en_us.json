@@ -1,0 +1,4 @@
+{
+  "command.chemmod.test.success": "ChemMod core works: %s, %s g/mol, predicted boiling point %s °C; reaction: %s",
+  "command.chemmod.test.failure": "ChemMod self-test failed: %s"
+}

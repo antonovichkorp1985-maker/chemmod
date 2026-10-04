@@ -7,12 +7,19 @@ kotlin {
 }
 
 dependencies {
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.18.2")
-
     testImplementation(kotlin("test"))
     testImplementation("org.junit.jupiter:junit-jupiter-params:5.11.4")
 }
 
 tasks.test {
     useJUnitPlatform()
+}
+
+tasks.jar {
+    manifest {
+        attributes(
+            "FMLModType" to "LIBRARY",
+            "Automatic-Module-Name" to "io.github.antonovichkorp1985maker.chemmod.core",
+        )
+    }
 }

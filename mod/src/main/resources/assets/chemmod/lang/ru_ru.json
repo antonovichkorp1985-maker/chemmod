@@ -1,0 +1,4 @@
+{
+  "command.chemmod.test.success": "Ядро ChemMod работает: %s, %s г/моль, расчётная температура кипения %s °C; реакция: %s",
+  "command.chemmod.test.failure": "Самопроверка ChemMod не пройдена: %s"
+}
