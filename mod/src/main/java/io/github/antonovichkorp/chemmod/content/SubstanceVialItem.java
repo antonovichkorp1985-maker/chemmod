@@ -46,7 +46,13 @@ public final class SubstanceVialItem extends Item {
         }
 
         if (!level.isClientSide) {
-            ItemStack filled = ChemItems.vialFromStructure("O", 1_000_000L, 997_000);
+            WaterSampleProfile profile = WaterSampleProfile.at(level, position);
+            ItemStack filled = ChemItems.vialFromStructure(
+                "O",
+                1_000_000L,
+                profile.purityPpm(),
+                profile.id()
+            );
             if (held.getCount() == 1 && !player.getAbilities().instabuild) {
                 player.setItemInHand(hand, filled);
             } else {
@@ -102,6 +108,20 @@ public final class SubstanceVialItem extends Item {
                     "tooltip.chemmod.impurities",
                     String.format(Locale.ROOT, "%.4f", (1_000_000 - contents.purityPpm()) / 10_000.0)
                 ).withStyle(ChatFormatting.YELLOW));
+            }
+            WaterSampleProfile waterProfile = WaterSampleProfile.byId(contents.sampleProfile());
+            if (waterProfile != null) {
+                tooltip.add(Component.translatable(
+                    "tooltip.chemmod.water_source",
+                    Component.translatable("water_profile.chemmod." + waterProfile.id())
+                ).withStyle(ChatFormatting.BLUE));
+                for (WaterSampleProfile.Impurity impurity : waterProfile.impurities()) {
+                    tooltip.add(Component.translatable(
+                        "tooltip.chemmod.impurity_entry",
+                        Component.translatable("impurity.chemmod." + impurity.id()),
+                        String.format(Locale.ROOT, "%.4f", impurity.ppm() / 10_000.0)
+                    ).withStyle(ChatFormatting.DARK_GRAY));
+                }
             }
             tooltip.add(Component.translatable(
                 "tooltip.chemmod.molar_mass",

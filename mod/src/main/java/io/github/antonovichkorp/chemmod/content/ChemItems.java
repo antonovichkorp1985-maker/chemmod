@@ -51,12 +51,29 @@ public final class ChemItems {
     public static ItemStack vial(String input) {
         CommonSubstance common = CommonSubstances.INSTANCE.find(input);
         String structure = common == null ? CommonSubstances.INSTANCE.resolve(input) : common.getStructure();
-        return vialFromStructure(structure, 1_000_000L, 999_000);
+        return vialFromStructure(structure, 1_000_000L, 1_000_000);
     }
 
     public static ItemStack vialFromStructure(String structure, long micromoles, int purityPpm) {
+        return vialFromStructure(
+            structure,
+            micromoles,
+            purityPpm,
+            SubstanceContents.LABORATORY_PROFILE
+        );
+    }
+
+    public static ItemStack vialFromStructure(
+        String structure,
+        long micromoles,
+        int purityPpm,
+        String sampleProfile
+    ) {
         ItemStack stack = new ItemStack(SUBSTANCE_VIAL.get());
-        stack.set(ChemComponents.SUBSTANCE.get(), new SubstanceContents(structure, micromoles, purityPpm));
+        stack.set(
+            ChemComponents.SUBSTANCE.get(),
+            new SubstanceContents(structure, micromoles, purityPpm, sampleProfile)
+        );
         return stack;
     }
 }

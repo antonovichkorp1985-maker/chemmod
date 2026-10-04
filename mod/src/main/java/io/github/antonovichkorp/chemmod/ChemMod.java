@@ -164,7 +164,7 @@ public final class ChemMod {
             if (!molecule.validate().isEmpty()) {
                 throw new IllegalArgumentException(molecule.validate().getFirst().getMessage());
             }
-            var stack = ChemItems.vialFromStructure(structure, 1_000_000L, 999_000);
+            var stack = ChemItems.vialFromStructure(structure, 1_000_000L, 1_000_000);
             var player = source.getPlayerOrException();
             if (!player.getInventory().add(stack)) {
                 player.drop(stack, false);
