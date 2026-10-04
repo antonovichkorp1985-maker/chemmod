@@ -22,8 +22,10 @@ jobs:
         shell: bash
         run: |
           set -o pipefail
+          set +e
           ./gradlew --no-daemon check installDist 2>&1 | tee build.log
           status=${PIPESTATUS[0]}
+          set -e
           {
             echo '```text'
             tail -n 200 build.log
