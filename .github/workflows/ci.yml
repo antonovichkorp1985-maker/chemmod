@@ -29,4 +29,8 @@ jobs:
             tail -n 200 build.log
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
+          if [[ "$status" -ne 0 ]]; then
+            diagnostic=$(tail -n 80 build.log | sed 's/%/%25/g; s/\r/%0D/g; s/$/%0A/' | tr -d '\n')
+            echo "::error title=Gradle build failed::$diagnostic"
+          fi
           exit "$status"
