@@ -46,10 +46,10 @@ assert_contains "$balance_output" "C2H6O + 3 O2 -> 2 CO2 + 3 H2O"
 assert_contains "$balance_output" "Atoms and formal charge conserved: true"
 
 echo "==> Checking distributable NeoForge mod"
-mod_jar=$(find mod/build/libs -maxdepth 1 -type f -name '*-all.jar' -print -quit)
+mod_jar=$(find mod/build -type f -name '*-all.jar' -print -quit)
 [[ -n "$mod_jar" ]] || {
     echo "Smoke-test failure: :mod:jarJar did not produce a distributable *-all.jar" >&2
-    find mod/build/libs -maxdepth 1 -type f -print >&2 || true
+    find mod/build -type f -name '*.jar' -print >&2 || true
     exit 1
 }
 jar tf "$mod_jar" | grep -q '^META-INF/neoforge.mods.toml$' || {
