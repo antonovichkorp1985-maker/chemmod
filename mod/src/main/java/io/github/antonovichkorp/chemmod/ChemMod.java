@@ -9,6 +9,8 @@ import io.github.antonovichkorp.chemmod.core.ValidationIssue;
 import io.github.antonovichkorp.chemmod.core.properties.PredictedProperties;
 import io.github.antonovichkorp.chemmod.core.reaction.BalancedReaction;
 import io.github.antonovichkorp.chemmod.core.reaction.ReactionEquationParser;
+import io.github.antonovichkorp.chemmod.content.ChemComponents;
+import io.github.antonovichkorp.chemmod.content.ChemItems;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -26,6 +28,8 @@ public final class ChemMod {
     public static final String MOD_ID = "chemmod";
 
     public ChemMod(IEventBus modEventBus) {
+        ChemComponents.register(modEventBus);
+        ChemItems.register(modEventBus);
         NeoForge.EVENT_BUS.addListener(this::registerCommands);
     }
 
@@ -58,6 +62,17 @@ public final class ChemMod {
                         )
                 )
                 .then(
+                    Commands.literal("give")
+                        .requires(source -> source.hasPermission(2))
+                        .then(
+                            Commands.argument("substance", StringArgumentType.string())
+                                .executes(context -> giveVial(
+                                    context.getSource(),
+                                    StringArgumentType.getString(context, "substance")
+                                ))
+                        )
+                )
+                .then(
                     Commands.literal("test")
                         .requires(source -> source.hasPermission(2))
                         .executes(context -> runSelfTest(context.getSource()))
@@ -69,6 +84,7 @@ public final class ChemMod {
         source.sendSuccess(() -> Component.translatable("command.chemmod.help.header").withStyle(ChatFormatting.GOLD), false);
         source.sendSuccess(() -> Component.translatable("command.chemmod.help.lookup"), false);
         source.sendSuccess(() -> Component.translatable("command.chemmod.help.balance"), false);
+        source.sendSuccess(() -> Component.translatable("command.chemmod.help.give"), false);
         source.sendSuccess(() -> Component.translatable("command.chemmod.help.test"), false);
         return 1;
     }
@@ -137,6 +153,29 @@ public final class ChemMod {
             return 1;
         } catch (Exception exception) {
             source.sendFailure(Component.translatable("command.chemmod.balance.failure", safeMessage(exception)));
+            return 0;
+        }
+    }
+
+    private static int giveVial(CommandSourceStack source, String input) {
+        try {
+            String structure = CommonSubstances.INSTANCE.resolve(input);
+            Molecule molecule = Molecule.Companion.fromSMILESlike(structure);
+            if (!molecule.validate().isEmpty()) {
+                throw new IllegalArgumentException(molecule.validate().getFirst().getMessage());
+            }
+            var stack = ChemItems.vialFromStructure(structure, 1_000_000L, 999_000);
+            var player = source.getPlayerOrException();
+            if (!player.getInventory().add(stack)) {
+                player.drop(stack, false);
+            }
+            source.sendSuccess(
+                () -> Component.translatable("command.chemmod.give.success", stack.getHoverName()),
+                false
+            );
+            return 1;
+        } catch (Exception exception) {
+            source.sendFailure(Component.translatable("command.chemmod.give.failure", safeMessage(exception)));
             return 0;
         }
     }

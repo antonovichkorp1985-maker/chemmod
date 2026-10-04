@@ -36,6 +36,9 @@ object CommonSubstances {
 
     fun find(input: String): CommonSubstance? = byAlias[normalize(input)]
 
+    fun findByStructure(structure: String): CommonSubstance? =
+        substances.firstOrNull { (substance, _) -> substance.structure == structure }?.first
+
     fun resolve(input: String): String = find(input)?.structure ?: input
 
     private fun entry(

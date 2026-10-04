@@ -26,5 +26,20 @@
   "substance.chemmod.propane": "Propane",
   "substance.chemmod.cyclopropane": "Cyclopropane",
   "substance.chemmod.acetic_acid": "Acetic acid",
-  "substance.chemmod.chlorine": "Chlorine"
+  "substance.chemmod.chlorine": "Chlorine",
+  "command.chemmod.help.give": "/chem give <substance> — give a one-mole test vial (administrator)",
+  "command.chemmod.give.success": "Created %s",
+  "command.chemmod.give.failure": "Could not create vial: %s",
+  "itemGroup.chemmod": "ChemMod",
+  "item.chemmod.substance_vial.empty": "Empty laboratory vial",
+  "item.chemmod.substance_vial.filled": "Vial of %s",
+  "tooltip.chemmod.vial.empty": "No substance data",
+  "tooltip.chemmod.formula": "Formula: %s",
+  "tooltip.chemmod.amount": "Amount: %s mol",
+  "tooltip.chemmod.purity": "Purity: %s%%",
+  "tooltip.chemmod.molar_mass": "Molar mass: %s g/mol",
+  "tooltip.chemmod.structure": "Internal structure: %s",
+  "tooltip.chemmod.canonical_id": "Canonical ID: %s",
+  "tooltip.chemmod.hold_shift": "Enable advanced tooltips (F3+H) for technical data",
+  "tooltip.chemmod.invalid": "Invalid substance data: %s"
 }

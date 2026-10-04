@@ -26,5 +26,20 @@
   "substance.chemmod.propane": "Пропан",
   "substance.chemmod.cyclopropane": "Циклопропан",
   "substance.chemmod.acetic_acid": "Уксусная кислота",
-  "substance.chemmod.chlorine": "Хлор"
+  "substance.chemmod.chlorine": "Хлор",
+  "command.chemmod.help.give": "/chem give <вещество> — выдать тестовую колбу на один моль (администратор)",
+  "command.chemmod.give.success": "Создано: %s",
+  "command.chemmod.give.failure": "Не удалось создать колбу: %s",
+  "itemGroup.chemmod": "ChemMod",
+  "item.chemmod.substance_vial.empty": "Пустая лабораторная колба",
+  "item.chemmod.substance_vial.filled": "Колба: %s",
+  "tooltip.chemmod.vial.empty": "Нет данных о веществе",
+  "tooltip.chemmod.formula": "Формула: %s",
+  "tooltip.chemmod.amount": "Количество: %s моль",
+  "tooltip.chemmod.purity": "Чистота: %s%%",
+  "tooltip.chemmod.molar_mass": "Молярная масса: %s г/моль",
+  "tooltip.chemmod.structure": "Внутренняя структура: %s",
+  "tooltip.chemmod.canonical_id": "Канонический ID: %s",
+  "tooltip.chemmod.hold_shift": "Включите расширенные подсказки (F3+H) для технических данных",
+  "tooltip.chemmod.invalid": "Некорректные данные вещества: %s"
 }
