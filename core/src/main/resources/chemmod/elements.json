@@ -1,0 +1,13 @@
+[
+  {"symbol":"H",  "name":"Hydrogen",   "atomicNumber":1,  "atomicMass":1.008,    "valences":[1]},
+  {"symbol":"B",  "name":"Boron",      "atomicNumber":5,  "atomicMass":10.81,    "valences":[3]},
+  {"symbol":"C",  "name":"Carbon",     "atomicNumber":6,  "atomicMass":12.011,   "valences":[4]},
+  {"symbol":"N",  "name":"Nitrogen",   "atomicNumber":7,  "atomicMass":14.007,   "valences":[3,5]},
+  {"symbol":"O",  "name":"Oxygen",     "atomicNumber":8,  "atomicMass":15.999,   "valences":[2]},
+  {"symbol":"F",  "name":"Fluorine",   "atomicNumber":9,  "atomicMass":18.998403,"valences":[1]},
+  {"symbol":"P",  "name":"Phosphorus", "atomicNumber":15, "atomicMass":30.973762,"valences":[3,5]},
+  {"symbol":"S",  "name":"Sulfur",     "atomicNumber":16, "atomicMass":32.06,    "valences":[2,4,6]},
+  {"symbol":"Cl", "name":"Chlorine",   "atomicNumber":17, "atomicMass":35.45,    "valences":[1]},
+  {"symbol":"Br", "name":"Bromine",    "atomicNumber":35, "atomicMass":79.904,   "valences":[1]},
+  {"symbol":"I",  "name":"Iodine",     "atomicNumber":53, "atomicMass":126.90447,"valences":[1]}
+]
