@@ -2,6 +2,8 @@ package io.github.antonovichkorp.chemmod.cli
 
 import io.github.antonovichkorp.chemmod.core.Molecule
 import io.github.antonovichkorp.chemmod.core.parse.MoleculeParseException
+import io.github.antonovichkorp.chemmod.core.reaction.ReactionBalanceException
+import io.github.antonovichkorp.chemmod.core.reaction.ReactionEquationParser
 import java.util.Locale
 import kotlin.system.exitProcess
 
@@ -16,6 +18,10 @@ fun main(args: Array<String>) {
         "lookup" -> {
             if (args.size != 2) fail("Usage: chem lookup <SMILES-like>")
             lookup(args[1])
+        }
+        "balance" -> {
+            if (args.size < 2) fail("Usage: chem balance '<reactants> -> <products>'")
+            balance(args.drop(1).joinToString(" "))
         }
         else -> fail("Unknown command '${args[0]}'. Run 'chem help'.")
     }
@@ -48,6 +54,18 @@ private fun lookup(input: String) {
     }
 }
 
+private fun balance(equation: String) {
+    try {
+        val reaction = ReactionEquationParser.balance(equation)
+        println(ReactionEquationParser.format(reaction))
+        println("Atoms and formal charge conserved: ${reaction.isConserved()}")
+    } catch (exception: ReactionBalanceException) {
+        fail(exception.message ?: "Could not balance reaction")
+    } catch (exception: MoleculeParseException) {
+        fail(exception.message ?: "Could not parse a reaction species")
+    }
+}
+
 private fun printHelp() {
     println(
         """
@@ -55,6 +73,7 @@ private fun printHelp() {
 
         Usage:
           chem lookup <SMILES-like>   Parse a molecule and print its identity and properties
+          chem balance '<equation>'   Balance atoms and formal charge with integer coefficients
           chem help                   Show this help
 
         M0 syntax supports B, C, N, O, F, P, S, Cl, Br and I; -, =, # bonds;
@@ -64,6 +83,7 @@ private fun printHelp() {
           chem lookup CCO
           chem lookup COC
           chem lookup 'CC(=O)O'
+          chem balance 'CCO + O=O -> O=C=O + O'
         """.trimIndent(),
     )
 }
