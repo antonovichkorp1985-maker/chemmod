@@ -70,7 +70,9 @@ dependencies {
     compileOnly(ponderApi)
     compileOnly(flywheelApi)
     if (createRuntimeEnabled.get()) {
-        add("additionalRuntimeClasspath", createApi)
+        // runtimeOnly makes ModDevGradle expose Create to the NeoForge mod scanner
+        // for the integration smoke run; jarJar still leaves it out of ChemMod's JAR.
+        runtimeOnly(createApi)
     }
 
     jarJar(project(":core"))
