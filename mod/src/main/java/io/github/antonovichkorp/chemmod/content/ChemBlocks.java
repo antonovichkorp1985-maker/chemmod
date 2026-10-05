@@ -37,6 +37,28 @@ public final class ChemBlocks {
         )
     );
 
+    public static final DeferredHolder<Block, RefractoryFurnaceBlock> REFRACTORY_FURNACE = BLOCKS.register(
+        "refractory_furnace",
+        () -> new RefractoryFurnaceBlock(
+            BlockBehaviour.Properties.of()
+                .mapColor(MapColor.COLOR_BROWN)
+                .requiresCorrectToolForDrops()
+                .strength(3.5F, 6.0F)
+                .sound(SoundType.DEEPSLATE_BRICKS)
+        )
+    );
+
+    public static final DeferredHolder<Block, IngotMoldBlock> INGOT_MOLD = BLOCKS.register(
+        "ingot_mold",
+        () -> new IngotMoldBlock(
+            BlockBehaviour.Properties.of()
+                .mapColor(MapColor.STONE)
+                .strength(2.5F, 6.0F)
+                .sound(SoundType.STONE)
+                .noOcclusion()
+        )
+    );
+
     private ChemBlocks() {}
 
     public static void register(IEventBus eventBus) {

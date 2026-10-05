@@ -21,13 +21,25 @@ object MaterialItemExports {
     )
 
     @JvmStatic
-    fun bundledSolidForms(): List<MaterialItemSpec> = MaterialCatalog.bundled().materials.values
+    fun bundledSolidForms(): List<MaterialItemSpec> = forms(itemForms) { materialPath, form ->
+        "${materialPath}_${form.name.lowercase()}"
+    }
+
+    @JvmStatic
+    fun bundledMoltenContainers(): List<MaterialItemSpec> = forms(setOf(MaterialForm.LIQUID)) { materialPath, _ ->
+        "molten_${materialPath}_crucible"
+    }
+
+    private fun forms(
+        accepted: Set<MaterialForm>,
+        registryPath: (String, MaterialForm) -> String,
+    ): List<MaterialItemSpec> = MaterialCatalog.bundled().materials.values
         .flatMap { material ->
             material.supportedForms
-                .filter { it in itemForms }
+                .filter { it in accepted }
                 .map { form ->
-                    val path = material.id.value.substringAfter(':') + "_" + form.name.lowercase()
-                    MaterialItemSpec(material.id.value, form.name, path)
+                    val materialPath = material.id.value.substringAfter(':')
+                    MaterialItemSpec(material.id.value, form.name, registryPath(materialPath, form))
                 }
         }
         .sortedBy(MaterialItemSpec::registryPath)

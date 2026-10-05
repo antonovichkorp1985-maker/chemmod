@@ -38,12 +38,28 @@ public final class ChemItems {
         () -> new BlockItem(ChemBlocks.STONE_MORTAR.get(), new Item.Properties())
     );
 
+    public static final DeferredHolder<Item, BlockItem> REFRACTORY_FURNACE = ITEMS.register(
+        "refractory_furnace",
+        () -> new BlockItem(ChemBlocks.REFRACTORY_FURNACE.get(), new Item.Properties())
+    );
+
+    public static final DeferredHolder<Item, BlockItem> INGOT_MOLD = ITEMS.register(
+        "ingot_mold",
+        () -> new BlockItem(ChemBlocks.INGOT_MOLD.get(), new Item.Properties())
+    );
+
+    public static final DeferredHolder<Item, Item> CERAMIC_CRUCIBLE = ITEMS.register(
+        "ceramic_crucible",
+        () -> new Item(new Item.Properties().stacksTo(16))
+    );
+
     private static final List<String> TEST_SUBSTANCES = List.of(
         "вода", "водород", "кислород", "углекислый_газ", "метан", "метанол",
         "этанол", "диметиловый_эфир", "пропан", "уксусная_кислота", "хлор"
     );
 
     private static final List<MaterialItemRegistration> MATERIAL_ITEMS = registerMaterialItems();
+    private static final List<MoltenItemRegistration> MOLTEN_ITEMS = registerMoltenItems();
 
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> MAIN_TAB = TABS.register(
         "main",
@@ -55,7 +71,11 @@ public final class ChemItems {
                 TEST_SUBSTANCES.forEach(alias -> output.accept(vial(alias)));
                 output.accept(new ItemStack(NATIVE_COPPER_ORE.get()));
                 output.accept(new ItemStack(STONE_MORTAR.get()));
+                output.accept(new ItemStack(REFRACTORY_FURNACE.get()));
+                output.accept(new ItemStack(INGOT_MOLD.get()));
+                output.accept(new ItemStack(CERAMIC_CRUCIBLE.get()));
                 MATERIAL_ITEMS.forEach(registration -> output.accept(new ItemStack(registration.holder().get())));
+                MOLTEN_ITEMS.forEach(registration -> output.accept(defaultMoltenStack(registration)));
             })
             .build()
     );
@@ -76,6 +96,28 @@ public final class ChemItems {
             registrations.add(new MaterialItemRegistration(spec, holder));
         }
         return List.copyOf(registrations);
+    }
+
+    private static List<MoltenItemRegistration> registerMoltenItems() {
+        List<MoltenItemRegistration> registrations = new ArrayList<>();
+        for (MaterialItemSpec spec : MaterialItemExports.bundledMoltenContainers()) {
+            DeferredHolder<Item, MoltenMaterialItem> holder = ITEMS.register(
+                spec.getRegistryPath(),
+                () -> new MoltenMaterialItem(
+                    new Item.Properties()
+                        .stacksTo(1)
+                        .component(ChemComponents.MATERIAL_BATCH.get(), defaultBatch(spec))
+                        .component(ChemComponents.MATERIAL_TEMPERATURE.get(), 1_357_770),
+                    spec.getMaterialId()
+                )
+            );
+            registrations.add(new MoltenItemRegistration(spec, holder));
+        }
+        return List.copyOf(registrations);
+    }
+
+    private static ItemStack defaultMoltenStack(MoltenItemRegistration registration) {
+        return new ItemStack(registration.holder().get());
     }
 
     private static MaterialBatchContents defaultBatch(MaterialItemSpec spec) {
@@ -135,8 +177,38 @@ public final class ChemItems {
         return ItemStack.EMPTY;
     }
 
+    public static ItemStack moltenStack(
+        MaterialBatchContents input,
+        String outputForm,
+        long outputMassMicrograms,
+        int temperatureMillikelvin
+    ) {
+        for (MoltenItemRegistration registration : MOLTEN_ITEMS) {
+            MaterialItemSpec spec = registration.spec();
+            if (spec.getMaterialId().equals(input.materialId()) && spec.getFormName().equals(outputForm)) {
+                ItemStack result = new ItemStack(registration.holder().get());
+                result.set(ChemComponents.MATERIAL_BATCH.get(), new MaterialBatchContents(
+                    MaterialBatchContents.CURRENT_SCHEMA,
+                    input.materialId(),
+                    outputForm,
+                    outputMassMicrograms,
+                    input.purityPpm(),
+                    input.impuritiesPpm()
+                ));
+                result.set(ChemComponents.MATERIAL_TEMPERATURE.get(), temperatureMillikelvin);
+                return result;
+            }
+        }
+        return ItemStack.EMPTY;
+    }
+
     private record MaterialItemRegistration(
         MaterialItemSpec spec,
         DeferredHolder<Item, MaterialFormItem> holder
+    ) {}
+
+    private record MoltenItemRegistration(
+        MaterialItemSpec spec,
+        DeferredHolder<Item, MoltenMaterialItem> holder
     ) {}
 }

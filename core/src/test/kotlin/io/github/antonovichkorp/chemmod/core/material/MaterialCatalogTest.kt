@@ -46,6 +46,19 @@ class MaterialCatalogTest {
         assertEquals("CRUSHED_ORE", manualTransitions.first().outputForm)
         assertEquals("DUST", manualTransitions.last().outputForm)
         assertTrue(manualTransitions.all { it.inputMassMicrograms == it.outputMassMicrograms })
+
+        val moltenContainers = MaterialItemExports.bundledMoltenContainers()
+        assertEquals("molten_copper_crucible", moltenContainers.single().registryPath)
+        assertEquals("LIQUID", moltenContainers.single().formName)
+
+        val meltingTransition = MaterialProcessExports.bundledMeltingTransitions().single()
+        assertEquals("DUST", meltingTransition.inputForm)
+        assertEquals("LIQUID", meltingTransition.outputForm)
+        assertEquals(1357.77, meltingTransition.minimumTemperatureKelvin)
+        val castingTransition = MaterialProcessExports.bundledCastingTransitions().single()
+        assertEquals("LIQUID", castingTransition.inputForm)
+        assertEquals("INGOT", castingTransition.outputForm)
+        assertEquals(1357.77, castingTransition.maximumTemperatureKelvin)
     }
 
     @Test

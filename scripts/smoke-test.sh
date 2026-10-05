@@ -112,6 +112,18 @@ jar tf "$mod_jar" | grep -q '^data/chemmod/recipe/stone_mortar.json$' || {
     echo "Smoke-test failure: stone mortar recipe is missing" >&2
     exit 1
 }
+jar tf "$mod_jar" | grep -q 'RefractoryFurnaceBlock.class$' || {
+    echo "Smoke-test failure: canonical melting adapter is missing" >&2
+    exit 1
+}
+jar tf "$mod_jar" | grep -q 'IngotMoldBlock.class$' || {
+    echo "Smoke-test failure: canonical casting adapter is missing" >&2
+    exit 1
+}
+jar tf "$mod_jar" | grep -q '^assets/chemmod/models/item/molten_copper_crucible.json$' || {
+    echo "Smoke-test failure: molten copper container model is missing" >&2
+    exit 1
+}
 echo "NeoForge test jar: $mod_jar"
 
 ./scripts/server-smoke-test.sh
