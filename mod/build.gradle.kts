@@ -32,6 +32,8 @@ neoForge {
 }
 
 val createApi = "maven.modrinth:LNytGWDc:UjX6dr61" // Create 6.0.10 for Minecraft 1.21.1
+val ponderApi = "net.createmod.ponder:ponder-neoforge:1.0.82+mc1.21.1"
+val flywheelApi = "dev.engine-room.flywheel:flywheel-neoforge-api-1.21.1:1.0.6"
 val createRuntimeEnabled = providers.gradleProperty("chemmod.createRuntime")
     .map(String::toBoolean)
     .orElse(true)
@@ -39,6 +41,10 @@ val createRuntimeEnabled = providers.gradleProperty("chemmod.createRuntime")
 // ModDevGradle adds its repositories at project level, so this repository must
 // also live here rather than only in settings.gradle.kts.
 repositories {
+    maven {
+        name = "Create"
+        url = uri("https://maven.createmod.net")
+    }
     maven {
         name = "Modrinth"
         url = uri("https://api.modrinth.com/maven")
@@ -59,6 +65,10 @@ dependencies {
     // The adapter compiles against Create but never embeds it. The property lets
     // the smoke suite prove ChemMod still starts when Create is absent.
     compileOnly(createApi)
+    // Create's published binary bundles these at runtime, but its API types
+    // appear in the kinetic block entity's supertypes and must be resolvable to javac.
+    compileOnly(ponderApi)
+    compileOnly(flywheelApi)
     if (createRuntimeEnabled.get()) {
         add("additionalRuntimeClasspath", createApi)
     }
