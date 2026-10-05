@@ -92,6 +92,18 @@ jar tf "$mod_jar" | grep -q '^data/c/tags/item/ingots/copper.json$' || {
     echo "Smoke-test failure: common copper ingot tag is missing" >&2
     exit 1
 }
+jar tf "$mod_jar" | grep -q 'ChemBlocks.class$' || {
+    echo "Smoke-test failure: canonical world blocks are missing" >&2
+    exit 1
+}
+jar tf "$mod_jar" | grep -q '^data/chemmod/worldgen/placed_feature/native_copper_ore.json$' || {
+    echo "Smoke-test failure: native copper worldgen is missing" >&2
+    exit 1
+}
+jar tf "$mod_jar" | grep -q '^data/chemmod/loot_table/blocks/native_copper_ore.json$' || {
+    echo "Smoke-test failure: native copper ore loot is missing" >&2
+    exit 1
+}
 echo "NeoForge test jar: $mod_jar"
 
 echo "==> Smoke test passed"

@@ -10,6 +10,7 @@ import io.github.antonovichkorp.chemmod.core.material.MaterialCatalog;
 import io.github.antonovichkorp.chemmod.core.properties.PredictedProperties;
 import io.github.antonovichkorp.chemmod.core.reaction.BalancedReaction;
 import io.github.antonovichkorp.chemmod.core.reaction.ReactionEquationParser;
+import io.github.antonovichkorp.chemmod.content.ChemBlocks;
 import io.github.antonovichkorp.chemmod.content.ChemComponents;
 import io.github.antonovichkorp.chemmod.content.ChemItems;
 import net.minecraft.ChatFormatting;
@@ -30,6 +31,7 @@ public final class ChemMod {
 
     public ChemMod(IEventBus modEventBus) {
         ChemComponents.register(modEventBus);
+        ChemBlocks.register(modEventBus);
         ChemItems.register(modEventBus);
         NeoForge.EVENT_BUS.addListener(this::registerCommands);
     }

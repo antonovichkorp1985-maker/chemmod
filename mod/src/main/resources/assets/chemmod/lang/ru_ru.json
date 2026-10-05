@@ -35,6 +35,7 @@
   "command.chemmod.give.success": "Создано: %s",
   "command.chemmod.give.failure": "Не удалось создать колбу: %s",
   "itemGroup.chemmod": "ChemMod",
+  "block.chemmod.native_copper_ore": "Руда самородной меди",
   "item.chemmod.material_form": "%s — %s",
   "material.chemmod.copper": "Медь",
   "material_form.chemmod.ore": "кусок самородной руды",

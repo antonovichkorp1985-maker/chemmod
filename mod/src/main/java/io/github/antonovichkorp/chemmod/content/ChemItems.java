@@ -7,6 +7,7 @@ import io.github.antonovichkorp.chemmod.core.material.MaterialItemExports;
 import io.github.antonovichkorp.chemmod.core.material.MaterialItemSpec;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -27,6 +28,11 @@ public final class ChemItems {
         () -> new SubstanceVialItem(new Item.Properties().stacksTo(16))
     );
 
+    public static final DeferredHolder<Item, BlockItem> NATIVE_COPPER_ORE = ITEMS.register(
+        "native_copper_ore",
+        () -> new BlockItem(ChemBlocks.NATIVE_COPPER_ORE.get(), new Item.Properties())
+    );
+
     private static final List<String> TEST_SUBSTANCES = List.of(
         "вода", "водород", "кислород", "углекислый_газ", "метан", "метанол",
         "этанол", "диметиловый_эфир", "пропан", "уксусная_кислота", "хлор"
@@ -42,6 +48,7 @@ public final class ChemItems {
             .displayItems((parameters, output) -> {
                 output.accept(new ItemStack(SUBSTANCE_VIAL.get()));
                 TEST_SUBSTANCES.forEach(alias -> output.accept(vial(alias)));
+                output.accept(new ItemStack(NATIVE_COPPER_ORE.get()));
                 MATERIAL_ITEMS.forEach(registration -> output.accept(new ItemStack(registration.holder().get())));
             })
             .build()

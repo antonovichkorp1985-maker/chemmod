@@ -18,6 +18,12 @@ class MaterialCatalogTest {
         assertEquals("Cu", nativeCopper.chemicalFormula)
         assertEquals(mapOf("Cu" to 1), nativeCopper.elementStoichiometry)
 
+        val deposit = catalog.deposits.getValue(DepositId.of("chemmod:overworld_native_copper"))
+        assertEquals(-32, deposit.minY)
+        assertEquals(80, deposit.maxY)
+        assertEquals(1, deposit.attemptsPerChunk)
+        assertEquals(setOf("minecraft:is_overworld"), deposit.dimensionTags)
+
         val copper = catalog.materials.getValue(MaterialId.of("chemmod:copper"))
         assertIs<MaterialSource.Mineral>(copper.source)
         assertTrue(MaterialForm.INGOT in copper.supportedForms)
