@@ -69,7 +69,7 @@ public final class OreWasherBlock extends Block {
         MaterialBatchContents washedBatch = washedBatch(batch, transition.getOutputForm(), result);
         ItemStack concentrate = ChemItems.materialStack(washedBatch);
         concentrate.setCount(transition.getOutputCount());
-        List<ItemStack> tailings = tailingStacks(result.tailingsMassMicrograms());
+        List<ItemStack> tailings = tailingStacks(result.getTailingsMassMicrograms());
         if (concentrate.isEmpty() || tailings.stream().anyMatch(ItemStack::isEmpty)) return ItemInteractionResult.FAIL;
 
         replaceOrConsumeInput(player, hand, held, transition.getInputCount(), concentrate);
