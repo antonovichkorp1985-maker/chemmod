@@ -95,6 +95,22 @@ public final class ChemItems {
         () -> new Item(new Item.Properties().stacksTo(1))
     );
 
+    public static final DeferredHolder<Item, DosimeterItem> DOSIMETER = ITEMS.register(
+        "dosimeter",
+        () -> new DosimeterItem(new Item.Properties().stacksTo(1))
+    );
+
+    /** A one-gram, 100% thorium-232 sealed creative calibration sample. */
+    public static final DeferredHolder<Item, RadioactiveSampleItem> THORIUM_232_REFERENCE_SOURCE = ITEMS.register(
+        "thorium_232_reference_source",
+        () -> new RadioactiveSampleItem(new Item.Properties()
+            .stacksTo(1)
+            .component(
+                ChemComponents.RADIOACTIVE_CONTENTS.get(),
+                new RadioactiveContents(RadiationNuclides.THORIUM_232, 1_000_000L, true)
+            ))
+    );
+
     private static final List<String> TEST_SUBSTANCES = List.of(
         "вода", "водород", "кислород", "углекислый_газ", "метан", "метанол",
         "этанол", "диметиловый_эфир", "пропан", "уксусная_кислота", "хлор"
@@ -123,6 +139,8 @@ public final class ChemItems {
                 output.accept(new ItemStack(METALWORKING_HAMMER.get()));
                 output.accept(new ItemStack(METALWORKING_CHISEL.get()));
                 output.accept(new ItemStack(DRAWPLATE.get()));
+                output.accept(new ItemStack(DOSIMETER.get()));
+                output.accept(new ItemStack(THORIUM_232_REFERENCE_SOURCE.get()));
                 MATERIAL_ITEMS.forEach(registration -> output.accept(new ItemStack(registration.holder().get())));
                 MOLTEN_ITEMS.forEach(registration -> output.accept(defaultMoltenStack(registration)));
             })

@@ -31,6 +31,12 @@ public final class ChemComponents {
             .networkSynchronized(ByteBufCodecs.VAR_INT)
             .build());
 
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<RadioactiveContents>> RADIOACTIVE_CONTENTS =
+        COMPONENTS.register("radioactive_contents", () -> DataComponentType.<RadioactiveContents>builder()
+            .persistent(RadioactiveContents.CODEC)
+            .networkSynchronized(RadioactiveContents.STREAM_CODEC)
+            .build());
+
     private ChemComponents() {}
 
     public static void register(IEventBus eventBus) {

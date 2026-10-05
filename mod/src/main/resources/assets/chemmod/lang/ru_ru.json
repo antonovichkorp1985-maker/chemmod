@@ -119,5 +119,20 @@
   "tooltip.chemmod.material.primary_mass": "Основного материала: %s г",
   "block.chemmod.kinetic_ore_separator": "Кинетический сепаратор руды",
   "message.chemmod.kinetic_separator.input": "Кинетический сепаратор: партия принята во вход",
-  "message.chemmod.kinetic_separator.output": "Кинетический сепаратор: результат извлечён"
+  "message.chemmod.kinetic_separator.output": "Кинетический сепаратор: результат извлечён",
+  "item.chemmod.dosimeter": "Дозиметр",
+  "item.chemmod.thorium_232_reference_source": "Герметичный эталонный источник тория-232",
+  "nuclide.chemmod.thorium_232": "Торий-232",
+  "tooltip.chemmod.radiation.contents_missing": "Отсутствуют данные радиоактивной пробы",
+  "tooltip.chemmod.radiation.nuclide": "Нуклид: %s",
+  "tooltip.chemmod.radiation.active_mass": "Масса активного изотопа: %s г",
+  "tooltip.chemmod.radiation.activity": "Активность: %s Бк",
+  "tooltip.chemmod.radiation.sealed": "Герметичный калибровочный источник",
+  "tooltip.chemmod.radiation.secular_equilibrium": "Для источника принято вековое равновесие",
+  "tooltip.chemmod.radiation.invalid": "Некорректные данные об излучении: %s",
+  "tooltip.chemmod.dosimeter.usage": "Используйте, держа пробу изотопа в другой руке",
+  "tooltip.chemmod.dosimeter.field_pending": "Сканирование поля и защиты: появится в мировом слое M6",
+  "message.chemmod.dosimeter.no_sample": "Держите пробу изотопа в другой руке, чтобы измерить её активность",
+  "message.chemmod.dosimeter.reading": "%s: %s Бк",
+  "message.chemmod.dosimeter.invalid": "Дозиметр не может прочитать эту пробу: %s"
 }

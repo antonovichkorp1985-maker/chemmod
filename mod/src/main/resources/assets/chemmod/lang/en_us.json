@@ -119,5 +119,20 @@
   "tooltip.chemmod.material.primary_mass": "Primary material: %s g",
   "block.chemmod.kinetic_ore_separator": "Kinetic Ore Separator",
   "message.chemmod.kinetic_separator.input": "Kinetic separator: batch accepted at input",
-  "message.chemmod.kinetic_separator.output": "Kinetic separator: output extracted"
+  "message.chemmod.kinetic_separator.output": "Kinetic separator: output extracted",
+  "item.chemmod.dosimeter": "Dosimeter",
+  "item.chemmod.thorium_232_reference_source": "Sealed Thorium-232 Reference Source",
+  "nuclide.chemmod.thorium_232": "Thorium-232",
+  "tooltip.chemmod.radiation.contents_missing": "Missing radioactive sample data",
+  "tooltip.chemmod.radiation.nuclide": "Nuclide: %s",
+  "tooltip.chemmod.radiation.active_mass": "Active isotope mass: %s g",
+  "tooltip.chemmod.radiation.activity": "Activity: %s Bq",
+  "tooltip.chemmod.radiation.sealed": "Sealed calibration source",
+  "tooltip.chemmod.radiation.secular_equilibrium": "Secular equilibrium assumed for this source",
+  "tooltip.chemmod.radiation.invalid": "Invalid radiation data: %s",
+  "tooltip.chemmod.dosimeter.usage": "Use while holding an isotope sample in the other hand",
+  "tooltip.chemmod.dosimeter.field_pending": "Field and shielding scan: pending M6 world layer",
+  "message.chemmod.dosimeter.no_sample": "Hold an isotope sample in the other hand to measure its activity",
+  "message.chemmod.dosimeter.reading": "%s: %s Bq",
+  "message.chemmod.dosimeter.invalid": "Dosimeter cannot read this sample: %s"
 }
