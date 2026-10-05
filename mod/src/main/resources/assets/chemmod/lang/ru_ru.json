@@ -102,5 +102,9 @@
   "tooltip.chemmod.material.form": "Каноническая форма: %s",
   "tooltip.chemmod.material.missing": "Отсутствуют данные партии материала",
   "tooltip.chemmod.schema": "Схема данных: v%s",
-  "item.chemmod.metalworking_chisel": "Зубило для металла"
+  "item.chemmod.metalworking_chisel": "Зубило для металла",
+  "block.chemmod.copper_block": "Складской блок меди",
+  "material_form.chemmod.block": "складской блок",
+  "material_form.chemmod.gear": "шестерня",
+  "message.chemmod.process.needs_count": "В удерживаемой стопке требуется одинаковых форм материала: %s"
 }

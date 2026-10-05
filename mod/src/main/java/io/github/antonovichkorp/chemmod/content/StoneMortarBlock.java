@@ -44,6 +44,14 @@ public final class StoneMortarBlock extends Block {
         if (transition == null) {
             return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
+        if (held.getCount() < transition.getInputCount()) {
+            if (!level.isClientSide()) {
+                player.displayClientMessage(Component.translatable(
+                    "message.chemmod.process.needs_count", transition.getInputCount()
+                ), true);
+            }
+            return ItemInteractionResult.FAIL;
+        }
         if (level.isClientSide()) {
             return ItemInteractionResult.SUCCESS;
         }
@@ -53,14 +61,15 @@ public final class StoneMortarBlock extends Block {
             transition.getOutputForm(),
             transition.getOutputMassMicrograms()
         );
+        output.setCount(transition.getOutputCount());
         if (output.isEmpty()) {
             return ItemInteractionResult.FAIL;
         }
 
-        if (held.getCount() == 1) {
+        if (held.getCount() == transition.getInputCount()) {
             player.setItemInHand(hand, output);
         } else {
-            held.shrink(1);
+            held.shrink(transition.getInputCount());
             if (!player.getInventory().add(output)) {
                 player.drop(output, false);
             }

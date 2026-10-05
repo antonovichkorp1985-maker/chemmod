@@ -58,6 +58,14 @@ public final class MetalworkingBenchBlock extends Block {
 
         MaterialTransitionSpec transition = findTransition(batch, machineTag);
         if (transition == null) return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+        if (held.getCount() < transition.getInputCount()) {
+            if (!level.isClientSide()) {
+                player.displayClientMessage(Component.translatable(
+                    "message.chemmod.process.needs_count", transition.getInputCount()
+                ), true);
+            }
+            return ItemInteractionResult.FAIL;
+        }
         if (level.isClientSide()) return ItemInteractionResult.SUCCESS;
 
         ItemStack output = ChemItems.materialStack(
@@ -68,10 +76,10 @@ public final class MetalworkingBenchBlock extends Block {
         output.setCount(transition.getOutputCount());
         if (output.isEmpty()) return ItemInteractionResult.FAIL;
 
-        if (held.getCount() == 1) {
+        if (held.getCount() == transition.getInputCount()) {
             player.setItemInHand(hand, output);
         } else {
-            held.shrink(1);
+            held.shrink(transition.getInputCount());
             if (!player.getInventory().add(output)) player.drop(output, false);
         }
         level.playSound(null, pos, SoundEvents.ANVIL_USE, SoundSource.BLOCKS, 0.65F, 1.2F);

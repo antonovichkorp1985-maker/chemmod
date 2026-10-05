@@ -40,6 +40,14 @@ public final class RefractoryFurnaceBlock extends Block {
         MaterialBatchContents batch = held.get(ChemComponents.MATERIAL_BATCH.get());
         MaterialTransitionSpec transition = batch == null ? null : findTransition(batch);
         if (transition == null) return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+        if (held.getCount() < transition.getInputCount()) {
+            if (!level.isClientSide()) {
+                player.displayClientMessage(Component.translatable(
+                    "message.chemmod.process.needs_count", transition.getInputCount()
+                ), true);
+            }
+            return ItemInteractionResult.FAIL;
+        }
         if (level.isClientSide()) return ItemInteractionResult.SUCCESS;
 
         ItemStack fuel = player.getItemInHand(
@@ -65,10 +73,11 @@ public final class RefractoryFurnaceBlock extends Block {
             transition.getOutputMassMicrograms(),
             temperatureMillikelvin
         );
+        output.setCount(transition.getOutputCount());
         if (output.isEmpty()) return ItemInteractionResult.FAIL;
 
         if (!player.getAbilities().instabuild) {
-            held.shrink(1);
+            held.shrink(transition.getInputCount());
             fuel.shrink(1);
             player.getInventory().getItem(crucibleSlot).shrink(1);
         }

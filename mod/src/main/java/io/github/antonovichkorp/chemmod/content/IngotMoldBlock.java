@@ -42,6 +42,14 @@ public final class IngotMoldBlock extends Block {
         if (transition == null || temperature == null) {
             return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
+        if (held.getCount() < transition.getInputCount()) {
+            if (!level.isClientSide()) {
+                player.displayClientMessage(Component.translatable(
+                    "message.chemmod.process.needs_count", transition.getInputCount()
+                ), true);
+            }
+            return ItemInteractionResult.FAIL;
+        }
         if (level.isClientSide()) return ItemInteractionResult.SUCCESS;
 
         Double maximum = transition.getMaximumTemperatureKelvin();
@@ -55,9 +63,15 @@ public final class IngotMoldBlock extends Block {
             transition.getOutputForm(),
             transition.getOutputMassMicrograms()
         );
+        output.setCount(transition.getOutputCount());
         if (output.isEmpty()) return ItemInteractionResult.FAIL;
 
-        player.setItemInHand(hand, output);
+        if (held.getCount() == transition.getInputCount()) {
+            player.setItemInHand(hand, output);
+        } else {
+            held.shrink(transition.getInputCount());
+            if (!player.getInventory().add(output)) player.drop(output, false);
+        }
         ItemStack emptyCrucible = new ItemStack(ChemItems.CERAMIC_CRUCIBLE.get());
         if (!player.getInventory().add(emptyCrucible)) player.drop(emptyCrucible, false);
         level.playSound(null, pos, SoundEvents.ANVIL_PLACE, SoundSource.BLOCKS, 0.6F, 1.4F);

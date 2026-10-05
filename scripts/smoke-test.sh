@@ -96,6 +96,22 @@ jar tf "$mod_jar" | grep -q 'ChemBlocks.class$' || {
     echo "Smoke-test failure: canonical world blocks are missing" >&2
     exit 1
 }
+jar tf "$mod_jar" | grep -q 'CopperStorageBlockEntity.class$' || {
+    echo "Smoke-test failure: persistent copper storage block entity is missing" >&2
+    exit 1
+}
+jar tf "$mod_jar" | grep -q '^assets/chemmod/blockstates/copper_block.json$' || {
+    echo "Smoke-test failure: copper storage block state is missing" >&2
+    exit 1
+}
+jar tf "$mod_jar" | grep -q '^data/c/tags/item/storage_blocks/copper.json$' || {
+    echo "Smoke-test failure: common copper storage tag is missing" >&2
+    exit 1
+}
+jar tf "$mod_jar" | grep -q '^data/chemmod/loot_table/blocks/copper_block.json$' || {
+    echo "Smoke-test failure: state-preserving copper storage loot table is missing" >&2
+    exit 1
+}
 jar tf "$mod_jar" | grep -q '^data/chemmod/worldgen/placed_feature/native_copper_ore.json$' || {
     echo "Smoke-test failure: native copper worldgen is missing" >&2
     exit 1
@@ -126,6 +142,14 @@ jar tf "$mod_jar" | grep -q '^assets/chemmod/models/item/molten_copper_crucible.
 }
 jar tf "$mod_jar" | grep -q 'MetalworkingBenchBlock.class$' || {
     echo "Smoke-test failure: canonical metal forming adapter is missing" >&2
+    exit 1
+}
+jar tf "$mod_jar" | grep -q '^assets/chemmod/models/item/copper_gear.json$' || {
+    echo "Smoke-test failure: finished copper gear model is missing" >&2
+    exit 1
+}
+jar tf "$mod_jar" | grep -q '^data/c/tags/item/gears/copper.json$' || {
+    echo "Smoke-test failure: common copper gear tag is missing" >&2
     exit 1
 }
 jar tf "$mod_jar" | grep -q '^data/chemmod/recipe/metalworking_chisel.json$' || {

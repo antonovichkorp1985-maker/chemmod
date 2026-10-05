@@ -33,6 +33,18 @@ public final class ChemItems {
         () -> new BlockItem(ChemBlocks.NATIVE_COPPER_ORE.get(), new Item.Properties())
     );
 
+    public static final DeferredHolder<Item, MaterialBlockItem> COPPER_BLOCK = ITEMS.register(
+        "copper_block",
+        () -> new MaterialBlockItem(
+            new Item.Properties()
+                .stacksTo(1)
+                .component(ChemComponents.MATERIAL_BATCH.get(), CopperStorageBlockEntity.defaultBatch()),
+            ChemBlocks.COPPER_BLOCK.get(),
+            CopperStorageBlockEntity.MATERIAL_ID,
+            CopperStorageBlockEntity.FORM
+        )
+    );
+
     public static final DeferredHolder<Item, BlockItem> STONE_MORTAR = ITEMS.register(
         "stone_mortar",
         () -> new BlockItem(ChemBlocks.STONE_MORTAR.get(), new Item.Properties())
@@ -90,6 +102,7 @@ public final class ChemItems {
                 output.accept(new ItemStack(SUBSTANCE_VIAL.get()));
                 TEST_SUBSTANCES.forEach(alias -> output.accept(vial(alias)));
                 output.accept(new ItemStack(NATIVE_COPPER_ORE.get()));
+                output.accept(copperStorageBlockStack(CopperStorageBlockEntity.defaultBatch()));
                 output.accept(new ItemStack(STONE_MORTAR.get()));
                 output.accept(new ItemStack(REFRACTORY_FURNACE.get()));
                 output.accept(new ItemStack(INGOT_MOLD.get()));
@@ -147,6 +160,7 @@ public final class ChemItems {
     private static MaterialBatchContents defaultBatch(MaterialItemSpec spec) {
         long massMicrograms = switch (spec.getFormName()) {
             case "NUGGET" -> 125_000_000L;
+            case "BLOCK" -> CopperStorageBlockEntity.MASS_MICROGRAMS;
             default -> 1_000_000_000L;
         };
         return new MaterialBatchContents(spec.getMaterialId(), spec.getFormName(), massMicrograms, 1_000_000);
@@ -182,6 +196,17 @@ public final class ChemItems {
         String outputForm,
         long outputMassMicrograms
     ) {
+        if (CopperStorageBlockEntity.FORM.equals(outputForm)
+            && CopperStorageBlockEntity.MATERIAL_ID.equals(input.materialId())) {
+            return copperStorageBlockStack(new MaterialBatchContents(
+                MaterialBatchContents.CURRENT_SCHEMA,
+                input.materialId(),
+                outputForm,
+                outputMassMicrograms,
+                input.purityPpm(),
+                input.impuritiesPpm()
+            ));
+        }
         for (MaterialItemRegistration registration : MATERIAL_ITEMS) {
             MaterialItemSpec spec = registration.spec();
             if (spec.getMaterialId().equals(input.materialId()) && spec.getFormName().equals(outputForm)) {
@@ -198,6 +223,18 @@ public final class ChemItems {
             }
         }
         return ItemStack.EMPTY;
+    }
+
+    /** Creates the only supported placeable material form while retaining the exact material batch. */
+    public static ItemStack copperStorageBlockStack(MaterialBatchContents batch) {
+        if (!CopperStorageBlockEntity.MATERIAL_ID.equals(batch.materialId())
+            || !CopperStorageBlockEntity.FORM.equals(batch.form())
+            || batch.massMicrograms() != CopperStorageBlockEntity.MASS_MICROGRAMS) {
+            return ItemStack.EMPTY;
+        }
+        ItemStack result = new ItemStack(COPPER_BLOCK.get());
+        result.set(ChemComponents.MATERIAL_BATCH.get(), batch);
+        return result;
     }
 
     public static ItemStack moltenStack(

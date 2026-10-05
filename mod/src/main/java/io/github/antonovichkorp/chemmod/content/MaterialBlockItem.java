@@ -1,19 +1,21 @@
 package io.github.antonovichkorp.chemmod.content;
 
 import net.minecraft.network.chat.Component;
-import net.minecraft.world.item.Item;
+import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.level.block.Block;
 
 import java.util.List;
 import java.util.Locale;
 
-public final class MaterialFormItem extends Item {
+/** Placeable canonical storage form; its batch component is transferred to the block entity on placement. */
+public final class MaterialBlockItem extends BlockItem {
     private final String materialPath;
     private final String formName;
 
-    public MaterialFormItem(Properties properties, String materialId, String formName) {
-        super(properties);
+    public MaterialBlockItem(Properties properties, Block block, String materialId, String formName) {
+        super(block, properties);
         this.materialPath = materialId.substring(materialId.indexOf(':') + 1);
         this.formName = formName.toLowerCase(Locale.ROOT);
     }

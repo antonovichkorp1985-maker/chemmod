@@ -27,6 +27,8 @@ class MaterialCatalogTest {
         val copper = catalog.materials.getValue(MaterialId.of("chemmod:copper"))
         assertIs<MaterialSource.Mineral>(copper.source)
         assertTrue(MaterialForm.INGOT in copper.supportedForms)
+        assertTrue(MaterialForm.BLOCK in copper.supportedForms)
+        assertTrue(MaterialForm.GEAR in copper.supportedForms)
         assertTrue(MaterialForm.LIQUID in copper.supportedForms)
 
         val melting = catalog.compiledProcesses.getValue(ProcessId.of("chemmod:melt_copper"))
@@ -36,7 +38,7 @@ class MaterialCatalogTest {
         assertEquals(1357.77, melting.conditions.minimumTemperatureKelvin)
 
         val itemForms = MaterialItemExports.bundledSolidForms()
-        assertEquals(8, itemForms.size)
+        assertEquals(9, itemForms.size)
         assertTrue(itemForms.any { it.registryPath == "copper_ingot" })
         assertTrue(itemForms.none { it.formName == MaterialForm.LIQUID.name })
 
@@ -51,25 +53,37 @@ class MaterialCatalogTest {
         assertEquals("molten_copper_crucible", moltenContainers.single().registryPath)
         assertEquals("LIQUID", moltenContainers.single().formName)
 
-        val meltingTransition = MaterialProcessExports.bundledMeltingTransitions().single()
-        assertEquals("DUST", meltingTransition.inputForm)
-        assertEquals("LIQUID", meltingTransition.outputForm)
-        assertEquals(1357.77, meltingTransition.minimumTemperatureKelvin)
+        val meltingTransitions = MaterialProcessExports.bundledMeltingTransitions()
+        assertEquals(7, meltingTransitions.size)
+        assertTrue(meltingTransitions.all { it.outputForm == "LIQUID" })
+        assertTrue(meltingTransitions.all { it.inputMassMicrograms * it.inputCount == 1_000_000_000L })
+        assertTrue(meltingTransitions.all { it.minimumTemperatureKelvin == 1357.77 })
         val castingTransition = MaterialProcessExports.bundledCastingTransitions().single()
         assertEquals("LIQUID", castingTransition.inputForm)
         assertEquals("INGOT", castingTransition.outputForm)
         assertEquals(1357.77, castingTransition.maximumTemperatureKelvin)
 
         val formingTransitions = MaterialProcessExports.bundledFormingTransitions()
-        assertEquals(4, formingTransitions.size)
+        assertEquals(8, formingTransitions.size)
         assertTrue(formingTransitions.any { it.inputForm == "INGOT" && it.outputForm == "PLATE" })
         assertTrue(formingTransitions.any { it.inputForm == "INGOT" && it.outputForm == "ROD" })
         assertTrue(formingTransitions.any { it.inputForm == "ROD" && it.outputForm == "WIRE" })
         val nuggets = formingTransitions.single { it.outputForm == "NUGGET" }
         assertEquals(8, nuggets.outputCount)
         assertEquals(125_000_000L, nuggets.outputMassMicrograms)
-        assertEquals(nuggets.inputMassMicrograms, nuggets.outputMassMicrograms * nuggets.outputCount)
-        assertTrue(formingTransitions.all { it.inputMassMicrograms == it.outputMassMicrograms * it.outputCount })
+        assertEquals(nuggets.inputMassMicrograms * nuggets.inputCount, nuggets.outputMassMicrograms * nuggets.outputCount)
+        val consolidation = formingTransitions.single { it.inputForm == "NUGGET" }
+        assertEquals(8, consolidation.inputCount)
+        assertEquals("INGOT", consolidation.outputForm)
+        assertTrue(formingTransitions.any { it.inputForm == "PLATE" && it.outputForm == "GEAR" })
+        val packing = formingTransitions.single { it.outputForm == "BLOCK" }
+        assertEquals("INGOT", packing.inputForm)
+        assertEquals(9, packing.inputCount)
+        assertEquals(9_000_000_000L, packing.outputMassMicrograms)
+        val unpacking = formingTransitions.single { it.inputForm == "BLOCK" }
+        assertEquals("INGOT", unpacking.outputForm)
+        assertEquals(9, unpacking.outputCount)
+        assertTrue(formingTransitions.all { it.inputMassMicrograms * it.inputCount == it.outputMassMicrograms * it.outputCount })
     }
 
     @Test

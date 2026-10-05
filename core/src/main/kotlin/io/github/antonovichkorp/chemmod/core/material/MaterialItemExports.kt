@@ -20,6 +20,10 @@ object MaterialItemExports {
         MaterialForm.GEAR,
     )
 
+    /**
+     * Forms represented by ordinary items. Placeable BLOCK forms are registered by
+     * the Minecraft adapter because they need a block entity to preserve batch state.
+     */
     @JvmStatic
     fun bundledSolidForms(): List<MaterialItemSpec> = forms(itemForms) { materialPath, form ->
         "${materialPath}_${form.name.lowercase()}"

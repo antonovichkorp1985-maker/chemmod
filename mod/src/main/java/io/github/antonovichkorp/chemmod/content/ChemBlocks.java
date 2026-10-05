@@ -26,6 +26,17 @@ public final class ChemBlocks {
         )
     );
 
+    public static final DeferredHolder<Block, CopperStorageBlock> COPPER_BLOCK = BLOCKS.register(
+        "copper_block",
+        () -> new CopperStorageBlock(
+            BlockBehaviour.Properties.of()
+                .mapColor(MapColor.METAL)
+                .requiresCorrectToolForDrops()
+                .strength(5.0F, 6.0F)
+                .sound(SoundType.METAL)
+        )
+    );
+
     public static final DeferredHolder<Block, StoneMortarBlock> STONE_MORTAR = BLOCKS.register(
         "stone_mortar",
         () -> new StoneMortarBlock(

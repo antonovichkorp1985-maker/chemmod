@@ -102,5 +102,9 @@
   "tooltip.chemmod.material.form": "Canonical form: %s",
   "tooltip.chemmod.material.missing": "Missing material batch data",
   "tooltip.chemmod.schema": "Data schema: v%s",
-  "item.chemmod.metalworking_chisel": "Metalworking Chisel"
+  "item.chemmod.metalworking_chisel": "Metalworking Chisel",
+  "block.chemmod.copper_block": "Copper Storage Block",
+  "material_form.chemmod.block": "storage block",
+  "material_form.chemmod.gear": "gear",
+  "message.chemmod.process.needs_count": "Need %s matching material forms in the held stack"
 }
