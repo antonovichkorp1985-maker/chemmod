@@ -59,6 +59,16 @@ public final class ChemBlocks {
         )
     );
 
+    public static final DeferredHolder<Block, MetalworkingBenchBlock> METALWORKING_BENCH = BLOCKS.register(
+        "metalworking_bench",
+        () -> new MetalworkingBenchBlock(
+            BlockBehaviour.Properties.of()
+                .mapColor(MapColor.WOOD)
+                .strength(2.5F, 6.0F)
+                .sound(SoundType.WOOD)
+        )
+    );
+
     private ChemBlocks() {}
 
     public static void register(IEventBus eventBus) {

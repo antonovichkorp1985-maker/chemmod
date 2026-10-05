@@ -124,6 +124,14 @@ jar tf "$mod_jar" | grep -q '^assets/chemmod/models/item/molten_copper_crucible.
     echo "Smoke-test failure: molten copper container model is missing" >&2
     exit 1
 }
+jar tf "$mod_jar" | grep -q 'MetalworkingBenchBlock.class$' || {
+    echo "Smoke-test failure: canonical metal forming adapter is missing" >&2
+    exit 1
+}
+jar tf "$mod_jar" | grep -q '^data/chemmod/recipe/drawplate.json$' || {
+    echo "Smoke-test failure: drawplate recipe is missing" >&2
+    exit 1
+}
 echo "NeoForge test jar: $mod_jar"
 
 ./scripts/server-smoke-test.sh

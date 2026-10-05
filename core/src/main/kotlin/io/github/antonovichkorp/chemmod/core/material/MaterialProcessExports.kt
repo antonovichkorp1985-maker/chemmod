@@ -27,6 +27,10 @@ object MaterialProcessExports {
     fun bundledCastingTransitions(): List<MaterialTransitionSpec> =
         bundledTransitions(setOf("chemmod:casting"))
 
+    @JvmStatic
+    fun bundledFormingTransitions(): List<MaterialTransitionSpec> =
+        bundledTransitions(setOf("chemmod:forming_hammer", "chemmod:drawing"))
+
     private fun bundledTransitions(machineTags: Set<String>): List<MaterialTransitionSpec> =
         MaterialCatalog.bundled().compiledProcesses.values
             .asSequence()

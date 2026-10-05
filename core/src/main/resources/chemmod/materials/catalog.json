@@ -141,6 +141,63 @@
       "conditions": {
         "maximumTemperatureKelvin": 1357.77
       }
+    },
+    {
+      "id": "chemmod:hammer_copper_plate",
+      "machineTag": "chemmod:forming_hammer",
+      "inputs": [
+        {
+          "material": "chemmod:copper",
+          "form": "ingot",
+          "massMicrograms": 1000000000
+        }
+      ],
+      "outputs": [
+        {
+          "material": "chemmod:copper",
+          "form": "plate",
+          "massMicrograms": 1000000000
+        }
+      ],
+      "durationTicks": 200
+    },
+    {
+      "id": "chemmod:draw_copper_rod",
+      "machineTag": "chemmod:drawing",
+      "inputs": [
+        {
+          "material": "chemmod:copper",
+          "form": "ingot",
+          "massMicrograms": 1000000000
+        }
+      ],
+      "outputs": [
+        {
+          "material": "chemmod:copper",
+          "form": "rod",
+          "massMicrograms": 1000000000
+        }
+      ],
+      "durationTicks": 200
+    },
+    {
+      "id": "chemmod:draw_copper_wire",
+      "machineTag": "chemmod:drawing",
+      "inputs": [
+        {
+          "material": "chemmod:copper",
+          "form": "rod",
+          "massMicrograms": 1000000000
+        }
+      ],
+      "outputs": [
+        {
+          "material": "chemmod:copper",
+          "form": "wire",
+          "massMicrograms": 1000000000
+        }
+      ],
+      "durationTicks": 200
     }
   ]
 }

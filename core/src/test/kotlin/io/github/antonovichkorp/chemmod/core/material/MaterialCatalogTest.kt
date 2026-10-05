@@ -59,6 +59,13 @@ class MaterialCatalogTest {
         assertEquals("LIQUID", castingTransition.inputForm)
         assertEquals("INGOT", castingTransition.outputForm)
         assertEquals(1357.77, castingTransition.maximumTemperatureKelvin)
+
+        val formingTransitions = MaterialProcessExports.bundledFormingTransitions()
+        assertEquals(3, formingTransitions.size)
+        assertTrue(formingTransitions.any { it.inputForm == "INGOT" && it.outputForm == "PLATE" })
+        assertTrue(formingTransitions.any { it.inputForm == "INGOT" && it.outputForm == "ROD" })
+        assertTrue(formingTransitions.any { it.inputForm == "ROD" && it.outputForm == "WIRE" })
+        assertTrue(formingTransitions.all { it.inputMassMicrograms == it.outputMassMicrograms })
     }
 
     @Test
