@@ -3,15 +3,29 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
+mode="${1:-standalone}"
+case "$mode" in
+    standalone)
+        gradle_args=(-Pchemmod.createRuntime=false)
+        ;;
+    create)
+        gradle_args=()
+        ;;
+    *)
+        echo "Usage: $0 [standalone|create]" >&2
+        exit 2
+        ;;
+esac
+
 run_dir="mod/run"
-log_file="$run_dir/chemmod-server-smoke.log"
+log_file="$run_dir/chemmod-server-smoke-${mode}.log"
 rm -rf "$run_dir/world"
 mkdir -p "$run_dir"
 printf 'eula=true\n' > "$run_dir/eula.txt"
 : > "$log_file"
 
-echo "==> Starting a headless NeoForge server for runtime data-pack validation"
-setsid ./gradlew --no-daemon :mod:runServer > "$log_file" 2>&1 &
+echo "==> Starting a headless NeoForge server (${mode})"
+setsid ./gradlew --no-daemon "${gradle_args[@]}" :mod:runServer > "$log_file" 2>&1 &
 server_pid=$!
 
 cleanup() {
@@ -28,7 +42,12 @@ while (( SECONDS < deadline )); do
             tail -n 200 "$log_file" >&2
             exit 1
         fi
-        echo "Headless NeoForge server reached a playable state"
+        if [[ "$mode" == "create" ]] && ! grep -Fq "ChemMod Create compatibility adapter enabled" "$log_file"; then
+            echo "Server smoke-test failure: Create was present but ChemMod did not activate its adapter" >&2
+            tail -n 200 "$log_file" >&2
+            exit 1
+        fi
+        echo "Headless NeoForge server reached a playable state (${mode})"
         exit 0
     fi
     if ! kill -0 "$server_pid" 2>/dev/null; then

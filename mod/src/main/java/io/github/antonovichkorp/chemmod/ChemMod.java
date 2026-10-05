@@ -14,11 +14,13 @@ import io.github.antonovichkorp.chemmod.content.ChemBlocks;
 import io.github.antonovichkorp.chemmod.content.ChemBlockEntities;
 import io.github.antonovichkorp.chemmod.content.ChemComponents;
 import io.github.antonovichkorp.chemmod.content.ChemItems;
+import io.github.antonovichkorp.chemmod.integration.create.CreateIntegration;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.ModList;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
@@ -35,6 +37,9 @@ public final class ChemMod {
         ChemBlocks.register(modEventBus);
         ChemBlockEntities.register(modEventBus);
         ChemItems.register(modEventBus);
+        if (ModList.get().isLoaded(CreateIntegration.MOD_ID)) {
+            CreateIntegration.register(modEventBus);
+        }
         NeoForge.EVENT_BUS.addListener(this::registerCommands);
     }
 

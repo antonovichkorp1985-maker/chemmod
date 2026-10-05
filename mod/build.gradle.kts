@@ -31,9 +31,37 @@ neoForge {
     }
 }
 
+val createApi = "maven.modrinth:LNytGWDc:UjX6dr61" // Create 6.0.10 for Minecraft 1.21.1
+val createRuntimeEnabled = providers.gradleProperty("chemmod.createRuntime")
+    .map(String::toBoolean)
+    .orElse(true)
+
+// ModDevGradle adds its repositories at project level, so this repository must
+// also live here rather than only in settings.gradle.kts.
+repositories {
+    maven {
+        name = "Modrinth"
+        url = uri("https://api.modrinth.com/maven")
+        content {
+            includeGroup("maven.modrinth")
+        }
+        metadataSources {
+            mavenPom()
+            artifact()
+        }
+    }
+}
+
 dependencies {
     implementation(project(":core"))
     add("additionalRuntimeClasspath", project(":core"))
+
+    // The adapter compiles against Create but never embeds it. The property lets
+    // the smoke suite prove ChemMod still starts when Create is absent.
+    compileOnly(createApi)
+    if (createRuntimeEnabled.get()) {
+        add("additionalRuntimeClasspath", createApi)
+    }
 
     jarJar(project(":core"))
     jarJar("org.jetbrains.kotlin:kotlin-stdlib:2.0.21")

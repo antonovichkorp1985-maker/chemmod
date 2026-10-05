@@ -76,6 +76,26 @@ unzip -p "$mod_jar" META-INF/neoforge.mods.toml | grep -q 'modId="tfc"' || {
     echo "Smoke-test failure: optional TerraFirmaCraft adapter metadata is missing" >&2
     exit 1
 }
+unzip -p "$mod_jar" META-INF/neoforge.mods.toml | grep -q 'modId="create"' || {
+    echo "Smoke-test failure: optional Create adapter metadata is missing" >&2
+    exit 1
+}
+jar tf "$mod_jar" | grep -q 'integration/create/KineticOreSeparatorBlock.class$' || {
+    echo "Smoke-test failure: Create kinetic separator adapter is missing" >&2
+    exit 1
+}
+jar tf "$mod_jar" | grep -q '^data/chemmod/recipe/kinetic_ore_separator.json$' || {
+    echo "Smoke-test failure: conditional Create kinetic separator recipe is missing" >&2
+    exit 1
+}
+jar tf "$mod_jar" | grep -q '^assets/chemmod/models/item/kinetic_ore_separator.json$' || {
+    echo "Smoke-test failure: Create kinetic separator item model is missing" >&2
+    exit 1
+}
+if jar tf "$mod_jar" | grep -q '^com/simibubi/create/'; then
+    echo "Smoke-test failure: Create classes were embedded instead of remaining optional" >&2
+    exit 1
+fi
 jar tf "$mod_jar" | grep -q 'TerraFirmaCraftWaterAdapter.class$' || {
     echo "Smoke-test failure: optional TerraFirmaCraft water adapter is missing" >&2
     exit 1
@@ -198,6 +218,9 @@ jar tf "$mod_jar" | grep -q '^data/chemmod/recipe/drawplate.json$' || {
 }
 echo "NeoForge test jar: $mod_jar"
 
-./scripts/server-smoke-test.sh
+# First prove the optional adapter does not hard-break a standalone ChemMod server,
+# then start the same headless server with Create on ModDevGradle's runtime classpath.
+./scripts/server-smoke-test.sh standalone
+./scripts/server-smoke-test.sh create
 
 echo "==> Smoke test passed"

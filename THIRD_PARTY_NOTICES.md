@@ -32,6 +32,17 @@ Copyright © 2015–2024 the original authors.
 Licensed under the Apache License, Version 2.0:
 <https://www.apache.org/licenses/LICENSE-2.0>
 
+## Create compatibility API
+
+ChemMod 0.8.0-test.1 compiles its optional kinetic-separator adapter against the
+public API of Create 6.0.10 for Minecraft 1.21.1. Create is **not embedded,
+redistributed, or copied** into ChemMod; it remains a separately installed optional
+runtime mod. No Create assets or source code are included in this repository.
+
+Create code is made available by The Create Team / The Creators of Create under
+its MIT code license; Create assets retain their separate All Rights Reserved
+status. See <https://github.com/Creators-of-Create/Create/blob/mc1.21.1-6.0.10/LICENSE.md>.
+
 ## Platform dependencies
 
 Minecraft, NeoForge, and their APIs are external platform dependencies and are

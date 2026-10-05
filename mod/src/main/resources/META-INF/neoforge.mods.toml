@@ -7,8 +7,8 @@ modId="chemmod"
 version="${modVersion}"
 displayName="ChemMod"
 description='''
-Predictive chemistry for Minecraft. This test build exposes /chem test so the
-molecular core and reaction balancer can be verified inside a real NeoForge game.
+Predictive chemistry and exact physical material batches for Minecraft.
+Optional adapters preserve ChemMod's server-authoritative processing model.
 '''
 authors="antonovichkorp1985-maker"
 
@@ -30,5 +30,12 @@ side="BOTH"
 modId="tfc"
 type="optional"
 versionRange="[4,)"
+ordering="AFTER"
+side="BOTH"
+
+[[dependencies.chemmod]]
+modId="create"
+type="optional"
+versionRange="[6.0.10,7)"
 ordering="AFTER"
 side="BOTH"

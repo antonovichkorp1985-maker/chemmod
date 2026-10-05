@@ -116,5 +116,8 @@
   "message.chemmod.separator.result": "Recovered %s g primary mineral and %s g remaining gangue",
   "message.chemmod.furnace.crucible_full": "This crucible already holds its maximum of %s g",
   "message.chemmod.mold.needs_mass": "Need at least %s g of molten material to cast one ingot",
-  "tooltip.chemmod.material.primary_mass": "Primary material: %s g"
+  "tooltip.chemmod.material.primary_mass": "Primary material: %s g",
+  "block.chemmod.kinetic_ore_separator": "Kinetic Ore Separator",
+  "message.chemmod.kinetic_separator.input": "Kinetic separator: batch accepted at input",
+  "message.chemmod.kinetic_separator.output": "Kinetic separator: output extracted"
 }
