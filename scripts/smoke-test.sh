@@ -128,6 +128,10 @@ jar tf "$mod_jar" | grep -q 'MetalworkingBenchBlock.class$' || {
     echo "Smoke-test failure: canonical metal forming adapter is missing" >&2
     exit 1
 }
+jar tf "$mod_jar" | grep -q '^data/chemmod/recipe/metalworking_chisel.json$' || {
+    echo "Smoke-test failure: count-aware cutting tool recipe is missing" >&2
+    exit 1
+}
 jar tf "$mod_jar" | grep -q '^data/chemmod/recipe/drawplate.json$' || {
     echo "Smoke-test failure: drawplate recipe is missing" >&2
     exit 1

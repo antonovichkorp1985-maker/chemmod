@@ -61,11 +61,15 @@ class MaterialCatalogTest {
         assertEquals(1357.77, castingTransition.maximumTemperatureKelvin)
 
         val formingTransitions = MaterialProcessExports.bundledFormingTransitions()
-        assertEquals(3, formingTransitions.size)
+        assertEquals(4, formingTransitions.size)
         assertTrue(formingTransitions.any { it.inputForm == "INGOT" && it.outputForm == "PLATE" })
         assertTrue(formingTransitions.any { it.inputForm == "INGOT" && it.outputForm == "ROD" })
         assertTrue(formingTransitions.any { it.inputForm == "ROD" && it.outputForm == "WIRE" })
-        assertTrue(formingTransitions.all { it.inputMassMicrograms == it.outputMassMicrograms })
+        val nuggets = formingTransitions.single { it.outputForm == "NUGGET" }
+        assertEquals(8, nuggets.outputCount)
+        assertEquals(125_000_000L, nuggets.outputMassMicrograms)
+        assertEquals(nuggets.inputMassMicrograms, nuggets.outputMassMicrograms * nuggets.outputCount)
+        assertTrue(formingTransitions.all { it.inputMassMicrograms == it.outputMassMicrograms * it.outputCount })
     }
 
     @Test

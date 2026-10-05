@@ -96,10 +96,11 @@
   "message.chemmod.furnace.needs_charcoal": "Держите древесный уголь в другой руке",
   "message.chemmod.furnace.needs_crucible": "В инвентаре нужен керамический тигель",
   "message.chemmod.mold.too_hot": "Расплав слишком горячий для затвердевания в изложнице",
-  "message.chemmod.bench.needs_tool": "Держите кузнечный молот или волочильную доску в другой руке",
+  "message.chemmod.bench.needs_tool": "Держите в другой руке кузнечный молот, зубило или волочильную доску",
   "tooltip.chemmod.material.impurity_entry": "  %s: %s%%",
   "tooltip.chemmod.material.id": "ID материала: %s",
   "tooltip.chemmod.material.form": "Каноническая форма: %s",
   "tooltip.chemmod.material.missing": "Отсутствуют данные партии материала",
-  "tooltip.chemmod.schema": "Схема данных: v%s"
+  "tooltip.chemmod.schema": "Схема данных: v%s",
+  "item.chemmod.metalworking_chisel": "Зубило для металла"
 }

@@ -4,9 +4,11 @@ data class ProcessStack(
     val materialId: MaterialId,
     val form: MaterialForm,
     val massMicrograms: Long,
+    val count: Int = 1,
 ) {
     init {
         require(massMicrograms > 0) { "Process stack mass must be positive" }
+        require(count > 0) { "Process stack count must be positive" }
     }
 }
 
@@ -58,7 +60,10 @@ data class RuntimeProcessStack(
     val material: MaterialDefinition,
     val form: MaterialForm,
     val massMicrograms: Long,
-)
+    val count: Int,
+) {
+    val totalMassMicrograms: Long = Math.multiplyExact(massMicrograms, count.toLong())
+}
 
 data class CompiledProcess(
     val id: ProcessId,
@@ -75,14 +80,23 @@ class ProcessCompiler(materials: Collection<MaterialDefinition>) {
         require(byId.size == materials.size) { "Duplicate material IDs" }
     }
 
-    fun compile(definition: ProcessDefinition): CompiledProcess = CompiledProcess(
-        id = definition.id,
-        machineTag = definition.machineTag,
-        inputs = definition.inputs.map(::compileStack),
-        outputs = definition.outputs.map(::compileStack),
-        durationTicks = definition.durationTicks,
-        conditions = definition.conditions,
-    )
+    fun compile(definition: ProcessDefinition): CompiledProcess {
+        val inputs = definition.inputs.map(::compileStack)
+        val outputs = definition.outputs.map(::compileStack)
+        val inputMass = inputs.sumOf(RuntimeProcessStack::totalMassMicrograms)
+        val outputMass = outputs.sumOf(RuntimeProcessStack::totalMassMicrograms)
+        require(inputMass == outputMass) {
+            "Process ${definition.id} does not conserve mass: $inputMass != $outputMass micrograms"
+        }
+        return CompiledProcess(
+            id = definition.id,
+            machineTag = definition.machineTag,
+            inputs = inputs,
+            outputs = outputs,
+            durationTicks = definition.durationTicks,
+            conditions = definition.conditions,
+        )
+    }
 
     private fun compileStack(stack: ProcessStack): RuntimeProcessStack {
         val material = requireNotNull(materialsById[stack.materialId]) {
@@ -91,6 +105,6 @@ class ProcessCompiler(materials: Collection<MaterialDefinition>) {
         require(stack.form in material.supportedForms) {
             "Material ${stack.materialId} does not support form ${stack.form}"
         }
-        return RuntimeProcessStack(material, stack.form, stack.massMicrograms)
+        return RuntimeProcessStack(material, stack.form, stack.massMicrograms, stack.count)
     }
 }

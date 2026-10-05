@@ -9,6 +9,7 @@ data class MaterialTransitionSpec(
     val outputForm: String,
     val inputMassMicrograms: Long,
     val outputMassMicrograms: Long,
+    val outputCount: Int,
     val durationTicks: Int,
     val minimumTemperatureKelvin: Double?,
     val maximumTemperatureKelvin: Double?,
@@ -29,7 +30,7 @@ object MaterialProcessExports {
 
     @JvmStatic
     fun bundledFormingTransitions(): List<MaterialTransitionSpec> =
-        bundledTransitions(setOf("chemmod:forming_hammer", "chemmod:drawing"))
+        bundledTransitions(setOf("chemmod:forming_hammer", "chemmod:drawing", "chemmod:cutting"))
 
     private fun bundledTransitions(machineTags: Set<String>): List<MaterialTransitionSpec> =
         MaterialCatalog.bundled().compiledProcesses.values
@@ -50,6 +51,7 @@ object MaterialProcessExports {
                     outputForm = output.form.name,
                     inputMassMicrograms = input.massMicrograms,
                     outputMassMicrograms = output.massMicrograms,
+                    outputCount = output.count,
                     durationTicks = process.durationTicks,
                     minimumTemperatureKelvin = process.conditions.minimumTemperatureKelvin,
                     maximumTemperatureKelvin = process.conditions.maximumTemperatureKelvin,

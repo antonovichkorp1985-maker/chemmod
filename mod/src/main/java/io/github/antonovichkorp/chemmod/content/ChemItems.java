@@ -63,6 +63,11 @@ public final class ChemItems {
         () -> new Item(new Item.Properties().stacksTo(1))
     );
 
+    public static final DeferredHolder<Item, Item> METALWORKING_CHISEL = ITEMS.register(
+        "metalworking_chisel",
+        () -> new Item(new Item.Properties().stacksTo(1))
+    );
+
     public static final DeferredHolder<Item, Item> DRAWPLATE = ITEMS.register(
         "drawplate",
         () -> new Item(new Item.Properties().stacksTo(1))
@@ -91,6 +96,7 @@ public final class ChemItems {
                 output.accept(new ItemStack(METALWORKING_BENCH.get()));
                 output.accept(new ItemStack(CERAMIC_CRUCIBLE.get()));
                 output.accept(new ItemStack(METALWORKING_HAMMER.get()));
+                output.accept(new ItemStack(METALWORKING_CHISEL.get()));
                 output.accept(new ItemStack(DRAWPLATE.get()));
                 MATERIAL_ITEMS.forEach(registration -> output.accept(new ItemStack(registration.holder().get())));
                 MOLTEN_ITEMS.forEach(registration -> output.accept(defaultMoltenStack(registration)));
@@ -140,7 +146,7 @@ public final class ChemItems {
 
     private static MaterialBatchContents defaultBatch(MaterialItemSpec spec) {
         long massMicrograms = switch (spec.getFormName()) {
-            case "NUGGET" -> 111_111_111L;
+            case "NUGGET" -> 125_000_000L;
             default -> 1_000_000_000L;
         };
         return new MaterialBatchContents(spec.getMaterialId(), spec.getFormName(), massMicrograms, 1_000_000);

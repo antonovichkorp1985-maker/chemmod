@@ -198,6 +198,26 @@
         }
       ],
       "durationTicks": 200
+    },
+    {
+      "id": "chemmod:cut_copper_nuggets",
+      "machineTag": "chemmod:cutting",
+      "inputs": [
+        {
+          "material": "chemmod:copper",
+          "form": "ingot",
+          "massMicrograms": 1000000000
+        }
+      ],
+      "outputs": [
+        {
+          "material": "chemmod:copper",
+          "form": "nugget",
+          "massMicrograms": 125000000,
+          "count": 8
+        }
+      ],
+      "durationTicks": 200
     }
   ]
 }

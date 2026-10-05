@@ -45,6 +45,8 @@ public final class MetalworkingBenchBlock extends Block {
         String machineTag;
         if (tool.is(ChemItems.METALWORKING_HAMMER.get())) {
             machineTag = "chemmod:forming_hammer";
+        } else if (tool.is(ChemItems.METALWORKING_CHISEL.get())) {
+            machineTag = "chemmod:cutting";
         } else if (tool.is(ChemItems.DRAWPLATE.get())) {
             machineTag = "chemmod:drawing";
         } else {
@@ -63,6 +65,7 @@ public final class MetalworkingBenchBlock extends Block {
             transition.getOutputForm(),
             transition.getOutputMassMicrograms()
         );
+        output.setCount(transition.getOutputCount());
         if (output.isEmpty()) return ItemInteractionResult.FAIL;
 
         if (held.getCount() == 1) {

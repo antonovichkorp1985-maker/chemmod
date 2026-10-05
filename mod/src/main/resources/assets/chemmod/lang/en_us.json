@@ -96,10 +96,11 @@
   "message.chemmod.furnace.needs_charcoal": "Hold charcoal in the other hand",
   "message.chemmod.furnace.needs_crucible": "A ceramic crucible is required in your inventory",
   "message.chemmod.mold.too_hot": "The melt is too hot to solidify in this mold",
-  "message.chemmod.bench.needs_tool": "Hold a metalworking hammer or drawplate in the other hand",
+  "message.chemmod.bench.needs_tool": "Hold a metalworking hammer, chisel, or drawplate in the other hand",
   "tooltip.chemmod.material.impurity_entry": "  %s: %s%%",
   "tooltip.chemmod.material.id": "Material ID: %s",
   "tooltip.chemmod.material.form": "Canonical form: %s",
   "tooltip.chemmod.material.missing": "Missing material batch data",
-  "tooltip.chemmod.schema": "Data schema: v%s"
+  "tooltip.chemmod.schema": "Data schema: v%s",
+  "item.chemmod.metalworking_chisel": "Metalworking Chisel"
 }

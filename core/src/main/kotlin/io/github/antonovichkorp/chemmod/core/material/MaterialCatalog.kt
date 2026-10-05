@@ -209,11 +209,13 @@ private data class ProcessStackDocument(
     val material: String,
     val form: String,
     val massMicrograms: Long,
+    val count: Int = 1,
 ) {
     fun toDomain() = ProcessStack(
         materialId = MaterialId.of(material),
         form = enumValue(form, "process material form"),
         massMicrograms = massMicrograms,
+        count = count,
     )
 }
 
