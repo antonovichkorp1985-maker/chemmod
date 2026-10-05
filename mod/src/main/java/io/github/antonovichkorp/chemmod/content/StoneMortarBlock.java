@@ -3,6 +3,7 @@ package io.github.antonovichkorp.chemmod.content;
 import io.github.antonovichkorp.chemmod.core.material.MaterialProcessExports;
 import io.github.antonovichkorp.chemmod.core.material.MaterialTransitionSpec;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
