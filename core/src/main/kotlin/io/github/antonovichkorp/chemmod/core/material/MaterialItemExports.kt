@@ -11,6 +11,7 @@ object MaterialItemExports {
     private val itemForms = setOf(
         MaterialForm.ORE,
         MaterialForm.CRUSHED_ORE,
+        MaterialForm.PURIFIED_CRUSHED_ORE,
         MaterialForm.DUST,
         MaterialForm.INGOT,
         MaterialForm.NUGGET,

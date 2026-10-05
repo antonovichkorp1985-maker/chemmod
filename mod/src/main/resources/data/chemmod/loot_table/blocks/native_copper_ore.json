@@ -9,6 +9,23 @@
           "name": "chemmod:copper_ore"
         }
       ],
+      "functions": [
+        {
+          "function": "minecraft:set_components",
+          "components": {
+            "chemmod:material_batch": {
+              "schema_version": 1,
+              "material_id": "chemmod:copper",
+              "form": "ORE",
+              "mass_micrograms": 1000000000,
+              "purity_ppm": 850000,
+              "impurities_ppm": {
+                "chemmod:silicate_gangue": 150000
+              }
+            }
+          }
+        }
+      ],
       "conditions": [
         {
           "condition": "minecraft:survives_explosion"

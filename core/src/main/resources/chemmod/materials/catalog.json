@@ -22,6 +22,15 @@
         "Cu": 1
       },
       "hardnessMohs": 3.0
+    },
+    {
+      "id": "chemmod:quartz",
+      "chemicalFormula": "SiO2",
+      "elementStoichiometry": {
+        "Si": 1,
+        "O": 2
+      },
+      "hardnessMohs": 7.0
     }
   ],
   "deposits": [
@@ -48,6 +57,7 @@
       "supportedForms": [
         "ore",
         "crushed_ore",
+        "purified_crushed_ore",
         "dust",
         "liquid",
         "ingot",
@@ -57,6 +67,16 @@
         "rod",
         "wire",
         "gear"
+      ]
+    },
+    {
+      "id": "chemmod:silicate_gangue",
+      "source": {
+        "type": "mineral",
+        "id": "chemmod:quartz"
+      },
+      "supportedForms": [
+        "dust"
       ]
     }
   ],
@@ -87,6 +107,44 @@
         {
           "material": "chemmod:copper",
           "form": "crushed_ore",
+          "massMicrograms": 1000000000
+        }
+      ],
+      "outputs": [
+        {
+          "material": "chemmod:copper",
+          "form": "dust",
+          "massMicrograms": 1000000000
+        }
+      ],
+      "durationTicks": 200
+    },
+    {
+      "id": "chemmod:wash_native_copper",
+      "machineTag": "chemmod:washing",
+      "inputs": [
+        {
+          "material": "chemmod:copper",
+          "form": "crushed_ore",
+          "massMicrograms": 1000000000
+        }
+      ],
+      "outputs": [
+        {
+          "material": "chemmod:copper",
+          "form": "purified_crushed_ore",
+          "massMicrograms": 1000000000
+        }
+      ],
+      "durationTicks": 300
+    },
+    {
+      "id": "chemmod:grind_purified_native_copper",
+      "machineTag": "chemmod:grinding",
+      "inputs": [
+        {
+          "material": "chemmod:copper",
+          "form": "purified_crushed_ore",
           "massMicrograms": 1000000000
         }
       ],

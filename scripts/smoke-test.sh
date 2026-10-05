@@ -124,6 +124,26 @@ jar tf "$mod_jar" | grep -q 'StoneMortarBlock.class$' || {
     echo "Smoke-test failure: manual material processing block is missing" >&2
     exit 1
 }
+jar tf "$mod_jar" | grep -q 'OreWasherBlock.class$' || {
+    echo "Smoke-test failure: water-gated ore washer is missing" >&2
+    exit 1
+}
+jar tf "$mod_jar" | grep -q '^assets/chemmod/models/item/copper_purified_crushed_ore.json$' || {
+    echo "Smoke-test failure: purified copper ore form model is missing" >&2
+    exit 1
+}
+jar tf "$mod_jar" | grep -q '^data/chemmod/recipe/ore_washer.json$' || {
+    echo "Smoke-test failure: ore washer recipe is missing" >&2
+    exit 1
+}
+jar tf "$mod_jar" | grep -q '^data/c/tags/item/purified_crushed_ores/copper.json$' || {
+    echo "Smoke-test failure: common purified copper ore tag is missing" >&2
+    exit 1
+}
+unzip -p "$mod_jar" data/chemmod/loot_table/blocks/native_copper_ore.json | grep -q 'silicate_gangue' || {
+    echo "Smoke-test failure: mined copper ore does not carry measured gangue" >&2
+    exit 1
+}
 jar tf "$mod_jar" | grep -q '^data/chemmod/recipe/stone_mortar.json$' || {
     echo "Smoke-test failure: stone mortar recipe is missing" >&2
     exit 1

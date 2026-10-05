@@ -55,7 +55,7 @@ public final class MoltenMaterialItem extends Item {
             tooltip.add(Component.translatable("tooltip.chemmod.material.impurities").withStyle(ChatFormatting.YELLOW));
             batch.impuritiesPpm().forEach((id, ppm) -> tooltip.add(Component.translatable(
                 "tooltip.chemmod.material.impurity_entry",
-                id,
+                MaterialItemPresentation.materialName(id),
                 String.format(Locale.ROOT, "%.4f", ppm / 10_000.0)
             ).withStyle(ChatFormatting.DARK_GRAY)));
         }

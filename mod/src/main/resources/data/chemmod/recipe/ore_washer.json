@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": ["P P", "BCB", "B B"],
+  "key": {
+    "P": {"item": "chemmod:copper_plate"},
+    "B": {"item": "minecraft:brick"},
+    "C": {"item": "minecraft:cauldron"}
+  },
+  "result": {"id": "chemmod:ore_washer", "count": 1}
+}

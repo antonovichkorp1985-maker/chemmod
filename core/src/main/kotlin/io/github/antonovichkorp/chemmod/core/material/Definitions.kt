@@ -91,6 +91,7 @@ sealed interface MaterialSource {
 enum class MaterialForm {
     ORE,
     CRUSHED_ORE,
+    PURIFIED_CRUSHED_ORE,
     DUST,
     INGOT,
     NUGGET,

@@ -48,6 +48,17 @@ public final class ChemBlocks {
         )
     );
 
+    public static final DeferredHolder<Block, OreWasherBlock> ORE_WASHER = BLOCKS.register(
+        "ore_washer",
+        () -> new OreWasherBlock(
+            BlockBehaviour.Properties.of()
+                .mapColor(MapColor.STONE)
+                .requiresCorrectToolForDrops()
+                .strength(3.0F, 6.0F)
+                .sound(SoundType.STONE)
+        )
+    );
+
     public static final DeferredHolder<Block, RefractoryFurnaceBlock> REFRACTORY_FURNACE = BLOCKS.register(
         "refractory_furnace",
         () -> new RefractoryFurnaceBlock(

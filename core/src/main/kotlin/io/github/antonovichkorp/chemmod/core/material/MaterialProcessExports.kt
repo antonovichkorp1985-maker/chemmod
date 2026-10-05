@@ -30,6 +30,10 @@ object MaterialProcessExports {
         bundledTransitions(setOf("chemmod:casting"))
 
     @JvmStatic
+    fun bundledWashingTransitions(): List<MaterialTransitionSpec> =
+        bundledTransitions(setOf("chemmod:washing"))
+
+    @JvmStatic
     fun bundledFormingTransitions(): List<MaterialTransitionSpec> =
         bundledTransitions(setOf("chemmod:forming_hammer", "chemmod:drawing", "chemmod:cutting"))
 

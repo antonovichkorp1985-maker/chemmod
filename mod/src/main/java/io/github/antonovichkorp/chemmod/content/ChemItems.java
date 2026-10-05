@@ -50,6 +50,11 @@ public final class ChemItems {
         () -> new BlockItem(ChemBlocks.STONE_MORTAR.get(), new Item.Properties())
     );
 
+    public static final DeferredHolder<Item, BlockItem> ORE_WASHER = ITEMS.register(
+        "ore_washer",
+        () -> new BlockItem(ChemBlocks.ORE_WASHER.get(), new Item.Properties())
+    );
+
     public static final DeferredHolder<Item, BlockItem> REFRACTORY_FURNACE = ITEMS.register(
         "refractory_furnace",
         () -> new BlockItem(ChemBlocks.REFRACTORY_FURNACE.get(), new Item.Properties())
@@ -104,6 +109,7 @@ public final class ChemItems {
                 output.accept(new ItemStack(NATIVE_COPPER_ORE.get()));
                 output.accept(copperStorageBlockStack(CopperStorageBlockEntity.defaultBatch()));
                 output.accept(new ItemStack(STONE_MORTAR.get()));
+                output.accept(new ItemStack(ORE_WASHER.get()));
                 output.accept(new ItemStack(REFRACTORY_FURNACE.get()));
                 output.accept(new ItemStack(INGOT_MOLD.get()));
                 output.accept(new ItemStack(METALWORKING_BENCH.get()));
@@ -191,34 +197,33 @@ public final class ChemItems {
         return stack;
     }
 
+    /** Copies a batch into another canonical form without changing its measured composition. */
     public static ItemStack materialStack(
         MaterialBatchContents input,
         String outputForm,
         long outputMassMicrograms
     ) {
-        if (CopperStorageBlockEntity.FORM.equals(outputForm)
-            && CopperStorageBlockEntity.MATERIAL_ID.equals(input.materialId())) {
-            return copperStorageBlockStack(new MaterialBatchContents(
-                MaterialBatchContents.CURRENT_SCHEMA,
-                input.materialId(),
-                outputForm,
-                outputMassMicrograms,
-                input.purityPpm(),
-                input.impuritiesPpm()
-            ));
+        return materialStack(new MaterialBatchContents(
+            MaterialBatchContents.CURRENT_SCHEMA,
+            input.materialId(),
+            outputForm,
+            outputMassMicrograms,
+            input.purityPpm(),
+            input.impuritiesPpm()
+        ));
+    }
+
+    /** Creates a canonical item from an already measured batch, for processes that alter composition. */
+    public static ItemStack materialStack(MaterialBatchContents batch) {
+        if (CopperStorageBlockEntity.FORM.equals(batch.form())
+            && CopperStorageBlockEntity.MATERIAL_ID.equals(batch.materialId())) {
+            return copperStorageBlockStack(batch);
         }
         for (MaterialItemRegistration registration : MATERIAL_ITEMS) {
             MaterialItemSpec spec = registration.spec();
-            if (spec.getMaterialId().equals(input.materialId()) && spec.getFormName().equals(outputForm)) {
+            if (spec.getMaterialId().equals(batch.materialId()) && spec.getFormName().equals(batch.form())) {
                 ItemStack result = new ItemStack(registration.holder().get());
-                result.set(ChemComponents.MATERIAL_BATCH.get(), new MaterialBatchContents(
-                    MaterialBatchContents.CURRENT_SCHEMA,
-                    input.materialId(),
-                    outputForm,
-                    outputMassMicrograms,
-                    input.purityPpm(),
-                    input.impuritiesPpm()
-                ));
+                result.set(ChemComponents.MATERIAL_BATCH.get(), batch);
                 return result;
             }
         }

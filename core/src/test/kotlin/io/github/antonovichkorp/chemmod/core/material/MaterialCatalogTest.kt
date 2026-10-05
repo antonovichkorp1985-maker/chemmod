@@ -38,16 +38,23 @@ class MaterialCatalogTest {
         assertEquals(1357.77, melting.conditions.minimumTemperatureKelvin)
 
         val itemForms = MaterialItemExports.bundledSolidForms()
-        assertEquals(9, itemForms.size)
+        assertEquals(11, itemForms.size)
         assertTrue(itemForms.any { it.registryPath == "copper_ingot" })
+        assertTrue(itemForms.any { it.registryPath == "copper_purified_crushed_ore" })
+        assertTrue(itemForms.any { it.registryPath == "silicate_gangue_dust" })
         assertTrue(itemForms.none { it.formName == MaterialForm.LIQUID.name })
 
         val manualTransitions = MaterialProcessExports.bundledManualTransitions()
-        assertEquals(2, manualTransitions.size)
+        assertEquals(3, manualTransitions.size)
         assertEquals("ORE", manualTransitions.first().inputForm)
         assertEquals("CRUSHED_ORE", manualTransitions.first().outputForm)
         assertEquals("DUST", manualTransitions.last().outputForm)
         assertTrue(manualTransitions.all { it.inputMassMicrograms == it.outputMassMicrograms })
+
+        val washingTransition = MaterialProcessExports.bundledWashingTransitions().single()
+        assertEquals("CRUSHED_ORE", washingTransition.inputForm)
+        assertEquals("PURIFIED_CRUSHED_ORE", washingTransition.outputForm)
+        assertEquals(washingTransition.inputMassMicrograms, washingTransition.outputMassMicrograms)
 
         val moltenContainers = MaterialItemExports.bundledMoltenContainers()
         assertEquals("molten_copper_crucible", moltenContainers.single().registryPath)

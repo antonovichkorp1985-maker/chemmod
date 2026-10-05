@@ -106,5 +106,10 @@
   "block.chemmod.copper_block": "Складской блок меди",
   "material_form.chemmod.block": "складской блок",
   "material_form.chemmod.gear": "шестерня",
-  "message.chemmod.process.needs_count": "В удерживаемой стопке требуется одинаковых форм материала: %s"
+  "message.chemmod.process.needs_count": "В удерживаемой стопке требуется одинаковых форм материала: %s",
+  "block.chemmod.ore_washer": "Промывочная установка для руды",
+  "material.chemmod.silicate_gangue": "Силикатная пустая порода",
+  "material_form.chemmod.purified_crushed_ore": "промытая дроблёная руда",
+  "message.chemmod.washer.needs_water_sample": "Держите в другой руке проанализированную пробу воды",
+  "message.chemmod.washer.result": "%s: чистота материала %s%% → %s%%"
 }

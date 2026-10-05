@@ -16,9 +16,16 @@ final class MaterialItemPresentation {
     static Component name(String materialPath, String formName) {
         return Component.translatable(
             "item.chemmod.material_form",
-            Component.translatable("material.chemmod." + materialPath),
+            materialName("chemmod:" + materialPath),
             Component.translatable("material_form.chemmod." + formName)
         );
+    }
+
+    static Component materialName(String materialId) {
+        if (materialId.startsWith("chemmod:")) {
+            return Component.translatable("material.chemmod." + materialId.substring("chemmod:".length()));
+        }
+        return Component.literal(materialId);
     }
 
     static void appendHoverText(
@@ -47,7 +54,7 @@ final class MaterialItemPresentation {
                 .withStyle(ChatFormatting.YELLOW));
             batch.impuritiesPpm().forEach((id, ppm) -> tooltip.add(Component.translatable(
                 "tooltip.chemmod.material.impurity_entry",
-                id,
+                materialName(id),
                 String.format(Locale.ROOT, "%.4f", ppm / 10_000.0)
             ).withStyle(ChatFormatting.DARK_GRAY)));
         }
