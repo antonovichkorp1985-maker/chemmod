@@ -1,78 +1,87 @@
 package io.github.antonovichkorp.chemmod.core.material
 
 /**
- * Deterministic beneficiation quality model shared by runtime adapters.
+ * Exact output of physical ore washing.
  *
- * Batch mass is intentionally outside this calculation: the M3 washing stage
- * changes the measured composition of one canonical batch while preserving its
- * nominal mass. A later separator stage will turn recovered gangue into explicit
- * mass-partitioned outputs.
+ * Water quality affects how much gangue remains attached to the copper
+ * concentrate. It never creates primary material: all removed mass is recorded
+ * as a named tailings output.
  */
-data class WashedComposition(
-    val purityPpm: Int,
-    val impuritiesPpm: Map<String, Int>,
+data class OreWashingResult(
+    val concentrate: MaterialMassComposition,
+    val tailingsMassMicrograms: Map<String, Long>,
 ) {
     init {
-        require(purityPpm in 0..PARTS_PER_MILLION) { "Purity must be 0..1,000,000 ppm" }
-        require(impuritiesPpm.values.all { it > 0 }) { "Known impurity concentrations must be positive" }
-        require(impuritiesPpm.values.sumOf { it.toLong() } <= PARTS_PER_MILLION - purityPpm) {
-            "Known impurities exceed the non-primary fraction"
+        require(tailingsMassMicrograms.keys.all { it.matches(MATERIAL_ID) }) {
+            "Tailings need valid material IDs"
         }
+        require(tailingsMassMicrograms.values.all { it > 0 }) { "Tailings masses must be positive" }
     }
 
-    companion object { const val PARTS_PER_MILLION = 1_000_000 }
+    val tailingsTotalMassMicrograms: Long = tailingsMassMicrograms.values.fold(0L, Math::addExact)
+
+    companion object {
+        private val MATERIAL_ID = Regex("[a-z][a-z0-9_.-]*:[a-z0-9_./-]+")
+    }
 }
 
+/** Deterministic, mass-conserving washing model shared by runtime adapters. */
 object OreWashingQuality {
-    private const val PPM = WashedComposition.PARTS_PER_MILLION
+    private const val PPM = MaterialMassComposition.PARTS_PER_MILLION
     private const val BASE_RETAINED_PPM = 90_000
     private const val MAX_WATER_PENALTY_PPM = 300_000
 
     /**
-     * Returns the remaining gangue after one wash. Cleaner recorded water retains
-     * less gangue. Unknown impurity remainder is assigned to [fallbackGangueId]
-     * rather than disappearing from the measured batch.
+     * Produces a denser concentrate and explicit tailings from [input].
+     *
+     * The historical quality curve is retained for player continuity: clean water
+     * targets 98.65% copper and 35,000 ppm saline water targets 96.025% copper
+     * for the former 85% natural-copper reference. Unlike schema v1, the copper
+     * mass is never increased to reach that display purity.
      */
     @JvmStatic
-    fun wash(
-        inputPurityPpm: Int,
-        inputImpuritiesPpm: Map<String, Int>,
-        waterImpuritiesPpm: Int,
-        fallbackGangueId: String,
-    ): WashedComposition {
-        require(inputPurityPpm in 0..PPM) { "Input purity must be 0..1,000,000 ppm" }
+    fun wash(input: MaterialMassComposition, waterImpuritiesPpm: Int): OreWashingResult {
         require(waterImpuritiesPpm in 0..PPM) { "Water impurities must be 0..1,000,000 ppm" }
-        require(fallbackGangueId.matches(Regex("[a-z][a-z0-9_.-]*:[a-z0-9_./-]+"))) {
-            "Fallback gangue needs a valid material ID"
-        }
-        require(inputImpuritiesPpm.values.all { it > 0 }) { "Known impurity concentrations must be positive" }
+        val sourceGangueMass = input.impurityMassMicrograms.values.fold(0L, Math::addExact)
+        if (sourceGangueMass == 0L) return OreWashingResult(input, emptyMap())
 
-        val sourceImpurities = PPM - inputPurityPpm
-        require(inputImpuritiesPpm.values.sumOf { it.toLong() } <= sourceImpurities.toLong()) {
-            "Known impurities exceed the non-primary fraction"
-        }
-        if (sourceImpurities == 0) return WashedComposition(PPM, emptyMap())
-
+        val sourceImpurityPpm = PPM - input.purityPpm()
         val waterPenalty = (waterImpuritiesPpm * 5).coerceAtMost(MAX_WATER_PENALTY_PPM)
         val retainedFractionPpm = BASE_RETAINED_PPM + waterPenalty
-        val residualImpurities = ceilingProduct(sourceImpurities, retainedFractionPpm)
-        val retained = linkedMapOf<String, Int>()
-        var allocated = 0
-        inputImpuritiesPpm.forEach { (id, ppm) ->
-            val retainedPpm = ((ppm.toLong() * residualImpurities) / sourceImpurities).toInt()
-            if (retainedPpm > 0) {
-                retained[id] = retainedPpm
-                allocated += retainedPpm
-            }
-        }
-        val unallocated = residualImpurities - allocated
-        if (unallocated > 0) {
-            retained[fallbackGangueId] = retained.getOrDefault(fallbackGangueId, 0) + unallocated
+        val targetPurityPpm = PPM - ceilingProduct(sourceImpurityPpm, retainedFractionPpm)
+        require(targetPurityPpm in 1..PPM) { "Washing cannot produce a zero-purity concentrate" }
+
+        // The primary copper mass is invariant. Calculate the smallest integer
+        // concentrate mass that reaches the target display purity, then allocate
+        // its retained gangue proportionally and send the remainder to tailings.
+        val concentrateMass = ceilingDivision(
+            Math.multiplyExact(input.primaryMassMicrograms, PPM.toLong()),
+            targetPurityPpm.toLong(),
+        )
+        val retainedGangueMass = Math.subtractExact(concentrateMass, input.primaryMassMicrograms)
+        require(retainedGangueMass in 0..sourceGangueMass) {
+            "Washing model cannot retain more gangue than the input contains"
         }
 
-        return WashedComposition(PPM - residualImpurities, retained)
+        val retainedGangue = MaterialMassComposition.distributeProportionally(
+            input.impurityMassMicrograms,
+            retainedGangueMass,
+        )
+        val tailings = linkedMapOf<String, Long>()
+        input.impurityMassMicrograms.toSortedMap().forEach { (id, inputMass) ->
+            val removed = Math.subtractExact(inputMass, retainedGangue.getOrDefault(id, 0L))
+            if (removed > 0) tailings[id] = removed
+        }
+        val concentrate = MaterialMassComposition(input.primaryMassMicrograms, retainedGangue)
+        check(Math.addExact(concentrate.totalMassMicrograms, tailings.values.fold(0L, Math::addExact)) == input.totalMassMicrograms) {
+            "Washing must conserve total physical mass"
+        }
+        return OreWashingResult(concentrate, tailings)
     }
 
     private fun ceilingProduct(amount: Int, multiplierPpm: Int): Int =
         ((amount.toLong() * multiplierPpm + PPM - 1L) / PPM).toInt()
+
+    private fun ceilingDivision(dividend: Long, divisor: Long): Long =
+        Math.addExact(dividend, divisor - 1L) / divisor
 }

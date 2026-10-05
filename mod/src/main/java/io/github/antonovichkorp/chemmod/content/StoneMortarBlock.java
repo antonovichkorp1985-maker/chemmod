@@ -60,7 +60,7 @@ public final class StoneMortarBlock extends Block {
         ItemStack output = ChemItems.materialStack(
             batch,
             transition.getOutputForm(),
-            transition.getOutputMassMicrograms()
+            outputMass(batch, transition)
         );
         output.setCount(transition.getOutputCount());
         if (output.isEmpty()) {
@@ -79,14 +79,25 @@ public final class StoneMortarBlock extends Block {
         return ItemInteractionResult.SUCCESS;
     }
 
+    private static long outputMass(MaterialBatchContents batch, MaterialTransitionSpec transition) {
+        return isMassScalable(transition) ? batch.massMicrograms() : transition.getOutputMassMicrograms();
+    }
+
     private static MaterialTransitionSpec findTransition(MaterialBatchContents batch) {
         for (MaterialTransitionSpec transition : TRANSITIONS) {
             if (transition.getMaterialId().equals(batch.materialId())
                 && transition.getInputForm().equals(batch.form())
-                && transition.getInputMassMicrograms() == batch.massMicrograms()) {
+                && (transition.getInputMassMicrograms() == batch.massMicrograms() || isMassScalable(transition))) {
                 return transition;
             }
         }
         return null;
+    }
+
+    /** Form-only manual processing can operate on a physically smaller concentrate batch. */
+    private static boolean isMassScalable(MaterialTransitionSpec transition) {
+        return transition.getInputCount() == 1
+            && transition.getOutputCount() == 1
+            && transition.getInputMassMicrograms() == transition.getOutputMassMicrograms();
     }
 }

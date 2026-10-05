@@ -56,6 +56,12 @@ class MaterialCatalogTest {
         assertEquals("PURIFIED_CRUSHED_ORE", washingTransition.outputForm)
         assertEquals(washingTransition.inputMassMicrograms, washingTransition.outputMassMicrograms)
 
+        val partition = MaterialProcessExports.bundledPartitionProcesses().single()
+        assertEquals("PURIFIED_CRUSHED_ORE", partition.inputForm)
+        assertEquals("DUST", partition.primaryOutputForm)
+        assertEquals("DUST", partition.impurityOutputForm)
+        assertEquals(861_632_033L, partition.referenceInputMassMicrograms)
+
         val moltenContainers = MaterialItemExports.bundledMoltenContainers()
         assertEquals("molten_copper_crucible", moltenContainers.single().registryPath)
         assertEquals("LIQUID", moltenContainers.single().formName)

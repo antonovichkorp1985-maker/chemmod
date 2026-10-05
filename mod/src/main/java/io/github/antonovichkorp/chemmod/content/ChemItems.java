@@ -55,6 +55,11 @@ public final class ChemItems {
         () -> new BlockItem(ChemBlocks.ORE_WASHER.get(), new Item.Properties())
     );
 
+    public static final DeferredHolder<Item, BlockItem> ORE_SEPARATOR = ITEMS.register(
+        "ore_separator",
+        () -> new BlockItem(ChemBlocks.ORE_SEPARATOR.get(), new Item.Properties())
+    );
+
     public static final DeferredHolder<Item, BlockItem> REFRACTORY_FURNACE = ITEMS.register(
         "refractory_furnace",
         () -> new BlockItem(ChemBlocks.REFRACTORY_FURNACE.get(), new Item.Properties())
@@ -110,6 +115,7 @@ public final class ChemItems {
                 output.accept(copperStorageBlockStack(CopperStorageBlockEntity.defaultBatch()));
                 output.accept(new ItemStack(STONE_MORTAR.get()));
                 output.accept(new ItemStack(ORE_WASHER.get()));
+                output.accept(new ItemStack(ORE_SEPARATOR.get()));
                 output.accept(new ItemStack(REFRACTORY_FURNACE.get()));
                 output.accept(new ItemStack(INGOT_MOLD.get()));
                 output.accept(new ItemStack(METALWORKING_BENCH.get()));
@@ -169,7 +175,7 @@ public final class ChemItems {
             case "BLOCK" -> CopperStorageBlockEntity.MASS_MICROGRAMS;
             default -> 1_000_000_000L;
         };
-        return new MaterialBatchContents(spec.getMaterialId(), spec.getFormName(), massMicrograms, 1_000_000);
+        return new MaterialBatchContents(spec.getMaterialId(), spec.getFormName(), massMicrograms);
     }
 
     private ChemItems() {}
@@ -197,19 +203,21 @@ public final class ChemItems {
         return stack;
     }
 
-    /** Copies a batch into another canonical form without changing its measured composition. */
+    /** Copies a physical batch into another canonical form without changing one microgram of composition. */
     public static ItemStack materialStack(
         MaterialBatchContents input,
         String outputForm,
         long outputMassMicrograms
     ) {
+        if (input.massMicrograms() != outputMassMicrograms) {
+            throw new IllegalArgumentException("Form-only material conversion cannot change physical mass");
+        }
         return materialStack(new MaterialBatchContents(
-            MaterialBatchContents.CURRENT_SCHEMA,
             input.materialId(),
             outputForm,
             outputMassMicrograms,
-            input.purityPpm(),
-            input.impuritiesPpm()
+            input.primaryMassMicrograms(),
+            input.impurityMassMicrograms()
         ));
     }
 
@@ -248,17 +256,19 @@ public final class ChemItems {
         long outputMassMicrograms,
         int temperatureMillikelvin
     ) {
+        if (input.massMicrograms() != outputMassMicrograms) {
+            throw new IllegalArgumentException("Melting cannot change physical batch mass");
+        }
         for (MoltenItemRegistration registration : MOLTEN_ITEMS) {
             MaterialItemSpec spec = registration.spec();
             if (spec.getMaterialId().equals(input.materialId()) && spec.getFormName().equals(outputForm)) {
                 ItemStack result = new ItemStack(registration.holder().get());
                 result.set(ChemComponents.MATERIAL_BATCH.get(), new MaterialBatchContents(
-                    MaterialBatchContents.CURRENT_SCHEMA,
                     input.materialId(),
                     outputForm,
                     outputMassMicrograms,
-                    input.purityPpm(),
-                    input.impuritiesPpm()
+                    input.primaryMassMicrograms(),
+                    input.impurityMassMicrograms()
                 ));
                 result.set(ChemComponents.MATERIAL_TEMPERATURE.get(), temperatureMillikelvin);
                 return result;

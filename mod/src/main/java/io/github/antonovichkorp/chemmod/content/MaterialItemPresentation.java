@@ -45,6 +45,10 @@ final class MaterialItemPresentation {
             String.format(Locale.ROOT, "%.3f", batch.massMicrograms() / 1_000_000.0)
         ).withStyle(ChatFormatting.GRAY));
         tooltip.add(Component.translatable(
+            "tooltip.chemmod.material.primary_mass",
+            String.format(Locale.ROOT, "%.3f", batch.primaryMassMicrograms() / 1_000_000.0)
+        ).withStyle(ChatFormatting.DARK_GRAY));
+        tooltip.add(Component.translatable(
             "tooltip.chemmod.purity",
             String.format(Locale.ROOT, "%.4f", batch.purityPpm() / 10_000.0)
         ).withStyle(batch.purityPpm() == 1_000_000 ? ChatFormatting.GREEN : ChatFormatting.YELLOW));
@@ -55,7 +59,8 @@ final class MaterialItemPresentation {
             batch.impuritiesPpm().forEach((id, ppm) -> tooltip.add(Component.translatable(
                 "tooltip.chemmod.material.impurity_entry",
                 materialName(id),
-                String.format(Locale.ROOT, "%.4f", ppm / 10_000.0)
+                String.format(Locale.ROOT, "%.4f", ppm / 10_000.0),
+                String.format(Locale.ROOT, "%.3f", batch.impurityMassMicrograms().get(id) / 1_000_000.0)
             ).withStyle(ChatFormatting.DARK_GRAY)));
         }
 

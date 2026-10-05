@@ -16,6 +16,22 @@ data class MaterialTransitionSpec(
     val maximumTemperatureKelvin: Double?,
 )
 
+/**
+ * Java-friendly declaration for a composition-driven physical partition. Static
+ * output masses describe the catalog's reference batch only; adapters calculate
+ * their actual output masses from persisted component masses at runtime.
+ */
+data class MaterialPartitionSpec(
+    val processId: String,
+    val machineTag: String,
+    val inputMaterialId: String,
+    val inputForm: String,
+    val primaryOutputForm: String,
+    val impurityOutputForm: String,
+    val referenceInputMassMicrograms: Long,
+    val durationTicks: Int,
+)
+
 object MaterialProcessExports {
     @JvmStatic
     fun bundledManualTransitions(): List<MaterialTransitionSpec> =
@@ -32,6 +48,36 @@ object MaterialProcessExports {
     @JvmStatic
     fun bundledWashingTransitions(): List<MaterialTransitionSpec> =
         bundledTransitions(setOf("chemmod:washing"))
+
+    @JvmStatic
+    fun bundledPartitionProcesses(): List<MaterialPartitionSpec> =
+        MaterialCatalog.bundled().compiledProcesses.values
+            .asSequence()
+            .filter { it.machineTag == "chemmod:separating" }
+            .map { process ->
+                require(process.inputs.size == 1 && process.outputs.size >= 2) {
+                    "Partition process ${process.id} must have one input and at least two outputs"
+                }
+                val input = process.inputs.single()
+                val primary = requireNotNull(process.outputs.singleOrNull { it.material.id == input.material.id }) {
+                    "Partition process ${process.id} must emit its primary material"
+                }
+                val impurity = requireNotNull(process.outputs.firstOrNull { it.material.id != input.material.id }) {
+                    "Partition process ${process.id} must emit a physical impurity output"
+                }
+                MaterialPartitionSpec(
+                    processId = process.id.value,
+                    machineTag = process.machineTag,
+                    inputMaterialId = input.material.id.value,
+                    inputForm = input.form.name,
+                    primaryOutputForm = primary.form.name,
+                    impurityOutputForm = impurity.form.name,
+                    referenceInputMassMicrograms = input.totalMassMicrograms,
+                    durationTicks = process.durationTicks,
+                )
+            }
+            .sortedBy(MaterialPartitionSpec::processId)
+            .toList()
 
     @JvmStatic
     fun bundledFormingTransitions(): List<MaterialTransitionSpec> =

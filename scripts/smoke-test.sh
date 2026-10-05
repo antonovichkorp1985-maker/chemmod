@@ -128,6 +128,10 @@ jar tf "$mod_jar" | grep -q 'OreWasherBlock.class$' || {
     echo "Smoke-test failure: water-gated ore washer is missing" >&2
     exit 1
 }
+jar tf "$mod_jar" | grep -q 'OreSeparatorBlock.class$' || {
+    echo "Smoke-test failure: physical ore separator is missing" >&2
+    exit 1
+}
 jar tf "$mod_jar" | grep -q '^assets/chemmod/models/item/copper_purified_crushed_ore.json$' || {
     echo "Smoke-test failure: purified copper ore form model is missing" >&2
     exit 1
@@ -136,8 +140,20 @@ jar tf "$mod_jar" | grep -q '^data/chemmod/recipe/ore_washer.json$' || {
     echo "Smoke-test failure: ore washer recipe is missing" >&2
     exit 1
 }
+jar tf "$mod_jar" | grep -q '^data/chemmod/recipe/ore_separator.json$' || {
+    echo "Smoke-test failure: physical ore separator recipe is missing" >&2
+    exit 1
+}
+jar tf "$mod_jar" | grep -q '^assets/chemmod/models/item/ore_separator.json$' || {
+    echo "Smoke-test failure: physical ore separator model is missing" >&2
+    exit 1
+}
 jar tf "$mod_jar" | grep -q '^data/c/tags/item/purified_crushed_ores/copper.json$' || {
     echo "Smoke-test failure: common purified copper ore tag is missing" >&2
+    exit 1
+}
+unzip -p "$mod_jar" data/chemmod/loot_table/blocks/native_copper_ore.json | grep -q 'primary_mass_micrograms' || {
+    echo "Smoke-test failure: mined copper ore does not carry exact primary mass" >&2
     exit 1
 }
 unzip -p "$mod_jar" data/chemmod/loot_table/blocks/native_copper_ore.json | grep -q 'silicate_gangue' || {

@@ -59,6 +59,17 @@ public final class ChemBlocks {
         )
     );
 
+    public static final DeferredHolder<Block, OreSeparatorBlock> ORE_SEPARATOR = BLOCKS.register(
+        "ore_separator",
+        () -> new OreSeparatorBlock(
+            BlockBehaviour.Properties.of()
+                .mapColor(MapColor.METAL)
+                .requiresCorrectToolForDrops()
+                .strength(3.0F, 6.0F)
+                .sound(SoundType.METAL)
+        )
+    );
+
     public static final DeferredHolder<Block, RefractoryFurnaceBlock> REFRACTORY_FURNACE = BLOCKS.register(
         "refractory_furnace",
         () -> new RefractoryFurnaceBlock(

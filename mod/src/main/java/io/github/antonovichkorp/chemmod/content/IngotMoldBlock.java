@@ -1,5 +1,7 @@
 package io.github.antonovichkorp.chemmod.content;
 
+import io.github.antonovichkorp.chemmod.core.material.MaterialMassComposition;
+import io.github.antonovichkorp.chemmod.core.material.MaterialMassSplit;
 import io.github.antonovichkorp.chemmod.core.material.MaterialProcessExports;
 import io.github.antonovichkorp.chemmod.core.material.MaterialTransitionSpec;
 import net.minecraft.core.BlockPos;
@@ -17,7 +19,11 @@ import net.minecraft.world.phys.BlockHitResult;
 
 import java.util.List;
 
-/** Cools a molten single-material batch into the catalog's cast output form. */
+/**
+ * Cools exactly one ingot mass from a molten batch. Larger accumulated crucibles
+ * retain their physically exact molten remainder; sub-ingot batches must first be
+ * accumulated in the refractory furnace.
+ */
 public final class IngotMoldBlock extends Block {
     private static final List<MaterialTransitionSpec> TRANSITIONS =
         MaterialProcessExports.bundledCastingTransitions();
@@ -38,18 +44,21 @@ public final class IngotMoldBlock extends Block {
     ) {
         MaterialBatchContents batch = held.get(ChemComponents.MATERIAL_BATCH.get());
         Integer temperature = held.get(ChemComponents.MATERIAL_TEMPERATURE.get());
-        MaterialTransitionSpec transition = batch == null ? null : findTransition(batch);
+        MaterialTransitionSpec matching = batch == null ? null : matchingTransition(batch);
+        MaterialTransitionSpec transition = matching != null && batch.massMicrograms() >= matching.getOutputMassMicrograms()
+            ? matching
+            : null;
         if (transition == null || temperature == null) {
+            if (matching != null && !level.isClientSide()) {
+                player.displayClientMessage(Component.translatable(
+                    "message.chemmod.mold.needs_mass",
+                    formatMass(matching.getOutputMassMicrograms())
+                ), true);
+                return ItemInteractionResult.FAIL;
+            }
             return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
-        if (held.getCount() < transition.getInputCount()) {
-            if (!level.isClientSide()) {
-                player.displayClientMessage(Component.translatable(
-                    "message.chemmod.process.needs_count", transition.getInputCount()
-                ), true);
-            }
-            return ItemInteractionResult.FAIL;
-        }
+        if (held.getCount() < transition.getInputCount()) return needsCount(level, player, transition);
         if (level.isClientSide()) return ItemInteractionResult.SUCCESS;
 
         Double maximum = transition.getMaximumTemperatureKelvin();
@@ -58,31 +67,69 @@ public final class IngotMoldBlock extends Block {
             return ItemInteractionResult.FAIL;
         }
 
-        ItemStack output = ChemItems.materialStack(
-            batch,
+        long ingotMass = transition.getOutputMassMicrograms();
+        MaterialMassSplit split = new MaterialMassComposition(
+            batch.primaryMassMicrograms(), batch.impurityMassMicrograms()
+        ).split(ingotMass);
+        ItemStack ingot = ChemItems.materialStack(new MaterialBatchContents(
+            batch.materialId(),
             transition.getOutputForm(),
-            transition.getOutputMassMicrograms()
-        );
-        output.setCount(transition.getOutputCount());
-        if (output.isEmpty()) return ItemInteractionResult.FAIL;
+            ingotMass,
+            split.getExtracted().getPrimaryMassMicrograms(),
+            split.getExtracted().getImpurityMassMicrograms()
+        ));
+        if (ingot.isEmpty()) return ItemInteractionResult.FAIL;
 
-        if (held.getCount() == transition.getInputCount()) {
-            player.setItemInHand(hand, output);
+        if (split.getRemainder() == null) {
+            player.setItemInHand(hand, ingot);
+            give(player, new ItemStack(ChemItems.CERAMIC_CRUCIBLE.get()));
         } else {
-            held.shrink(transition.getInputCount());
-            if (!player.getInventory().add(output)) player.drop(output, false);
+            MaterialMassComposition remainder = split.getRemainder();
+            ItemStack residualMelt = ChemItems.moltenStack(
+                new MaterialBatchContents(
+                    batch.materialId(),
+                    batch.form(),
+                    remainder.getTotalMassMicrograms(),
+                    remainder.getPrimaryMassMicrograms(),
+                    remainder.getImpurityMassMicrograms()
+                ),
+                batch.form(),
+                remainder.getTotalMassMicrograms(),
+                temperature
+            );
+            if (residualMelt.isEmpty()) return ItemInteractionResult.FAIL;
+            player.setItemInHand(hand, ingot);
+            give(player, residualMelt);
         }
-        ItemStack emptyCrucible = new ItemStack(ChemItems.CERAMIC_CRUCIBLE.get());
-        if (!player.getInventory().add(emptyCrucible)) player.drop(emptyCrucible, false);
         level.playSound(null, pos, SoundEvents.ANVIL_PLACE, SoundSource.BLOCKS, 0.6F, 1.4F);
         return ItemInteractionResult.SUCCESS;
     }
 
-    private static MaterialTransitionSpec findTransition(MaterialBatchContents batch) {
+    private static ItemInteractionResult needsCount(Level level, Player player, MaterialTransitionSpec transition) {
+        if (!level.isClientSide()) {
+            player.displayClientMessage(Component.translatable(
+                "message.chemmod.process.needs_count", transition.getInputCount()
+            ), true);
+        }
+        return ItemInteractionResult.FAIL;
+    }
+
+    private static void give(Player player, ItemStack stack) {
+        if (!player.getInventory().add(stack)) player.drop(stack, false);
+    }
+
+    private static String formatMass(long micrograms) {
+        return String.format(java.util.Locale.ROOT, "%.3f", micrograms / 1_000_000.0);
+    }
+
+    private static MaterialTransitionSpec matchingTransition(MaterialBatchContents batch) {
         for (MaterialTransitionSpec transition : TRANSITIONS) {
             if (transition.getMaterialId().equals(batch.materialId())
                 && transition.getInputForm().equals(batch.form())
-                && transition.getInputMassMicrograms() == batch.massMicrograms()) return transition;
+                && transition.getInputCount() == 1
+                && transition.getOutputCount() == 1) {
+                return transition;
+            }
         }
         return null;
     }

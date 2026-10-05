@@ -26,7 +26,7 @@ public final class CopperStorageBlockEntity extends BlockEntity {
     }
 
     public static MaterialBatchContents defaultBatch() {
-        return new MaterialBatchContents(MATERIAL_ID, FORM, MASS_MICROGRAMS, 1_000_000);
+        return new MaterialBatchContents(MATERIAL_ID, FORM, MASS_MICROGRAMS);
     }
 
     public MaterialBatchContents batch() {
@@ -50,10 +50,10 @@ public final class CopperStorageBlockEntity extends BlockEntity {
         batchTag.putString("material_id", batch.materialId());
         batchTag.putString("form", batch.form());
         batchTag.putLong("mass_micrograms", batch.massMicrograms());
-        batchTag.putInt("purity_ppm", batch.purityPpm());
+        batchTag.putLong("primary_mass_micrograms", batch.primaryMassMicrograms());
         CompoundTag impurities = new CompoundTag();
-        batch.impuritiesPpm().forEach(impurities::putInt);
-        batchTag.put("impurities_ppm", impurities);
+        batch.impurityMassMicrograms().forEach(impurities::putLong);
+        batchTag.put("impurity_mass_micrograms", impurities);
         tag.put("material_batch", batchTag);
     }
 
@@ -78,20 +78,37 @@ public final class CopperStorageBlockEntity extends BlockEntity {
     private static MaterialBatchContents readBatch(CompoundTag tag) {
         if (!tag.contains("material_batch", Tag.TAG_COMPOUND)) return defaultBatch();
         CompoundTag batchTag = tag.getCompound("material_batch");
-        Map<String, Integer> impurities = new LinkedHashMap<>();
-        if (batchTag.contains("impurities_ppm", Tag.TAG_COMPOUND)) {
-            CompoundTag impurityTag = batchTag.getCompound("impurities_ppm");
-            for (String key : impurityTag.getAllKeys()) impurities.put(key, impurityTag.getInt(key));
-        }
         try {
-            MaterialBatchContents value = new MaterialBatchContents(
-                batchTag.getInt("schema_version"),
-                batchTag.getString("material_id"),
-                batchTag.getString("form"),
-                batchTag.getLong("mass_micrograms"),
-                batchTag.getInt("purity_ppm"),
-                impurities
-            );
+            MaterialBatchContents value;
+            if (batchTag.contains("primary_mass_micrograms", Tag.TAG_LONG)) {
+                Map<String, Long> impurities = new LinkedHashMap<>();
+                if (batchTag.contains("impurity_mass_micrograms", Tag.TAG_COMPOUND)) {
+                    CompoundTag impurityTag = batchTag.getCompound("impurity_mass_micrograms");
+                    for (String key : impurityTag.getAllKeys()) impurities.put(key, impurityTag.getLong(key));
+                }
+                value = new MaterialBatchContents(
+                    batchTag.getInt("schema_version"),
+                    batchTag.getString("material_id"),
+                    batchTag.getString("form"),
+                    batchTag.getLong("mass_micrograms"),
+                    batchTag.getLong("primary_mass_micrograms"),
+                    impurities
+                );
+            } else {
+                Map<String, Integer> legacyImpurities = new LinkedHashMap<>();
+                if (batchTag.contains("impurities_ppm", Tag.TAG_COMPOUND)) {
+                    CompoundTag impurityTag = batchTag.getCompound("impurities_ppm");
+                    for (String key : impurityTag.getAllKeys()) legacyImpurities.put(key, impurityTag.getInt(key));
+                }
+                value = new MaterialBatchContents(
+                    batchTag.getInt("schema_version"),
+                    batchTag.getString("material_id"),
+                    batchTag.getString("form"),
+                    batchTag.getLong("mass_micrograms"),
+                    batchTag.getInt("purity_ppm"),
+                    legacyImpurities
+                );
+            }
             validateBatch(value);
             return value;
         } catch (IllegalArgumentException exception) {

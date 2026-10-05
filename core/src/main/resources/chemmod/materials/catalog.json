@@ -139,6 +139,30 @@
       "durationTicks": 300
     },
     {
+      "id": "chemmod:separate_purified_native_copper",
+      "machineTag": "chemmod:separating",
+      "inputs": [
+        {
+          "material": "chemmod:copper",
+          "form": "purified_crushed_ore",
+          "massMicrograms": 861632033
+        }
+      ],
+      "outputs": [
+        {
+          "material": "chemmod:copper",
+          "form": "dust",
+          "massMicrograms": 850000000
+        },
+        {
+          "material": "chemmod:silicate_gangue",
+          "form": "dust",
+          "massMicrograms": 11632033
+        }
+      ],
+      "durationTicks": 300
+    },
+    {
       "id": "chemmod:grind_purified_native_copper",
       "machineTag": "chemmod:grinding",
       "inputs": [

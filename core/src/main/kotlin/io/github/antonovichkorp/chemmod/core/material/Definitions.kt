@@ -120,27 +120,40 @@ data class MaterialDefinition(
     companion object { const val CURRENT_SCHEMA = 1 }
 }
 
-/** Server-authoritative material state carried by an item, tank, or machine slot. */
+/**
+ * Server-authoritative physical material state carried by an item, tank, or
+ * machine slot. Percentages are derived for presentation; stored component
+ * masses are the source of truth and must account for every microgram.
+ */
 data class MaterialBatch(
     val materialId: MaterialId,
     val massMicrograms: Long,
-    val purityPpm: Int,
-    val impuritiesPpm: Map<MaterialId, Int> = emptyMap(),
+    val primaryMassMicrograms: Long,
+    val impurityMassMicrograms: Map<MaterialId, Long> = emptyMap(),
     val schemaVersion: Int = CURRENT_SCHEMA,
 ) {
     init {
         require(massMicrograms > 0) { "Batch mass must be positive" }
-        require(purityPpm in 0..PARTS_PER_MILLION) { "Purity must be 0..1,000,000 ppm" }
-        require(impuritiesPpm.values.all { it > 0 }) { "Impurity concentrations must be positive" }
-        require(impuritiesPpm.keys.none { it == materialId }) { "A material cannot be its own impurity" }
-        require(impuritiesPpm.values.sumOf { it.toLong() } <= (PARTS_PER_MILLION - purityPpm).toLong()) {
-            "Known impurities exceed the non-primary fraction"
+        require(primaryMassMicrograms >= 0) { "Primary material mass cannot be negative" }
+        require(impurityMassMicrograms.values.all { it > 0 }) { "Impurity masses must be positive" }
+        require(impurityMassMicrograms.keys.none { it == materialId }) { "A material cannot be its own impurity" }
+        require(Math.addExact(primaryMassMicrograms, impurityMassMicrograms.values.fold(0L, Math::addExact)) == massMicrograms) {
+            "Every microgram in a batch must be assigned to a component"
         }
         require(schemaVersion > 0) { "Schema version must be positive" }
     }
 
+    /** Rounded only for display. Exact calculations use [primaryMassMicrograms]. */
+    val purityPpm: Int
+        get() = ((primaryMassMicrograms * PARTS_PER_MILLION + massMicrograms / 2) / massMicrograms).toInt()
+
+    val impuritiesPpm: Map<MaterialId, Int>
+        get() = impurityMassMicrograms.mapValues { (_, mass) ->
+            ((mass * PARTS_PER_MILLION + massMicrograms / 2) / massMicrograms).toInt()
+        }
+
     companion object {
-        const val CURRENT_SCHEMA = 1
-        const val PARTS_PER_MILLION = 1_000_000
+        const val CURRENT_SCHEMA = 2
+        const val PARTS_PER_MILLION = 1_000_000L
     }
 }

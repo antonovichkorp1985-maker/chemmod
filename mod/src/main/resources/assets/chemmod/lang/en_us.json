@@ -97,7 +97,7 @@
   "message.chemmod.furnace.needs_crucible": "A ceramic crucible is required in your inventory",
   "message.chemmod.mold.too_hot": "The melt is too hot to solidify in this mold",
   "message.chemmod.bench.needs_tool": "Hold a metalworking hammer, chisel, or drawplate in the other hand",
-  "tooltip.chemmod.material.impurity_entry": "  %s: %s%%",
+  "tooltip.chemmod.material.impurity_entry": "  %s: %s%% (%s g)",
   "tooltip.chemmod.material.id": "Material ID: %s",
   "tooltip.chemmod.material.form": "Canonical form: %s",
   "tooltip.chemmod.material.missing": "Missing material batch data",
@@ -111,5 +111,10 @@
   "material.chemmod.silicate_gangue": "Silicate gangue",
   "material_form.chemmod.purified_crushed_ore": "washed crushed ore",
   "message.chemmod.washer.needs_water_sample": "Hold an analyzed water sample in the other hand",
-  "message.chemmod.washer.result": "%s: material purity %s%% → %s%%"
+  "message.chemmod.washer.result": "%s: purity %s%% → %s%%; tailings recovered: %s g",
+  "block.chemmod.ore_separator": "Ore Separator",
+  "message.chemmod.separator.result": "Recovered %s g primary mineral and %s g remaining gangue",
+  "message.chemmod.furnace.crucible_full": "This crucible already holds its maximum of %s g",
+  "message.chemmod.mold.needs_mass": "Need at least %s g of molten material to cast one ingot",
+  "tooltip.chemmod.material.primary_mass": "Primary material: %s g"
 }

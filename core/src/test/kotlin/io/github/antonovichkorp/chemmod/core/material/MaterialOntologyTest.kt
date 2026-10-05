@@ -44,15 +44,23 @@ class MaterialOntologyTest {
     }
 
     @Test
-    fun `material batch enforces purity budget`() {
+    fun `material batch accounts for every microgram`() {
         assertFailsWith<IllegalArgumentException> {
             MaterialBatch(
                 materialId = copperMaterial,
                 massMicrograms = 1_000_000,
-                purityPpm = 900_000,
-                impuritiesPpm = mapOf(MaterialId.of("chemmod:iron") to 100_001),
+                primaryMassMicrograms = 900_000,
+                impurityMassMicrograms = mapOf(MaterialId.of("chemmod:iron") to 99_999),
             )
         }
+
+        val exact = MaterialBatch(
+            materialId = copperMaterial,
+            massMicrograms = 1_000_000,
+            primaryMassMicrograms = 900_000,
+            impurityMassMicrograms = mapOf(MaterialId.of("chemmod:iron") to 100_000),
+        )
+        assertEquals(900_000, exact.purityPpm)
     }
 
     @Test

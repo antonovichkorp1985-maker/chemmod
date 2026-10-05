@@ -14,13 +14,13 @@
           "function": "minecraft:set_components",
           "components": {
             "chemmod:material_batch": {
-              "schema_version": 1,
+              "schema_version": 2,
               "material_id": "chemmod:copper",
               "form": "ORE",
               "mass_micrograms": 1000000000,
-              "purity_ppm": 850000,
-              "impurities_ppm": {
-                "chemmod:silicate_gangue": 150000
+              "primary_mass_micrograms": 850000000,
+              "impurity_mass_micrograms": {
+                "chemmod:silicate_gangue": 150000000
               }
             }
           }

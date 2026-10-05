@@ -5,6 +5,7 @@
     "chemmod:refractory_furnace",
     "chemmod:ingot_mold",
     "chemmod:copper_block",
-    "chemmod:ore_washer"
+    "chemmod:ore_washer",
+    "chemmod:ore_separator"
   ]
 }

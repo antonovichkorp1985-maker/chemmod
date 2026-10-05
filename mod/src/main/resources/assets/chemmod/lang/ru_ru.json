@@ -97,7 +97,7 @@
   "message.chemmod.furnace.needs_crucible": "В инвентаре нужен керамический тигель",
   "message.chemmod.mold.too_hot": "Расплав слишком горячий для затвердевания в изложнице",
   "message.chemmod.bench.needs_tool": "Держите в другой руке кузнечный молот, зубило или волочильную доску",
-  "tooltip.chemmod.material.impurity_entry": "  %s: %s%%",
+  "tooltip.chemmod.material.impurity_entry": "  %s: %s%% (%s г)",
   "tooltip.chemmod.material.id": "ID материала: %s",
   "tooltip.chemmod.material.form": "Каноническая форма: %s",
   "tooltip.chemmod.material.missing": "Отсутствуют данные партии материала",
@@ -111,5 +111,10 @@
   "material.chemmod.silicate_gangue": "Силикатная пустая порода",
   "material_form.chemmod.purified_crushed_ore": "промытая дроблёная руда",
   "message.chemmod.washer.needs_water_sample": "Держите в другой руке проанализированную пробу воды",
-  "message.chemmod.washer.result": "%s: чистота материала %s%% → %s%%"
+  "message.chemmod.washer.result": "%s: чистота %s%% → %s%%; выделено хвостов: %s г",
+  "block.chemmod.ore_separator": "Сепаратор руды",
+  "message.chemmod.separator.result": "Получено основного минерала: %s г; оставшейся пустой породы: %s г",
+  "message.chemmod.furnace.crucible_full": "Тигель уже содержит предельные %s г материала",
+  "message.chemmod.mold.needs_mass": "Для отливки одного слитка нужно не менее %s г расплава",
+  "tooltip.chemmod.material.primary_mass": "Основного материала: %s г"
 }

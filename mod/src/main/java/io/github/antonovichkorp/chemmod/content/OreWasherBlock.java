@@ -1,9 +1,10 @@
 package io.github.antonovichkorp.chemmod.content;
 
+import io.github.antonovichkorp.chemmod.core.material.MaterialMassComposition;
 import io.github.antonovichkorp.chemmod.core.material.MaterialProcessExports;
 import io.github.antonovichkorp.chemmod.core.material.MaterialTransitionSpec;
 import io.github.antonovichkorp.chemmod.core.material.OreWashingQuality;
-import io.github.antonovichkorp.chemmod.core.material.WashedComposition;
+import io.github.antonovichkorp.chemmod.core.material.OreWashingResult;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
@@ -17,15 +18,17 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
- * Water-gated beneficiation adapter. It intentionally consumes the recorded water
- * sample instead of inspecting the biome at processing time, so quality is fully
- * server-authoritative and reproducible from the vial component.
+ * Water-gated physical beneficiation adapter. It consumes the recorded water
+ * sample rather than inspecting the biome at processing time, so quality is
+ * reproducible from server-authoritative vial data. Removed gangue is emitted as
+ * explicit tailings instead of silently becoming extra copper.
  */
 public final class OreWasherBlock extends Block {
-    private static final String SILICATE_GANGUE = "chemmod:silicate_gangue";
     private static final List<MaterialTransitionSpec> TRANSITIONS =
         MaterialProcessExports.bundledWashingTransitions();
 
@@ -46,9 +49,7 @@ public final class OreWasherBlock extends Block {
         MaterialBatchContents batch = held.get(ChemComponents.MATERIAL_BATCH.get());
         MaterialTransitionSpec transition = batch == null ? null : findTransition(batch);
         if (transition == null) return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
-        if (held.getCount() < transition.getInputCount()) {
-            return needsCount(level, player, transition);
-        }
+        if (held.getCount() < transition.getInputCount()) return needsCount(level, player, transition);
 
         InteractionHand waterHand = hand == InteractionHand.MAIN_HAND ? InteractionHand.OFF_HAND : InteractionHand.MAIN_HAND;
         ItemStack waterVial = player.getItemInHand(waterHand);
@@ -61,24 +62,26 @@ public final class OreWasherBlock extends Block {
         }
         if (level.isClientSide()) return ItemInteractionResult.SUCCESS;
 
-        MaterialBatchContents washedBatch = washedBatch(batch, transition.getOutputForm(), transition.getOutputMassMicrograms(), water);
-        ItemStack output = ChemItems.materialStack(washedBatch);
-        output.setCount(transition.getOutputCount());
-        if (output.isEmpty()) return ItemInteractionResult.FAIL;
+        OreWashingResult result = OreWashingQuality.wash(
+            new MaterialMassComposition(batch.primaryMassMicrograms(), batch.impurityMassMicrograms()),
+            water.waterSample().totalImpuritiesPpm()
+        );
+        MaterialBatchContents washedBatch = washedBatch(batch, transition.getOutputForm(), result);
+        ItemStack concentrate = ChemItems.materialStack(washedBatch);
+        concentrate.setCount(transition.getOutputCount());
+        List<ItemStack> tailings = tailingStacks(result.tailingsMassMicrograms());
+        if (concentrate.isEmpty() || tailings.stream().anyMatch(ItemStack::isEmpty)) return ItemInteractionResult.FAIL;
 
-        if (held.getCount() == transition.getInputCount()) {
-            player.setItemInHand(hand, output);
-        } else {
-            held.shrink(transition.getInputCount());
-            if (!player.getInventory().add(output)) player.drop(output, false);
-        }
+        replaceOrConsumeInput(player, hand, held, transition.getInputCount(), concentrate);
         consumeWaterVial(player, waterHand, waterVial);
+        tailings.forEach(stack -> give(player, stack));
         level.playSound(null, pos, SoundEvents.BUCKET_EMPTY, SoundSource.BLOCKS, 0.7F, 1.25F);
         player.displayClientMessage(Component.translatable(
             "message.chemmod.washer.result",
             Component.translatable("water_profile.chemmod." + water.waterSample().profile()),
             formatPercent(batch.purityPpm()),
-            formatPercent(washedBatch.purityPpm())
+            formatPercent(washedBatch.purityPpm()),
+            formatMass(result.getTailingsTotalMassMicrograms())
         ), true);
         return ItemInteractionResult.SUCCESS;
     }
@@ -92,6 +95,25 @@ public final class OreWasherBlock extends Block {
         return ItemInteractionResult.FAIL;
     }
 
+    private static void replaceOrConsumeInput(
+        Player player,
+        InteractionHand hand,
+        ItemStack input,
+        int inputCount,
+        ItemStack output
+    ) {
+        if (input.getCount() == inputCount) {
+            player.setItemInHand(hand, output);
+        } else {
+            input.shrink(inputCount);
+            give(player, output);
+        }
+    }
+
+    private static void give(Player player, ItemStack stack) {
+        if (!player.getInventory().add(stack)) player.drop(stack, false);
+    }
+
     private static void consumeWaterVial(Player player, InteractionHand waterHand, ItemStack waterVial) {
         if (player.getAbilities().instabuild) return;
         ItemStack empty = new ItemStack(ChemItems.SUBSTANCE_VIAL.get());
@@ -99,40 +121,39 @@ public final class OreWasherBlock extends Block {
             player.setItemInHand(waterHand, empty);
         } else {
             waterVial.shrink(1);
-            if (!player.getInventory().add(empty)) player.drop(empty, false);
+            give(player, empty);
         }
     }
 
-    /**
-     * Keeps the batch's nominal mass exactly constant. The current material model
-     * tracks gangue as a measured concentration, so washing retains a deterministic
-     * fraction based on the recorded water analysis; explicit tailings are reserved
-     * for the later multi-output separator milestone.
-     */
+    private static List<ItemStack> tailingStacks(Map<String, Long> tailingsMasses) {
+        List<ItemStack> stacks = new ArrayList<>();
+        tailingsMasses.forEach((materialId, mass) -> stacks.add(ChemItems.materialStack(
+            new MaterialBatchContents(materialId, "DUST", mass)
+        )));
+        return stacks;
+    }
+
     static MaterialBatchContents washedBatch(
         MaterialBatchContents input,
         String outputForm,
-        long outputMassMicrograms,
-        SubstanceContents water
+        OreWashingResult result
     ) {
-        WashedComposition composition = OreWashingQuality.wash(
-            input.purityPpm(),
-            input.impuritiesPpm(),
-            water.waterSample().totalImpuritiesPpm(),
-            SILICATE_GANGUE
-        );
+        MaterialMassComposition concentrate = result.getConcentrate();
         return new MaterialBatchContents(
-            MaterialBatchContents.CURRENT_SCHEMA,
             input.materialId(),
             outputForm,
-            outputMassMicrograms,
-            composition.getPurityPpm(),
-            composition.getImpuritiesPpm()
+            concentrate.getTotalMassMicrograms(),
+            concentrate.getPrimaryMassMicrograms(),
+            concentrate.getImpurityMassMicrograms()
         );
     }
 
     private static String formatPercent(int ppm) {
         return String.format(java.util.Locale.ROOT, "%.4f", ppm / 10_000.0);
+    }
+
+    private static String formatMass(long micrograms) {
+        return String.format(java.util.Locale.ROOT, "%.3f", micrograms / 1_000_000.0);
     }
 
     private static MaterialTransitionSpec findTransition(MaterialBatchContents batch) {
