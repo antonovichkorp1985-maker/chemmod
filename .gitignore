@@ -4,4 +4,5 @@ build/
 .idea/
 *.iml
 out/
+**/run/
 .DS_Store

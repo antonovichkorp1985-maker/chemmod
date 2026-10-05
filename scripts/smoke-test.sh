@@ -114,4 +114,6 @@ jar tf "$mod_jar" | grep -q '^data/chemmod/recipe/stone_mortar.json$' || {
 }
 echo "NeoForge test jar: $mod_jar"
 
+./scripts/server-smoke-test.sh
+
 echo "==> Smoke test passed"
