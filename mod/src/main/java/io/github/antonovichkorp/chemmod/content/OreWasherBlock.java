@@ -131,6 +131,10 @@ public final class OreWasherBlock extends Block {
         );
     }
 
+    private static String formatPercent(int ppm) {
+        return String.format(java.util.Locale.ROOT, "%.4f", ppm / 10_000.0);
+    }
+
     private static MaterialTransitionSpec findTransition(MaterialBatchContents batch) {
         for (MaterialTransitionSpec transition : TRANSITIONS) {
             if (transition.getMaterialId().equals(batch.materialId())
