@@ -19,13 +19,13 @@ class OreWashingQualityTest {
         assertEquals(11_632_033, clean.concentrate.impurityMassMicrograms.getValue("chemmod:silicate_gangue"))
         assertEquals(861_632_033, clean.concentrate.totalMassMicrograms)
         assertEquals(986_500, clean.concentrate.purityPpm())
-        assertEquals(mapOf("chemmod:silicate_gangue" to 138_367_967), clean.tailingsMassMicrograms)
+        assertEquals(mapOf("chemmod:silicate_gangue" to 138_367_967L), clean.tailingsMassMicrograms)
 
         assertEquals(850_000_000, saline.concentrate.primaryMassMicrograms)
         assertEquals(35_186_150, saline.concentrate.impurityMassMicrograms.getValue("chemmod:silicate_gangue"))
         assertEquals(885_186_150, saline.concentrate.totalMassMicrograms)
         assertEquals(960_250, saline.concentrate.purityPpm())
-        assertEquals(mapOf("chemmod:silicate_gangue" to 114_813_850), saline.tailingsMassMicrograms)
+        assertEquals(mapOf("chemmod:silicate_gangue" to 114_813_850L), saline.tailingsMassMicrograms)
         assertTrue(clean.concentrate.purityPpm() > saline.concentrate.purityPpm())
 
         assertMassConserved(naturalCopper, clean)
