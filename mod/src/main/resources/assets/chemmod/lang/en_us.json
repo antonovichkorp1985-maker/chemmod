@@ -36,6 +36,7 @@
   "command.chemmod.give.failure": "Could not create vial: %s",
   "itemGroup.chemmod": "ChemMod",
   "block.chemmod.native_copper_ore": "Native Copper Ore",
+  "block.chemmod.stone_mortar": "Stone Mortar",
   "item.chemmod.material_form": "%s — %s",
   "material.chemmod.copper": "Copper",
   "material_form.chemmod.ore": "native ore chunk",

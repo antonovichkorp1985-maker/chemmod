@@ -104,6 +104,14 @@ jar tf "$mod_jar" | grep -q '^data/chemmod/loot_table/blocks/native_copper_ore.j
     echo "Smoke-test failure: native copper ore loot is missing" >&2
     exit 1
 }
+jar tf "$mod_jar" | grep -q 'StoneMortarBlock.class$' || {
+    echo "Smoke-test failure: manual material processing block is missing" >&2
+    exit 1
+}
+jar tf "$mod_jar" | grep -q '^data/chemmod/recipe/stone_mortar.json$' || {
+    echo "Smoke-test failure: stone mortar recipe is missing" >&2
+    exit 1
+}
 echo "NeoForge test jar: $mod_jar"
 
 echo "==> Smoke test passed"

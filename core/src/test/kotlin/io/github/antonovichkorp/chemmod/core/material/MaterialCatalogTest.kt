@@ -39,6 +39,13 @@ class MaterialCatalogTest {
         assertEquals(8, itemForms.size)
         assertTrue(itemForms.any { it.registryPath == "copper_ingot" })
         assertTrue(itemForms.none { it.formName == MaterialForm.LIQUID.name })
+
+        val manualTransitions = MaterialProcessExports.bundledManualTransitions()
+        assertEquals(2, manualTransitions.size)
+        assertEquals("ORE", manualTransitions.first().inputForm)
+        assertEquals("CRUSHED_ORE", manualTransitions.first().outputForm)
+        assertEquals("DUST", manualTransitions.last().outputForm)
+        assertTrue(manualTransitions.all { it.inputMassMicrograms == it.outputMassMicrograms })
     }
 
     @Test

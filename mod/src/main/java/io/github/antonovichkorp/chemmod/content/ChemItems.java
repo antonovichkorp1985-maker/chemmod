@@ -33,6 +33,11 @@ public final class ChemItems {
         () -> new BlockItem(ChemBlocks.NATIVE_COPPER_ORE.get(), new Item.Properties())
     );
 
+    public static final DeferredHolder<Item, BlockItem> STONE_MORTAR = ITEMS.register(
+        "stone_mortar",
+        () -> new BlockItem(ChemBlocks.STONE_MORTAR.get(), new Item.Properties())
+    );
+
     private static final List<String> TEST_SUBSTANCES = List.of(
         "вода", "водород", "кислород", "углекислый_газ", "метан", "метанол",
         "этанол", "диметиловый_эфир", "пропан", "уксусная_кислота", "хлор"
@@ -49,6 +54,7 @@ public final class ChemItems {
                 output.accept(new ItemStack(SUBSTANCE_VIAL.get()));
                 TEST_SUBSTANCES.forEach(alias -> output.accept(vial(alias)));
                 output.accept(new ItemStack(NATIVE_COPPER_ORE.get()));
+                output.accept(new ItemStack(STONE_MORTAR.get()));
                 MATERIAL_ITEMS.forEach(registration -> output.accept(new ItemStack(registration.holder().get())));
             })
             .build()
@@ -104,6 +110,29 @@ public final class ChemItems {
         ItemStack stack = new ItemStack(SUBSTANCE_VIAL.get());
         stack.set(ChemComponents.SUBSTANCE.get(), new SubstanceContents("O", micromoles, analysis));
         return stack;
+    }
+
+    public static ItemStack materialStack(
+        MaterialBatchContents input,
+        String outputForm,
+        long outputMassMicrograms
+    ) {
+        for (MaterialItemRegistration registration : MATERIAL_ITEMS) {
+            MaterialItemSpec spec = registration.spec();
+            if (spec.getMaterialId().equals(input.materialId()) && spec.getFormName().equals(outputForm)) {
+                ItemStack result = new ItemStack(registration.holder().get());
+                result.set(ChemComponents.MATERIAL_BATCH.get(), new MaterialBatchContents(
+                    MaterialBatchContents.CURRENT_SCHEMA,
+                    input.materialId(),
+                    outputForm,
+                    outputMassMicrograms,
+                    input.purityPpm(),
+                    input.impuritiesPpm()
+                ));
+                return result;
+            }
+        }
+        return ItemStack.EMPTY;
     }
 
     private record MaterialItemRegistration(

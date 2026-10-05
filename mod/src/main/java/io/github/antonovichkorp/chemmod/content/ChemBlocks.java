@@ -26,6 +26,17 @@ public final class ChemBlocks {
         )
     );
 
+    public static final DeferredHolder<Block, StoneMortarBlock> STONE_MORTAR = BLOCKS.register(
+        "stone_mortar",
+        () -> new StoneMortarBlock(
+            BlockBehaviour.Properties.of()
+                .mapColor(MapColor.STONE)
+                .strength(2.0F, 6.0F)
+                .sound(SoundType.STONE)
+                .noOcclusion()
+        )
+    );
+
     private ChemBlocks() {}
 
     public static void register(IEventBus eventBus) {
