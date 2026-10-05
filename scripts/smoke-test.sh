@@ -80,6 +80,18 @@ jar tf "$mod_jar" | grep -q 'TerraFirmaCraftWaterAdapter.class$' || {
     echo "Smoke-test failure: optional TerraFirmaCraft water adapter is missing" >&2
     exit 1
 }
+jar tf "$mod_jar" | grep -q 'MaterialFormItem.class$' || {
+    echo "Smoke-test failure: canonical material form item is missing" >&2
+    exit 1
+}
+jar tf "$mod_jar" | grep -q '^assets/chemmod/models/item/copper_ingot.json$' || {
+    echo "Smoke-test failure: canonical copper ingot model is missing" >&2
+    exit 1
+}
+jar tf "$mod_jar" | grep -q '^data/c/tags/item/ingots/copper.json$' || {
+    echo "Smoke-test failure: common copper ingot tag is missing" >&2
+    exit 1
+}
 echo "NeoForge test jar: $mod_jar"
 
 echo "==> Smoke test passed"

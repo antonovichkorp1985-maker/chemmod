@@ -67,14 +67,14 @@
         {
           "material": "chemmod:copper",
           "form": "ore",
-          "massMicrograms": 1000000
+          "massMicrograms": 1000000000
         }
       ],
       "outputs": [
         {
           "material": "chemmod:copper",
           "form": "crushed_ore",
-          "massMicrograms": 1000000
+          "massMicrograms": 1000000000
         }
       ],
       "durationTicks": 200
@@ -86,14 +86,14 @@
         {
           "material": "chemmod:copper",
           "form": "crushed_ore",
-          "massMicrograms": 1000000
+          "massMicrograms": 1000000000
         }
       ],
       "outputs": [
         {
           "material": "chemmod:copper",
           "form": "dust",
-          "massMicrograms": 1000000
+          "massMicrograms": 1000000000
         }
       ],
       "durationTicks": 200
@@ -105,14 +105,14 @@
         {
           "material": "chemmod:copper",
           "form": "dust",
-          "massMicrograms": 1000000
+          "massMicrograms": 1000000000
         }
       ],
       "outputs": [
         {
           "material": "chemmod:copper",
           "form": "liquid",
-          "massMicrograms": 1000000
+          "massMicrograms": 1000000000
         }
       ],
       "durationTicks": 400,
@@ -127,14 +127,14 @@
         {
           "material": "chemmod:copper",
           "form": "liquid",
-          "massMicrograms": 1000000
+          "massMicrograms": 1000000000
         }
       ],
       "outputs": [
         {
           "material": "chemmod:copper",
           "form": "ingot",
-          "massMicrograms": 1000000
+          "massMicrograms": 1000000000
         }
       ],
       "durationTicks": 200,

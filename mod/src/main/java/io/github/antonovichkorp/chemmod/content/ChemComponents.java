@@ -17,6 +17,12 @@ public final class ChemComponents {
             .networkSynchronized(SubstanceContents.STREAM_CODEC)
             .build());
 
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<MaterialBatchContents>> MATERIAL_BATCH =
+        COMPONENTS.register("material_batch", () -> DataComponentType.<MaterialBatchContents>builder()
+            .persistent(MaterialBatchContents.CODEC)
+            .networkSynchronized(MaterialBatchContents.STREAM_CODEC)
+            .build());
+
     private ChemComponents() {}
 
     public static void register(IEventBus eventBus) {

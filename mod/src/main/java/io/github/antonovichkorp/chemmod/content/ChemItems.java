@@ -3,6 +3,8 @@ package io.github.antonovichkorp.chemmod.content;
 import io.github.antonovichkorp.chemmod.ChemMod;
 import io.github.antonovichkorp.chemmod.core.CommonSubstance;
 import io.github.antonovichkorp.chemmod.core.CommonSubstances;
+import io.github.antonovichkorp.chemmod.core.material.MaterialItemExports;
+import io.github.antonovichkorp.chemmod.core.material.MaterialItemSpec;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.CreativeModeTab;
@@ -12,6 +14,7 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public final class ChemItems {
@@ -29,6 +32,8 @@ public final class ChemItems {
         "этанол", "диметиловый_эфир", "пропан", "уксусная_кислота", "хлор"
     );
 
+    private static final List<MaterialItemRegistration> MATERIAL_ITEMS = registerMaterialItems();
+
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> MAIN_TAB = TABS.register(
         "main",
         () -> CreativeModeTab.builder()
@@ -37,9 +42,37 @@ public final class ChemItems {
             .displayItems((parameters, output) -> {
                 output.accept(new ItemStack(SUBSTANCE_VIAL.get()));
                 TEST_SUBSTANCES.forEach(alias -> output.accept(vial(alias)));
+                MATERIAL_ITEMS.forEach(registration -> output.accept(new ItemStack(registration.holder().get())));
             })
             .build()
     );
+
+    private static List<MaterialItemRegistration> registerMaterialItems() {
+        List<MaterialItemRegistration> registrations = new ArrayList<>();
+        for (MaterialItemSpec spec : MaterialItemExports.bundledSolidForms()) {
+            DeferredHolder<Item, MaterialFormItem> holder = ITEMS.register(
+                spec.getRegistryPath(),
+                () -> new MaterialFormItem(
+                    new Item.Properties()
+                        .stacksTo(64)
+                        .component(ChemComponents.MATERIAL_BATCH.get(), defaultBatch(spec)),
+                    spec.getMaterialId(),
+                    spec.getFormName()
+                )
+            );
+            registrations.add(new MaterialItemRegistration(spec, holder));
+        }
+        return List.copyOf(registrations);
+    }
+
+    private static MaterialBatchContents defaultBatch(MaterialItemSpec spec) {
+        long massMicrograms = switch (spec.getFormName()) {
+            case "NUGGET" -> 111_111_111L;
+            case "WIRE" -> 250_000_000L;
+            default -> 1_000_000_000L;
+        };
+        return new MaterialBatchContents(spec.getMaterialId(), spec.getFormName(), massMicrograms, 1_000_000);
+    }
 
     private ChemItems() {}
 
@@ -65,4 +98,9 @@ public final class ChemItems {
         stack.set(ChemComponents.SUBSTANCE.get(), new SubstanceContents("O", micromoles, analysis));
         return stack;
     }
+
+    private record MaterialItemRegistration(
+        MaterialItemSpec spec,
+        DeferredHolder<Item, MaterialFormItem> holder
+    ) {}
 }

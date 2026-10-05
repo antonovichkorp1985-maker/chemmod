@@ -26,7 +26,13 @@ class MaterialCatalogTest {
         val melting = catalog.compiledProcesses.getValue(ProcessId.of("chemmod:melt_copper"))
         assertEquals(MaterialForm.DUST, melting.inputs.single().form)
         assertEquals(MaterialForm.LIQUID, melting.outputs.single().form)
+        assertEquals(1_000_000_000L, melting.inputs.single().massMicrograms)
         assertEquals(1357.77, melting.conditions.minimumTemperatureKelvin)
+
+        val itemForms = MaterialItemExports.bundledSolidForms()
+        assertEquals(8, itemForms.size)
+        assertTrue(itemForms.any { it.registryPath == "copper_ingot" })
+        assertTrue(itemForms.none { it.formName == MaterialForm.LIQUID.name })
     }
 
     @Test
