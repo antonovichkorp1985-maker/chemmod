@@ -24,9 +24,9 @@ class ReactionBatchPlannerTest {
         )
 
         val plan = plans.single()
-        assertEquals(1_000_000, plan.extentMicromoles)
-        assertEquals(1_000_000, plan.targetConsumedMicromoles)
-        assertEquals(listOf(1_000_000), plan.coReactantConsumedMicromoles)
+        assertEquals(1_000_000L, plan.extentMicromoles)
+        assertEquals(1_000_000L, plan.targetConsumedMicromoles)
+        assertEquals(listOf(1_000_000L), plan.coReactantConsumedMicromoles)
         assertEquals(listOf("C3H8"), plan.products.map { it.molecule.formula() })
         assertEquals(listOf(1_000_000L), plan.products.map { it.micromoles })
         assertTrue(plan.reaction.isConserved())
@@ -42,9 +42,9 @@ class ReactionBatchPlannerTest {
         )
 
         val plan = plans.single()
-        assertEquals(666_666, plan.extentMicromoles)
-        assertEquals(666_666, plan.targetConsumedMicromoles)
-        assertEquals(listOf(1_999_998), plan.coReactantConsumedMicromoles)
+        assertEquals(666_666L, plan.extentMicromoles)
+        assertEquals(666_666L, plan.targetConsumedMicromoles)
+        assertEquals(listOf(1_999_998L), plan.coReactantConsumedMicromoles)
         assertEquals(listOf("CO2", "H2O"), plan.products.map { it.molecule.formula() })
         assertEquals(listOf(1_333_332L, 1_999_998L), plan.products.map { it.micromoles })
     }
