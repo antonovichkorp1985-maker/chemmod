@@ -5,6 +5,8 @@ import io.github.antonovichkorp.chemmod.core.CommonSubstance;
 import io.github.antonovichkorp.chemmod.core.CommonSubstances;
 import io.github.antonovichkorp.chemmod.core.material.MaterialItemExports;
 import io.github.antonovichkorp.chemmod.core.material.MaterialItemSpec;
+import io.github.antonovichkorp.chemmod.core.mixture.MolecularMixture;
+import io.github.antonovichkorp.chemmod.core.reaction.MolecularPortion;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.BlockItem;
@@ -127,6 +129,7 @@ public final class ChemItems {
             .displayItems((parameters, output) -> {
                 output.accept(new ItemStack(SUBSTANCE_VIAL.get()));
                 TEST_SUBSTANCES.forEach(alias -> output.accept(vial(alias)));
+                output.accept(mixtureVial("вода", "этанол"));
                 output.accept(new ItemStack(NATIVE_COPPER_ORE.get()));
                 output.accept(copperStorageBlockStack(CopperStorageBlockEntity.defaultBatch()));
                 output.accept(new ItemStack(STONE_MORTAR.get()));
@@ -213,6 +216,30 @@ public final class ChemItems {
         ItemStack stack = new ItemStack(SUBSTANCE_VIAL.get());
         stack.set(ChemComponents.SUBSTANCE.get(), new SubstanceContents(structure, micromoles, purityPpm));
         return stack;
+    }
+
+    /** Create a vial from exact core composition without inventing an unnamed impurity field. */
+    public static ItemStack vialFromMolecularMixture(MolecularMixture mixture) {
+        VialContentsState contents = VialContentsState.fromMolecularMixture(mixture);
+        if (contents.isEmpty()) throw new IllegalArgumentException("A vial cannot be created from an empty mixture");
+        ItemStack stack = new ItemStack(SUBSTANCE_VIAL.get());
+        contents.applyTo(stack);
+        return stack;
+    }
+
+    /** Convenience constructor for explicit pure reference components (for example, creative calibration stacks). */
+    public static ItemStack mixtureVial(String... inputs) {
+        if (inputs == null || inputs.length < 2) {
+            throw new IllegalArgumentException("A mixture vial needs at least two input structures");
+        }
+        List<MolecularPortion> portions = new ArrayList<>();
+        for (String input : inputs) {
+            CommonSubstance common = CommonSubstances.INSTANCE.find(input);
+            String structure = common == null ? CommonSubstances.INSTANCE.resolve(input) : common.getStructure();
+            SubstanceContents contents = new SubstanceContents(structure, 1_000_000L, 1_000_000);
+            portions.add(new MolecularPortion(contents.molecule(), contents.micromoles()));
+        }
+        return vialFromMolecularMixture(new MolecularMixture(portions));
     }
 
     public static ItemStack waterSample(long micromoles, WaterSampleData analysis) {
