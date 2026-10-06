@@ -2,7 +2,6 @@ package io.github.antonovichkorp.chemmod.core.chemistry
 
 import io.github.antonovichkorp.chemmod.core.Molecule
 import io.github.antonovichkorp.chemmod.core.properties.StructuralProperties
-import io.github.antonovichkorp.chemmod.core.properties.StructuralPropertyAnalyzer
 import io.github.antonovichkorp.chemmod.core.reaction.ReactionBalancer
 import java.io.InputStream
 import java.math.BigInteger
@@ -11,9 +10,10 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
 /**
- * Declarative chemistry before mixtures or machines. The catalog owns molecular
- * identities and reaction equations; processing equipment will later consume
- * this validated chemistry instead of hard-coding another recipe graph.
+ * Declarative registry of named/approved chemistry before mixtures or machines.
+ * It does not own molecular existence: [MolecularSubstance] can be created from
+ * any valid graph. The catalog adds player-facing names, aliases and explicitly
+ * declared gameplay reactions to selected identities.
  */
 class ChemicalCatalog private constructor(
     val schemaVersion: Int,
@@ -117,31 +117,24 @@ class ChemicalCatalog private constructor(
     }
 }
 
+/** A game-facing name and aliases for an otherwise catalog-independent molecular identity. */
 class ChemicalSubstance private constructor(
     val id: SubstanceId,
     val aliases: Set<String>,
-    val structure: String,
-    val molecule: Molecule,
-    val canonicalKey: String,
-    val properties: StructuralProperties,
+    val molecular: MolecularSubstance,
 ) {
+    val structure: String
+        get() = molecular.structure
+    val molecule: Molecule
+        get() = molecular.molecule
+    val canonicalKey: String
+        get() = molecular.canonicalKey
+    val properties: StructuralProperties
+        get() = molecular.properties
+
     companion object {
-        fun fromStructure(id: SubstanceId, aliases: Set<String>, structure: String): ChemicalSubstance {
-            require(structure.isNotBlank()) { "Substance $id needs a structure" }
-            val molecule = Molecule.fromSMILESlike(structure)
-            val issues = molecule.validate()
-            require(issues.isEmpty()) {
-                "Invalid structure for $id: ${issues.joinToString { it.message }}"
-            }
-            return ChemicalSubstance(
-                id = id,
-                aliases = aliases.toSet(),
-                structure = structure,
-                molecule = molecule,
-                canonicalKey = molecule.canonicalKey(),
-                properties = StructuralPropertyAnalyzer.analyze(molecule.graph),
-            )
-        }
+        fun fromStructure(id: SubstanceId, aliases: Set<String>, structure: String): ChemicalSubstance =
+            ChemicalSubstance(id, aliases.toSet(), MolecularSubstance.fromStructure(structure))
     }
 }
 
