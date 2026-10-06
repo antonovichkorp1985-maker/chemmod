@@ -73,7 +73,7 @@ public final class SubstanceVialItem extends Item {
         if (contents == null) {
             return Component.translatable("item.chemmod.substance_vial.empty");
         }
-        CommonSubstance common = CommonSubstances.INSTANCE.findByStructure(contents.structure());
+        CommonSubstance common = CommonSubstances.INSTANCE.findByCanonicalKey(contents.canonicalKey());
         Component substanceName = common == null
             ? Component.translatable("substance.chemmod.custom")
             : Component.translatable("substance.chemmod." + common.getCanonicalName());
@@ -94,7 +94,7 @@ public final class SubstanceVialItem extends Item {
         }
 
         try {
-            Molecule molecule = Molecule.Companion.fromSMILESlike(contents.structure());
+            Molecule molecule = contents.molecule();
             tooltip.add(Component.translatable("tooltip.chemmod.formula", molecule.formula())
                 .withStyle(ChatFormatting.AQUA));
             tooltip.add(Component.translatable(
@@ -142,11 +142,11 @@ public final class SubstanceVialItem extends Item {
             if (flag.isAdvanced()) {
                 tooltip.add(Component.translatable("tooltip.chemmod.schema", contents.schemaVersion())
                     .withStyle(ChatFormatting.DARK_GRAY));
-                tooltip.add(Component.translatable("tooltip.chemmod.structure", contents.structure())
+                tooltip.add(Component.translatable("tooltip.chemmod.structure", contents.structuralWitness())
                     .withStyle(ChatFormatting.DARK_GRAY));
                 tooltip.add(Component.translatable(
                     "tooltip.chemmod.canonical_id",
-                    Long.toUnsignedString(molecule.canonicalId())
+                    contents.canonicalKey()
                 ).withStyle(ChatFormatting.DARK_GRAY));
             } else {
                 tooltip.add(Component.translatable("tooltip.chemmod.hold_shift")

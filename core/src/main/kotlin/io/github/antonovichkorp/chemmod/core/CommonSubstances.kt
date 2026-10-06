@@ -19,9 +19,11 @@ object CommonSubstances {
     }
 
     fun findByStructure(structure: String): CommonSubstance? =
-        directory.findByCanonicalKey(Molecule.fromSMILESlike(structure).canonicalKey())?.let {
-            CommonSubstance(it.canonicalName, it.structure)
-        }
+        findByCanonicalKey(Molecule.fromSMILESlike(structure).canonicalKey())
+
+    fun findByCanonicalKey(canonicalKey: String): CommonSubstance? = directory.findByCanonicalKey(canonicalKey)?.let {
+        CommonSubstance(it.canonicalName, it.structure)
+    }
 
     fun resolve(input: String): String = find(input)?.structure ?: input
 }

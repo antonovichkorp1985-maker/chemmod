@@ -54,7 +54,7 @@ public final class OreWasherBlock extends Block {
         InteractionHand waterHand = hand == InteractionHand.MAIN_HAND ? InteractionHand.OFF_HAND : InteractionHand.MAIN_HAND;
         ItemStack waterVial = player.getItemInHand(waterHand);
         SubstanceContents water = waterVial.get(ChemComponents.SUBSTANCE.get());
-        if (water == null || !"O".equals(water.structure()) || !water.waterSample().isAnalyzed()) {
+        if (water == null || !water.isWater() || !water.waterSample().isAnalyzed()) {
             if (!level.isClientSide()) {
                 player.displayClientMessage(Component.translatable("message.chemmod.washer.needs_water_sample"), true);
             }
