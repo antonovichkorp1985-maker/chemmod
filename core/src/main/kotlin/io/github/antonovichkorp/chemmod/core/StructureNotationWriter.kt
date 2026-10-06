@@ -72,12 +72,13 @@ object StructureNotationWriter {
                 if (closure.writesBond) append(bondToken(closure.order))
                 append(closure.label)
             }
-            treeChildren.getValue(atomId)
-                .sortedBy { it.other(atomId) }
-                .forEachIndexed { index, bond ->
-                    val segment = bondToken(bond.order) + render(bond.other(atomId))
-                    if (index == 0) append(segment) else append('(').append(segment).append(')')
-                }
+            val children = treeChildren.getValue(atomId).sortedBy { it.other(atomId) }
+            children.forEachIndexed { index, bond ->
+                val segment = bondToken(bond.order) + render(bond.other(atomId))
+                // Branches must be written before the one linear child: after a
+                // linear child has been rendered, parser state is at that child.
+                if (index == children.lastIndex) append(segment) else append('(').append(segment).append(')')
+            }
         }
 
         return roots.joinToString(separator = ".") { root -> render(root) }
