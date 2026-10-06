@@ -31,6 +31,8 @@ public final class SubstanceVialItem extends Item {
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         ItemStack held = player.getItemInHand(hand);
+        InteractionResultHolder<ItemStack> mixing = tryMixWithOppositeHand(level, player, hand, held);
+        if (mixing != null) return mixing;
         if (held.has(ChemComponents.SUBSTANCE.get()) || held.has(ChemComponents.MIXTURE.get())) {
             return InteractionResultHolder.pass(held);
         }
@@ -65,6 +67,74 @@ public final class SubstanceVialItem extends Item {
                 SoundEvents.BOTTLE_FILL, SoundSource.PLAYERS, 1.0F, 1.0F);
         }
         return InteractionResultHolder.sidedSuccess(player.getItemInHand(hand), level.isClientSide);
+    }
+
+    /** Sneak-use a filled vial while holding another filled vial to mix exact component quantities. */
+    private static InteractionResultHolder<ItemStack> tryMixWithOppositeHand(
+        Level level,
+        Player player,
+        InteractionHand hand,
+        ItemStack held
+    ) {
+        if (!player.isShiftKeyDown()) return null;
+        InteractionHand otherHand = hand == InteractionHand.MAIN_HAND ? InteractionHand.OFF_HAND : InteractionHand.MAIN_HAND;
+        ItemStack other = player.getItemInHand(otherHand);
+        if (!other.is(ChemItems.SUBSTANCE_VIAL.get())) return null;
+
+        final VialContentsState heldState;
+        final VialContentsState otherState;
+        try {
+            heldState = VialContentsState.fromStack(held);
+            otherState = VialContentsState.fromStack(other);
+        } catch (IllegalArgumentException exception) {
+            if (!level.isClientSide()) {
+                player.displayClientMessage(Component.translatable("message.chemmod.mixture.invalid_contents"), true);
+            }
+            return InteractionResultHolder.fail(held);
+        }
+        if (heldState.isEmpty() || otherState.isEmpty()) return null;
+
+        if (player.getAbilities().instabuild) {
+            if (!level.isClientSide()) {
+                try {
+                    ItemStack output = new ItemStack(ChemItems.SUBSTANCE_VIAL.get());
+                    VialMixingTransaction.combine(heldState, otherState).applyTo(output);
+                    if (!player.getInventory().add(output)) player.drop(output, false);
+                    player.displayClientMessage(Component.translatable("message.chemmod.mixture.mixed"), true);
+                } catch (IllegalArgumentException | ArithmeticException exception) {
+                    player.displayClientMessage(Component.translatable("message.chemmod.mixture.cannot_mix"), true);
+                    return InteractionResultHolder.fail(held);
+                }
+            }
+            return InteractionResultHolder.sidedSuccess(held, level.isClientSide);
+        }
+
+        // Replacing components of a stack would change every vial in that stack,
+        // so the survival operation only accepts exactly one vial in each hand.
+        if (held.getCount() != 1 || other.getCount() != 1) {
+            if (!level.isClientSide()) {
+                player.displayClientMessage(Component.translatable("message.chemmod.mixture.needs_single_vials"), true);
+            }
+            return InteractionResultHolder.fail(held);
+        }
+
+        final VialContentsState output;
+        try {
+            output = VialMixingTransaction.combine(heldState, otherState);
+        } catch (IllegalArgumentException | ArithmeticException exception) {
+            if (!level.isClientSide()) {
+                player.displayClientMessage(Component.translatable("message.chemmod.mixture.cannot_mix"), true);
+            }
+            return InteractionResultHolder.fail(held);
+        }
+        if (!level.isClientSide()) {
+            output.applyTo(held);
+            VialContentsState.empty().applyTo(other);
+            player.displayClientMessage(Component.translatable("message.chemmod.mixture.mixed"), true);
+            level.playSound(null, player.getX(), player.getY(), player.getZ(),
+                SoundEvents.BOTTLE_EMPTY, SoundSource.PLAYERS, 0.8F, 1.0F);
+        }
+        return InteractionResultHolder.sidedSuccess(held, level.isClientSide);
     }
 
     @Override
