@@ -31,7 +31,7 @@ public final class SubstanceVialItem extends Item {
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         ItemStack held = player.getItemInHand(hand);
-        if (held.has(ChemComponents.SUBSTANCE.get())) {
+        if (held.has(ChemComponents.SUBSTANCE.get()) || held.has(ChemComponents.MIXTURE.get())) {
             return InteractionResultHolder.pass(held);
         }
 
@@ -70,14 +70,25 @@ public final class SubstanceVialItem extends Item {
     @Override
     public Component getName(ItemStack stack) {
         SubstanceContents contents = stack.get(ChemComponents.SUBSTANCE.get());
-        if (contents == null) {
-            return Component.translatable("item.chemmod.substance_vial.empty");
+        MixtureContents mixture = stack.get(ChemComponents.MIXTURE.get());
+        if (contents != null && mixture != null) {
+            return Component.translatable("item.chemmod.substance_vial.filled",
+                Component.translatable("substance.chemmod.invalid_data"));
         }
-        CommonSubstance common = CommonSubstances.INSTANCE.findByCanonicalKey(contents.canonicalKey());
-        Component substanceName = common == null
-            ? Component.translatable("substance.chemmod.custom")
-            : Component.translatable("substance.chemmod." + common.getCanonicalName());
-        return Component.translatable("item.chemmod.substance_vial.filled", substanceName);
+        if (contents != null) {
+            CommonSubstance common = CommonSubstances.INSTANCE.findByCanonicalKey(contents.canonicalKey());
+            Component substanceName = common == null
+                ? Component.translatable("substance.chemmod.custom")
+                : Component.translatable("substance.chemmod." + common.getCanonicalName());
+            return Component.translatable("item.chemmod.substance_vial.filled", substanceName);
+        }
+        if (mixture != null) {
+            return Component.translatable(
+                "item.chemmod.substance_vial.filled",
+                Component.translatable("substance.chemmod.mixture", mixture.parts().size())
+            );
+        }
+        return Component.translatable("item.chemmod.substance_vial.empty");
     }
 
     @Override
@@ -88,6 +99,16 @@ public final class SubstanceVialItem extends Item {
         TooltipFlag flag
     ) {
         SubstanceContents contents = stack.get(ChemComponents.SUBSTANCE.get());
+        MixtureContents mixture = stack.get(ChemComponents.MIXTURE.get());
+        if (contents != null && mixture != null) {
+            tooltip.add(Component.translatable("tooltip.chemmod.invalid", "substance and mixture cannot coexist")
+                .withStyle(ChatFormatting.RED));
+            return;
+        }
+        if (mixture != null) {
+            appendMixtureTooltip(mixture, tooltip, flag);
+            return;
+        }
         if (contents == null) {
             tooltip.add(Component.translatable("tooltip.chemmod.vial.empty").withStyle(ChatFormatting.GRAY));
             return;
@@ -155,6 +176,31 @@ public final class SubstanceVialItem extends Item {
         } catch (Exception exception) {
             tooltip.add(Component.translatable("tooltip.chemmod.invalid", exception.getMessage())
                 .withStyle(ChatFormatting.RED));
+        }
+    }
+
+    private static void appendMixtureTooltip(
+        MixtureContents mixture,
+        List<Component> tooltip,
+        TooltipFlag flag
+    ) {
+        tooltip.add(Component.translatable("tooltip.chemmod.mixture", mixture.parts().size())
+            .withStyle(ChatFormatting.GOLD));
+        tooltip.add(Component.translatable(
+            "tooltip.chemmod.amount",
+            String.format(Locale.ROOT, "%.6f", mixture.totalMicromoles() / 1_000_000.0)
+        ).withStyle(ChatFormatting.GRAY));
+        for (MixtureContents.MixturePart part : mixture.parts()) {
+            Molecule molecule = part.molecule();
+            tooltip.add(Component.translatable(
+                "tooltip.chemmod.mixture.component",
+                molecule.formula(),
+                String.format(Locale.ROOT, "%.6f", part.micromoles() / 1_000_000.0)
+            ).withStyle(ChatFormatting.DARK_GRAY));
+            if (flag.isAdvanced()) {
+                tooltip.add(Component.translatable("tooltip.chemmod.mixture.component_key", part.canonicalKey())
+                    .withStyle(ChatFormatting.DARK_GRAY));
+            }
         }
     }
 }
