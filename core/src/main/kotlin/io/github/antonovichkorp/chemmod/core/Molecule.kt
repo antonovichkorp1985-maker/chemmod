@@ -15,6 +15,8 @@ class Molecule private constructor(val graph: MoleculeGraph) {
     fun formula(): String = FormulaCalculator.hillFormula(graph)
     fun molarMass(): Double = FormulaCalculator.molarMass(graph)
     fun properties(): PredictedProperties = PropertyPredictor.predict(graph)
+    /** Extended estimates derived from the graph, without a per-substance lookup table. */
+    fun structuralProperties(): StructuralProperties = StructuralPropertyAnalyzer.analyze(graph)
 
     companion object {
         private val defaultParser by lazy { SmilesLikeParser(ElementTable.default()) }
