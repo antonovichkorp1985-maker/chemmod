@@ -24,7 +24,7 @@ class MolecularReactionRulesTest {
         val butanol = MolecularSubstance.fromStructure("CCCCO")
         val reaction = assertNotNull(MolecularReactionRules.completeCombustion(butanol))
 
-        assertEquals("2 C4H10O + 12 O2 -> 8 CO2 + 10 H2O", reaction.formatEquation())
+        assertEquals("C4H10O + 6 O2 -> 4 CO2 + 5 H2O", reaction.formatEquation())
         assertTrue(reaction.isConserved())
     }
 
