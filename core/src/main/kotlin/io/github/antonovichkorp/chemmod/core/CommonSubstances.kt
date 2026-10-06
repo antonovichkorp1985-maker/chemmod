@@ -1,12 +1,10 @@
 package io.github.antonovichkorp.chemmod.core
 
-import io.github.antonovichkorp.chemmod.core.chemistry.ChemicalCatalog
-import io.github.antonovichkorp.chemmod.core.chemistry.ChemicalSubstance
+import io.github.antonovichkorp.chemmod.core.naming.TrivialNameDirectory
 
 /**
- * Compatibility input facade for commands and legacy callers. Molecular names,
- * aliases and structures now have one authoritative data source in the
- * declarative chemistry catalog rather than a second hand-written list.
+ * Compatibility facade for commands and old callers. This directory resolves
+ * only human names; it never controls the existence of a molecular structure.
  */
 data class CommonSubstance(
     val canonicalName: String,
@@ -14,14 +12,16 @@ data class CommonSubstance(
 )
 
 object CommonSubstances {
-    private val catalog: ChemicalCatalog by lazy(ChemicalCatalog::bundled)
+    private val directory: TrivialNameDirectory by lazy(TrivialNameDirectory::bundled)
 
-    fun find(input: String): CommonSubstance? = catalog.findSubstance(input)?.asCommon()
+    fun find(input: String): CommonSubstance? = directory.find(input)?.let {
+        CommonSubstance(it.canonicalName, it.structure)
+    }
 
     fun findByStructure(structure: String): CommonSubstance? =
-        catalog.substances.values.firstOrNull { it.structure == structure }?.asCommon()
+        directory.findByCanonicalKey(Molecule.fromSMILESlike(structure).canonicalKey())?.let {
+            CommonSubstance(it.canonicalName, it.structure)
+        }
 
     fun resolve(input: String): String = find(input)?.structure ?: input
-
-    private fun ChemicalSubstance.asCommon(): CommonSubstance = CommonSubstance(id.path, structure)
 }

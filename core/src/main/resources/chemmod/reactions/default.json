@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "rules": [
+    {
+      "id": "chemmod:complete_combustion",
+      "matcher": {
+        "allowedElements": ["C", "H", "O"],
+        "requiredElements": ["C"],
+        "requireNeutral": true,
+        "requirePositiveOxygenDemand": true
+      },
+      "coReactantStructures": ["O=O"],
+      "productStructures": ["O=C=O", "O"],
+      "conditions": {
+        "minimumTemperatureKelvin": 500.0
+      }
+    }
+  ]
+}

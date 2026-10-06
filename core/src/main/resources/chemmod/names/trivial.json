@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "entries": [
+    {"canonicalName": "water", "aliases": ["water", "вода", "h2o"], "structure": "O"},
+    {"canonicalName": "hydrogen", "aliases": ["hydrogen", "водород", "h2"], "structure": "[H][H]"},
+    {"canonicalName": "oxygen", "aliases": ["oxygen", "кислород", "o2"], "structure": "O=O"},
+    {"canonicalName": "carbon_dioxide", "aliases": ["carbon_dioxide", "carbon-dioxide", "углекислый_газ", "co2"], "structure": "O=C=O"},
+    {"canonicalName": "methane", "aliases": ["methane", "метан", "ch4"], "structure": "C"},
+    {"canonicalName": "methanol", "aliases": ["methanol", "метанол", "ch3oh"], "structure": "CO"},
+    {"canonicalName": "ethanol", "aliases": ["ethanol", "этанол", "c2h5oh"], "structure": "CCO"},
+    {"canonicalName": "dimethyl_ether", "aliases": ["dimethyl_ether", "dimethyl-ether", "диметиловый_эфир"], "structure": "COC"},
+    {"canonicalName": "propane", "aliases": ["propane", "пропан", "c3h8"], "structure": "CCC"},
+    {"canonicalName": "cyclopropane", "aliases": ["cyclopropane", "циклопропан"], "structure": "C1CC1"},
+    {"canonicalName": "acetylene", "aliases": ["acetylene", "ацетилен", "c2h2"], "structure": "C#C"},
+    {"canonicalName": "acetic_acid", "aliases": ["acetic_acid", "acetic-acid", "уксусная_кислота", "ch3cooh"], "structure": "CC(=O)O"},
+    {"canonicalName": "chlorine", "aliases": ["chlorine", "хлор", "cl2"], "structure": "Cl-Cl"}
+  ]
+}

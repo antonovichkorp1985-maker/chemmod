@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "modelId": "joback-light-bond-energy-v1",
+  "bondEnergies": [
+    {"first": "C", "second": "C", "order": "SINGLE", "kilojoulesPerMole": 347.0},
+    {"first": "C", "second": "C", "order": "DOUBLE", "kilojoulesPerMole": 614.0},
+    {"first": "C", "second": "C", "order": "TRIPLE", "kilojoulesPerMole": 839.0},
+    {"first": "C", "second": "H", "order": "SINGLE", "kilojoulesPerMole": 413.0},
+    {"first": "C", "second": "O", "order": "SINGLE", "kilojoulesPerMole": 358.0},
+    {"first": "C", "second": "O", "order": "DOUBLE", "kilojoulesPerMole": 745.0},
+    {"first": "O", "second": "H", "order": "SINGLE", "kilojoulesPerMole": 463.0},
+    {"first": "O", "second": "O", "order": "SINGLE", "kilojoulesPerMole": 146.0},
+    {"first": "O", "second": "O", "order": "DOUBLE", "kilojoulesPerMole": 498.0}
+  ],
+  "carbonDioxideCarbonOxygenDoubleBondKilojoulesPerMole": 799.0,
+  "boiling": {
+    "exactFormulaCelsius": {"H2O": 100.0},
+    "hydroxylFirstCarbonCelsius": 65.0,
+    "hydroxylAdditionalCarbonCelsius": -1.0,
+    "etherBaseCelsius": -2.0,
+    "etherAdditionalCarbonCelsius": 20.0,
+    "hydrocarbonFirstCarbonCelsius": -161.5,
+    "hydrocarbonLinearCarbonCelsius": 48.0,
+    "hydrocarbonQuadraticCarbonCelsius": 3.5
+  }
+}

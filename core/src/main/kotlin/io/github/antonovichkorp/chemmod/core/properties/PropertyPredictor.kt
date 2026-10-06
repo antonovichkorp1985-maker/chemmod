@@ -4,37 +4,24 @@ import io.github.antonovichkorp.chemmod.core.FormulaCalculator
 import io.github.antonovichkorp.chemmod.core.model.BondOrder
 import io.github.antonovichkorp.chemmod.core.model.MoleculeGraph
 
+/** A derived view; it is never stored in, or allowed to define, a substance. */
 data class PredictedProperties(
     val boilingPointC: Double?,
     val molarMass: Double,
     val flags: Set<String>,
-    val model: String = "m0-group-contribution-v1",
+    val combustionEnthalpyKilojoulesPerMole: Double?,
+    val model: String,
 )
 
 /**
- * Deliberately small, transparent M0 group-contribution model.
- * It is a gameplay predictor, not a reference-property database. Coefficients are
- * frozen by acceptance fixtures from the project prototype and will be expanded
- * from datapack groups in later milestones.
+ * Pure structure → properties evaluator. All coefficients live in
+ * [PropertyRuleSet], not in named substance records or gameplay code.
  */
-object PropertyPredictor {
+class PropertyEngine(private val rules: PropertyRuleSet) {
     fun predict(graph: MoleculeGraph): PredictedProperties {
         val formula = FormulaCalculator.counts(graph)
-        val carbon = formula["C"] ?: 0
-        val oxygenAtoms = graph.atoms.filter { it.element.symbol == "O" }
-
-        val boilingPoint = when {
-            hasCycle(graph) -> null // M0 has no calibrated ring-strain/group correction yet.
-            formula == mapOf("O" to 1, "H" to 2) -> 100.0
-            oxygenAtoms.size == 1 && isHydroxyl(graph, oxygenAtoms.single().id) ->
-                65.0 - (carbon - 1).coerceAtLeast(0)
-            oxygenAtoms.size == 1 && graph.bondsOf(oxygenAtoms.single().id).size == 2 ->
-                -2.0 + 20.0 * (carbon - 2).coerceAtLeast(0)
-            carbon > 0 && oxygenAtoms.isEmpty() ->
-                -161.5 + 48.0 * (carbon - 1) - 3.5 * (carbon - 1) * (carbon - 2)
-            else -> null
-        }
-
+        val boilingPoint = predictBoilingPoint(graph, formula)
+        val combustion = estimateCombustionEnthalpy(graph, formula)
         val flags = buildSet {
             if (graph.bonds.any { bond ->
                     bond.order == BondOrder.SINGLE &&
@@ -44,9 +31,73 @@ object PropertyPredictor {
             ) add("PEROXIDE_BOND")
             if (graph.atoms.any { it.formalCharge != 0 }) add("FORMAL_CHARGE")
             if (graph.bonds.any { it.order == BondOrder.TRIPLE }) add("TRIPLE_BOND")
+            if (hasCycle(graph)) add("CYCLIC_STRUCTURE")
+            if (combustion != null && combustion < 0.0) add("COMBUSTIBLE_ESTIMATE")
         }
+        return PredictedProperties(
+            boilingPointC = boilingPoint,
+            molarMass = FormulaCalculator.molarMass(graph),
+            flags = flags,
+            combustionEnthalpyKilojoulesPerMole = combustion,
+            model = rules.modelId,
+        )
+    }
 
-        return PredictedProperties(boilingPoint, FormulaCalculator.molarMass(graph), flags)
+    private fun predictBoilingPoint(graph: MoleculeGraph, formula: Map<String, Int>): Double? {
+        val formulaText = FormulaCalculator.hillFormula(graph)
+        rules.boiling.exactFormulaCelsius[formulaText]?.let { return it }
+        if (hasCycle(graph)) return null
+        val carbon = formula["C"] ?: 0
+        val oxygenAtoms = graph.atoms.filter { it.element.symbol == "O" }
+        return when {
+            oxygenAtoms.size == 1 && isHydroxyl(graph, oxygenAtoms.single().id) ->
+                rules.boiling.hydroxylFirstCarbonCelsius +
+                    rules.boiling.hydroxylAdditionalCarbonCelsius * (carbon - 1).coerceAtLeast(0)
+            oxygenAtoms.size == 1 && graph.bondsOf(oxygenAtoms.single().id).size == 2 ->
+                rules.boiling.etherBaseCelsius +
+                    rules.boiling.etherAdditionalCarbonCelsius * (carbon - 2).coerceAtLeast(0)
+            carbon > 0 && oxygenAtoms.isEmpty() -> {
+                val additionalCarbon = carbon - 1
+                rules.boiling.hydrocarbonFirstCarbonCelsius +
+                    rules.boiling.hydrocarbonLinearCarbonCelsius * additionalCarbon -
+                    rules.boiling.hydrocarbonQuadraticCarbonCelsius * additionalCarbon * (carbon - 2)
+            }
+            else -> null
+        }
+    }
+
+    /** Mean-bond-energy ΔH estimate for neutral C/H/O complete combustion only. */
+    private fun estimateCombustionEnthalpy(graph: MoleculeGraph, formula: Map<String, Int>): Double? {
+        if (graph.atoms.any { it.formalCharge != 0 }) return null
+        if (formula.keys.any { it !in setOf("C", "H", "O") }) return null
+        val carbon = formula["C"] ?: return null
+        val hydrogen = formula["H"] ?: 0
+        val oxygen = formula["O"] ?: 0
+        val oxygenMoles = carbon + hydrogen / 4.0 - oxygen / 2.0
+        if (oxygenMoles <= 0.0) return null
+        val reactantBondEnergy = graphBondEnergy(graph) ?: return null
+        val oxygenBondEnergy = oxygenMoles * (rules.bondEnergy("O", "O", BondOrder.DOUBLE) ?: return null)
+        val productBondEnergy = carbon * 2.0 * rules.carbonDioxideCarbonOxygenDoubleBondKilojoulesPerMole +
+            (hydrogen / 2.0) * 2.0 * (rules.bondEnergy("O", "H", BondOrder.SINGLE) ?: return null)
+        return reactantBondEnergy + oxygenBondEnergy - productBondEnergy
+    }
+
+    private fun graphBondEnergy(graph: MoleculeGraph): Double? {
+        var total = 0.0
+        graph.bonds.forEach { bond ->
+            total += rules.bondEnergy(
+                graph.atom(bond.first).element.symbol,
+                graph.atom(bond.second).element.symbol,
+                bond.order,
+            ) ?: return null
+        }
+        graph.atoms.forEach { atom ->
+            val hydrogenCount = atom.explicitHydrogens + graph.implicitHydrogens(atom.id)
+            if (hydrogenCount > 0) {
+                total += hydrogenCount * (rules.bondEnergy(atom.element.symbol, "H", BondOrder.SINGLE) ?: return null)
+            }
+        }
+        return total
     }
 
     private fun isHydroxyl(graph: MoleculeGraph, oxygenId: Int): Boolean =
@@ -69,4 +120,11 @@ object PropertyPredictor {
         }
         return graph.bonds.size > graph.atoms.size - components
     }
+}
+
+/** Compatibility facade for the public M0 API: mol.properties(). */
+object PropertyPredictor {
+    private val defaultEngine by lazy { PropertyEngine(PropertyRuleSet.bundled()) }
+
+    fun predict(graph: MoleculeGraph): PredictedProperties = defaultEngine.predict(graph)
 }
