@@ -9,6 +9,8 @@ import io.github.antonovichkorp.chemmod.core.properties.PropertyPredictor
 class Molecule private constructor(val graph: MoleculeGraph) {
     fun canonicalId(): Long = MoleculeCanonicalizer.canonicalId(graph)
     fun canonicalKey(): String = MoleculeCanonicalizer.canonicalKey(graph)
+    /** Deterministic supported notation for storing this graph as a witness. */
+    fun structuralWitness(): String = StructureNotationWriter.write(graph)
     fun validate(): List<ValidationIssue> = MoleculeValidator.validate(graph)
     fun formula(): String = FormulaCalculator.hillFormula(graph)
     fun molarMass(): Double = FormulaCalculator.molarMass(graph)

@@ -69,6 +69,33 @@ public record SubstanceContents(
         this(CURRENT_SCHEMA, canonicalKeyFor(structure), structure, micromoles, waterSample.purityPpm(), waterSample);
     }
 
+    /** Construct contents from a graph, including a generated reconstructable witness. */
+    public static SubstanceContents fromMolecule(Molecule molecule, long micromoles, int purityPpm) {
+        if (molecule == null) throw new IllegalArgumentException("Molecule cannot be null");
+        return new SubstanceContents(
+            CURRENT_SCHEMA,
+            molecule.canonicalKey(),
+            molecule.structuralWitness(),
+            micromoles,
+            purityPpm,
+            WaterSampleData.NONE
+        );
+    }
+
+    /** Construct analyzed contents from a graph without relying on a hand-written structure string. */
+    public static SubstanceContents fromMolecule(Molecule molecule, long micromoles, WaterSampleData waterSample) {
+        if (molecule == null) throw new IllegalArgumentException("Molecule cannot be null");
+        if (waterSample == null) throw new IllegalArgumentException("Water sample data cannot be null");
+        return new SubstanceContents(
+            CURRENT_SCHEMA,
+            molecule.canonicalKey(),
+            molecule.structuralWitness(),
+            micromoles,
+            waterSample.purityPpm(),
+            waterSample
+        );
+    }
+
     private static SubstanceContents fromSerialized(
         int serializedSchema,
         String serializedCanonicalKey,
