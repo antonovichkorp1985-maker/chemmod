@@ -13,10 +13,10 @@ materials. ChemMod needs such depth, but must remain an independent,
 server-authoritative material model. Another mod's registry, source code, assets,
 recipe tables, identifiers and balance are not authoritative here.
 
-M3 represented a batch with ppm purity and retained its nominal mass during
-washing. That established water analysis gameplay, but it could not be a final
-physical model: raising the purity of a fixed-mass batch implicitly increased the
-mass of primary copper.
+An earlier batch schema represented only ppm purity while retaining nominal
+mass during washing. That established water-analysis gameplay, but it could not
+be a final physical model: raising purity at fixed mass implicitly increased
+the mass of primary copper.
 
 ## Decision
 
@@ -44,8 +44,9 @@ The Ore Separator materializes the remaining measured impurities as physical
 dust outputs. Its catalog declaration is a canonical, mass-conserving multi-output
 reference process; runtime scales its component outputs from the persisted batch
 rather than using random bonus drops. The first separator is deliberately a
-low-throughput, power-API-free adapter. A future optional kinetic adapter may
-operate the same canonical process when a supported mechanical mod is present.
+low-throughput, power-API-free adapter. The optional Create kinetic separator
+already operates that same process when Create 6.0.10 is present; it does not
+introduce a second output table or alter composition.
 
 A refractory furnace may merge compatible molten batches into one capped crucible.
 The ingot mold splits exactly one standard ingot mass and retains the remaining

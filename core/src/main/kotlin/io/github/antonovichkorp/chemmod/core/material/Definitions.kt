@@ -2,7 +2,11 @@ package io.github.antonovichkorp.chemmod.core.material
 
 import io.github.antonovichkorp.chemmod.core.Molecule
 
-/** A molecular identity. Minerals and bulk materials deliberately use other types. */
+/**
+ * A finite material-catalog reference to a molecular graph. The graph's
+ * canonical key, not this content ID, is the molecular identity; unnamed
+ * molecules do not need a [ChemicalSpecies] entry.
+ */
 data class ChemicalSpecies private constructor(
     val id: SpeciesId,
     val structure: String,
@@ -55,7 +59,7 @@ data class MineralDefinition(
     }
 }
 
-/** Canonical world-generation policy for a mixture of minerals. */
+/** ChemMod-owned world-generation policy for a mixture of minerals. */
 data class DepositDefinition(
     val id: DepositId,
     val mineralWeights: Map<MineralId, Int>,

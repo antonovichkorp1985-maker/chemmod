@@ -4,7 +4,10 @@ import java.io.InputStream
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
-/** Validated, immutable source of truth consumed by game and optional-mod adapters. */
+/**
+ * Validated immutable content for ChemMod-owned bulk-material processes.
+ * It is not a registry of every molecule and never overrides graph identity.
+ */
 class MaterialCatalog private constructor(
     val schemaVersion: Int,
     species: List<ChemicalSpecies>,
