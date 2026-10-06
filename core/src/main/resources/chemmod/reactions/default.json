@@ -1,9 +1,10 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "rules": [
     {
       "id": "chemmod:complete_combustion",
       "matcher": {
+        "kind": "formula",
         "allowedElements": ["C", "H", "O"],
         "requiredElements": ["C"],
         "requireNeutral": true,
@@ -13,6 +14,70 @@
       "productStructures": ["O=C=O", "O"],
       "conditions": {
         "minimumTemperatureKelvin": 500.0
+      }
+    },
+    {
+      "id": "chemmod:alkene_hydrogenation",
+      "matcher": {
+        "kind": "bond_order",
+        "firstElement": "C",
+        "secondElement": "C",
+        "bondOrder": "DOUBLE"
+      },
+      "targetProductBondOrder": "SINGLE",
+      "coReactantStructures": ["[H][H]"],
+      "conditions": {
+        "minimumTemperatureKelvin": 300.0,
+        "catalystTags": ["chemmod:palladium"]
+      }
+    },
+    {
+      "id": "chemmod:alkane_dehydrogenation",
+      "matcher": {
+        "kind": "bond_order",
+        "firstElement": "C",
+        "secondElement": "C",
+        "bondOrder": "SINGLE",
+        "firstMinimumHydrogens": 1,
+        "secondMinimumHydrogens": 1
+      },
+      "targetProductBondOrder": "DOUBLE",
+      "productStructures": ["[H][H]"],
+      "conditions": {
+        "minimumTemperatureKelvin": 600.0,
+        "catalystTags": ["chemmod:chromium_oxide"]
+      }
+    },
+    {
+      "id": "chemmod:carbonyl_hydrogenation",
+      "matcher": {
+        "kind": "bond_order",
+        "firstElement": "C",
+        "secondElement": "O",
+        "bondOrder": "DOUBLE"
+      },
+      "targetProductBondOrder": "SINGLE",
+      "coReactantStructures": ["[H][H]"],
+      "conditions": {
+        "minimumTemperatureKelvin": 300.0,
+        "catalystTags": ["chemmod:nickel"]
+      }
+    },
+    {
+      "id": "chemmod:alcohol_dehydrogenation",
+      "matcher": {
+        "kind": "bond_order",
+        "firstElement": "C",
+        "secondElement": "O",
+        "bondOrder": "SINGLE",
+        "firstMinimumHydrogens": 1,
+        "secondMinimumHydrogens": 1
+      },
+      "targetProductBondOrder": "DOUBLE",
+      "productStructures": ["[H][H]"],
+      "conditions": {
+        "minimumTemperatureKelvin": 550.0,
+        "catalystTags": ["chemmod:copper"]
       }
     }
   ]

@@ -22,9 +22,11 @@
 Базовый контент химического ядра находится в JSON, а не в реестре веществ или
 коде алгоритмов: элементы — `chemmod/elements.json`, коэффициенты модели свойств —
 `chemmod/properties/default.json`, правила реакций — `chemmod/reactions/default.json`,
-а тривиальные имена — `chemmod/names/trivial.json`. Эти схемы являются основой для
-будущей загрузки datapack: отсутствие имени не запрещает существование валидной
-молекулы, поскольку её идентичность задаёт канонизированный граф.
+а тривиальные имена — `chemmod/names/trivial.json`. В базовом M1-наборе пять
+правил: общее сгорание, гидрирование/дегидрирование C–C и обратимые переходы
+карбонил/спирт. Эти схемы являются основой для будущей загрузки datapack: отсутствие
+имени не запрещает существование валидной молекулы, поскольку её идентичность задаёт
+канонизированный граф.
 
 ## Требования
 
@@ -47,6 +49,7 @@
 ./gradlew check
 ./gradlew :core-cli:run --args="lookup CCO"
 ./gradlew :core-cli:run --args="balance 'CCO + O=O -> O=C=O + O'"
+./gradlew :core-cli:run --args="react C=CC chemmod:alkene_hydrogenation 350 '[H][H]' --catalyst chemmod:palladium"
 ```
 
 `smoke-test.sh` запускает dedicated server дважды: сначала **без** Create, затем с

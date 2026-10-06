@@ -8,8 +8,12 @@ import io.github.antonovichkorp.chemmod.core.Molecule;
 import io.github.antonovichkorp.chemmod.core.ValidationIssue;
 import io.github.antonovichkorp.chemmod.core.material.MaterialCatalog;
 import io.github.antonovichkorp.chemmod.core.properties.PredictedProperties;
+import io.github.antonovichkorp.chemmod.core.reaction.AppliedReaction;
 import io.github.antonovichkorp.chemmod.core.reaction.BalancedReaction;
+import io.github.antonovichkorp.chemmod.core.reaction.ReactionEngine;
+import io.github.antonovichkorp.chemmod.core.reaction.ReactionEnvironment;
 import io.github.antonovichkorp.chemmod.core.reaction.ReactionEquationParser;
+import io.github.antonovichkorp.chemmod.core.reaction.ReactionRuleId;
 import io.github.antonovichkorp.chemmod.content.ChemBlocks;
 import io.github.antonovichkorp.chemmod.content.ChemBlockEntities;
 import io.github.antonovichkorp.chemmod.content.ChemComponents;
@@ -26,6 +30,7 @@ import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 
 import java.util.Locale;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Mod(ChemMod.MOD_ID)
@@ -236,11 +241,18 @@ public final class ChemMod {
                 throw new IllegalStateException("ethanol formula mismatch: " + ethanol.formula());
             }
 
-            BalancedReaction combustion = ReactionEquationParser.INSTANCE.balance(
-                "CCO + O=O -> O=C=O + O"
+            Molecule oxygen = Molecule.Companion.fromSMILESlike("O=O");
+            var combustions = ReactionEngine.bundled().apply(
+                ethanol,
+                ReactionRuleId.of("chemmod:complete_combustion"),
+                new ReactionEnvironment(600.0, 101.325, Set.of(), Set.of(oxygen.canonicalKey()))
             );
+            if (combustions.size() != 1) {
+                throw new IllegalStateException("complete combustion did not produce exactly one balanced outcome");
+            }
+            AppliedReaction combustion = combustions.get(0);
             if (!combustion.isConserved()) {
-                throw new IllegalStateException("combustion is not conserved");
+                throw new IllegalStateException("complete combustion is not conserved");
             }
             if (catalog().getCompiledProcesses().isEmpty()) {
                 throw new IllegalStateException("material catalog compiled no processes");
@@ -252,7 +264,7 @@ public final class ChemMod {
                 "%.1f",
                 ethanol.properties().getBoilingPointC()
             );
-            String equation = ReactionEquationParser.INSTANCE.format(combustion);
+            String equation = combustion.formatEquation();
             source.sendSuccess(
                 () -> Component.translatable(
                     "command.chemmod.test.success",

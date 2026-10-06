@@ -45,6 +45,12 @@ echo "$balance_output"
 assert_contains "$balance_output" "C2H6O + 3 O2 -> 2 CO2 + 3 H2O"
 assert_contains "$balance_output" "Atoms and formal charge conserved: true"
 
+echo "==> Checking data-defined reaction rule"
+reaction_output=$("$chem" react C=CC chemmod:alkene_hydrogenation 350 '[H][H]' --catalyst chemmod:palladium)
+echo "$reaction_output"
+assert_contains "$reaction_output" "C3H6 + H2 -> C3H8"
+assert_contains "$reaction_output" "Atoms and formal charge conserved: true"
+
 echo "==> Checking distributable NeoForge mod"
 mod_jar=$(find mod/build/libs -maxdepth 1 -type f -name 'chemmod-*.jar' ! -name '*sources*' -print -quit)
 [[ -n "$mod_jar" ]] || {
