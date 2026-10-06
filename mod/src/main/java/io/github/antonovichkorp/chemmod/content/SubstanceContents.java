@@ -162,6 +162,18 @@ public record SubstanceContents(
         return Molecule.Companion.fromSMILESlike(structuralWitness);
     }
 
+    /** Copy this exact component with a new positive amount, preserving its analysis and identity. */
+    public SubstanceContents withMicromoles(long newMicromoles) {
+        return new SubstanceContents(
+            CURRENT_SCHEMA,
+            canonicalKey,
+            structuralWitness,
+            newMicromoles,
+            purityPpm,
+            waterSample
+        );
+    }
+
     /** Whether this graph identity is the structural H2O identity accepted by water-only mechanics. */
     public boolean isWater() {
         return WATER_CANONICAL_KEY.equals(canonicalKey);
