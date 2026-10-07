@@ -34,11 +34,11 @@ public final class MixtureSubstanceReactionPlanner {
     ) {
         if (input == null) throw new IllegalArgumentException("Mixture input cannot be null");
         return planner.plan(input.mixture(), targetCanonicalKey, ruleId, environment).stream()
-            .map(MixtureSubstanceReactionPlanner::toContentsPlan)
+            .map(plan -> toContentsPlan(input, plan))
             .toList();
     }
 
-    private static PlannedMixtureReaction toContentsPlan(MixtureReactionPlan plan) {
+    private static PlannedMixtureReaction toContentsPlan(MixtureContents input, MixtureReactionPlan plan) {
         List<SubstanceContents> products = plan.getProducts().stream()
             .map(portion -> SubstanceContents.fromMolecule(
                 portion.getMolecule(),
@@ -47,6 +47,7 @@ public final class MixtureSubstanceReactionPlanner {
             ))
             .toList();
         return new PlannedMixtureReaction(
+            input,
             plan.getBatchPlan(),
             VialContentsState.fromMolecularMixture(plan.getResidual()),
             products
@@ -59,13 +60,14 @@ public final class MixtureSubstanceReactionPlanner {
      * merged: output inventory policy belongs to the transactional vessel.
      */
     public record PlannedMixtureReaction(
+        MixtureContents sourceInput,
         ReactionBatchPlan batchPlan,
         VialContentsState sourceReplacement,
         List<SubstanceContents> products
     ) {
         public PlannedMixtureReaction {
-            if (batchPlan == null || sourceReplacement == null) {
-                throw new IllegalArgumentException("A mixture reaction needs a batch plan and source replacement");
+            if (sourceInput == null || batchPlan == null || sourceReplacement == null) {
+                throw new IllegalArgumentException("A mixture reaction needs an input snapshot and source replacement");
             }
             products = List.copyOf(products);
             if (products.isEmpty()) throw new IllegalArgumentException("A mixture reaction needs products");

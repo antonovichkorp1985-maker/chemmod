@@ -69,6 +69,8 @@ public final class PureSubstanceReactionPlanner {
             .map(portion -> SubstanceContents.fromMolecule(portion.getMolecule(), portion.getMicromoles(), 1_000_000))
             .toList();
         return new PlannedSubstanceReaction(
+            target,
+            coReactants,
             plan,
             change(target, plan.getTargetConsumedMicromoles()),
             coChanges,
@@ -97,14 +99,23 @@ public final class PureSubstanceReactionPlanner {
 
     /** A complete, not-yet-applied pure-vial reaction transaction. */
     public record PlannedSubstanceReaction(
+        SubstanceContents targetInput,
+        List<SubstanceContents> coReactantInputs,
         ReactionBatchPlan batchPlan,
         InputConsumption target,
         List<InputConsumption> coReactants,
         List<SubstanceContents> products
     ) {
         public PlannedSubstanceReaction {
+            if (targetInput == null || batchPlan == null || target == null) {
+                throw new IllegalArgumentException("A planned reaction needs an input snapshot and batch plan");
+            }
+            coReactantInputs = List.copyOf(coReactantInputs);
             coReactants = List.copyOf(coReactants);
             products = List.copyOf(products);
+            if (coReactantInputs.size() != coReactants.size()) {
+                throw new IllegalArgumentException("Co-reactant snapshots must match planned input changes");
+            }
             if (products.isEmpty()) throw new IllegalArgumentException("A planned reaction needs products");
         }
     }
