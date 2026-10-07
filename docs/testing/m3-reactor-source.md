@@ -9,8 +9,15 @@ CLI, a save editor, or a synthetic test item to replace it.
 
 ## Setup
 
-1. Install a JAR built from the branch that includes `Chemical Reactor`.
-2. In a creative test world obtain: one Chemical Reactor, one blast furnace (or
+1. Use the `chemmod-m3-manual-acceptance-<commit>` artifact from the newest
+   successful **CI** run of this branch. It contains the exact JDK-21-tested
+   mod JAR and its SHA-256 file; artifacts expire after 14 days and are not a
+   GitHub prerelease. If it has expired, build the same branch locally with
+   `./scripts/smoke-test.sh` on JDK 21.
+2. Put that JAR in both the client and dedicated-server `mods` directories and
+   verify the SHA-256 value before testing. Do not substitute the published
+   `v0.9.0-test.3` JAR: it has no reactor.
+3. In a creative test world obtain: one Chemical Reactor, one blast furnace (or
    another supported heat source), fuel, one copper ingot, one 100% ethanol
    vial, and two empty laboratory vials.
 3. Place and ignite the blast furnace. Place the Chemical Reactor directly on
