@@ -20,10 +20,10 @@ CLI, a save editor, or a synthetic test item to replace it.
 3. In a creative test world obtain: one Chemical Reactor, one blast furnace (or
    another supported heat source), fuel, one copper ingot, one 100% ethanol
    vial, and two empty laboratory vials.
-3. Place and ignite the blast furnace. Place the Chemical Reactor directly on
+4. Place and ignite the blast furnace. Place the Chemical Reactor directly on
    top of it. It must be visibly lit before the reactor can satisfy its heat
    condition.
-4. Switch to survival before operating the machine.
+5. Switch to survival before operating the machine.
 
 The first M3 line is deliberately physical and small:
 
