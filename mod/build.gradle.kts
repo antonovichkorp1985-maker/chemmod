@@ -62,6 +62,8 @@ dependencies {
     implementation(project(":core"))
     add("additionalRuntimeClasspath", project(":core"))
 
+    testImplementation("org.junit.jupiter:junit-jupiter:5.11.4")
+
     // The adapter compiles against Create but never embeds it. The property lets
     // the smoke suite prove ChemMod still starts when Create is absent.
     compileOnly(createApi)
@@ -82,6 +84,10 @@ dependencies {
     add("additionalRuntimeClasspath", "org.jetbrains.kotlin:kotlin-stdlib:2.0.21")
     add("additionalRuntimeClasspath", "org.jetbrains.kotlinx:kotlinx-serialization-core-jvm:1.7.3")
     add("additionalRuntimeClasspath", "org.jetbrains.kotlinx:kotlinx-serialization-json-jvm:1.7.3")
+}
+
+tasks.test {
+    useJUnitPlatform()
 }
 
 tasks.processResources {
