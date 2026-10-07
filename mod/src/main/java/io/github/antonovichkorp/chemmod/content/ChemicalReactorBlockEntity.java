@@ -652,6 +652,12 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
 
     private record RuleDisplay(String id, String nameKey, String descriptionKey) {}
 
+    private record ReactorInputs(SubstanceContents target, List<SubstanceContents> coReactants) {
+        private ReactorInputs {
+            coReactants = List.copyOf(coReactants);
+        }
+    }
+
     private record Candidate(
         ReactionRule rule,
         PureSubstanceReactionPlanner.PlannedSubstanceReaction plan
