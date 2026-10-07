@@ -62,8 +62,9 @@ is consumed**.
   required; neither source vial changes.
 - A mixture or impure vial in an input: the reactor rejects it rather than
   silently extracting a pure component.
-- Replace an input or output vial while a batch is in progress: the next
-  one-second operation must reset/refuse before it mutates any slot.
+- Replace or remove an input or output vial while a batch is in progress: the
+  stored progress must cancel immediately, and the next one-second evaluation
+  must re-plan/refuse before it mutates any slot.
 
 ## Persistence and multiplayer
 

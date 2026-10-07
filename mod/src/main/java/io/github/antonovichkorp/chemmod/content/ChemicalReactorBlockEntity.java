@@ -512,6 +512,13 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
         setDisplayedRule(null);
     }
 
+    /** Any player or automation slot mutation invalidates a batch before it can commit. */
+    private void invalidateActiveOperation() {
+        if (reactionProgress != 0.0 || progressingOperation != null || !progressingOperator.isBlank()) {
+            resetProgress(ReactorStatus.INPUT_CHANGED);
+        }
+    }
+
     private void resetProgress(ReactorStatus newStatus) {
         boolean changed = reactionProgress != 0.0 || progressingOperation != null || !progressingOperator.isBlank() || status != newStatus;
         reactionProgress = 0.0;
@@ -548,12 +555,18 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
     public ItemStack removeItem(int slot, int amount) {
         if (!validSlot(slot)) return ItemStack.EMPTY;
         ItemStack result = ContainerHelper.removeItem(items, slot, amount);
-        if (!result.isEmpty()) setChanged();
+        if (!result.isEmpty()) {
+            invalidateActiveOperation();
+            setChanged();
+        }
         return result;
     }
 
     @Override
     public ItemStack removeItemNoUpdate(int slot) {
+        // Used by block removal/drops as well as low-level inventory transfer.
+        // Do not mutate world state from that removal path; interactive changes
+        // use removeItem/setItem and invalidate the batch above.
         return validSlot(slot) ? ContainerHelper.takeItem(items, slot) : ItemStack.EMPTY;
     }
 
@@ -562,6 +575,11 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
         if (!validSlot(slot)) return;
         items.set(slot, stack);
         if (!stack.isEmpty() && stack.getCount() > getMaxStackSize()) stack.setCount(getMaxStackSize());
+        // Empty output vials look identical in their serialized contents, so
+        // OperationSignature alone cannot tell whether a player replaced one
+        // during a batch. Any actual slot mutation is therefore an immediate
+        // physical boundary: discard progress and re-plan from the new slots.
+        invalidateActiveOperation();
         setChanged();
     }
 
@@ -582,7 +600,9 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
 
     @Override
     public void clearContent() {
+        boolean hadContents = !isEmpty();
         for (int slot = 0; slot < items.size(); slot++) items.set(slot, ItemStack.EMPTY);
+        if (hadContents) invalidateActiveOperation();
         setChanged();
     }
 
