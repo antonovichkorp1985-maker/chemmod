@@ -81,6 +81,18 @@ public final class ChemBlocks {
         )
     );
 
+    /** M3 vessel: actual vial slots, data-rule environment checks, and 1 Hz processing. */
+    public static final DeferredHolder<Block, ChemicalReactorBlock> CHEMICAL_REACTOR = BLOCKS.register(
+        "chemical_reactor",
+        () -> new ChemicalReactorBlock(
+            BlockBehaviour.Properties.of()
+                .mapColor(MapColor.COLOR_LIGHT_GRAY)
+                .requiresCorrectToolForDrops()
+                .strength(4.0F, 6.0F)
+                .sound(SoundType.METAL)
+        )
+    );
+
     public static final DeferredHolder<Block, IngotMoldBlock> INGOT_MOLD = BLOCKS.register(
         "ingot_mold",
         () -> new IngotMoldBlock(

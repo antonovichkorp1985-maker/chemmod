@@ -5,15 +5,31 @@
       "id": "chemmod:complete_combustion",
       "matcher": {
         "kind": "formula",
-        "allowedElements": ["C", "H", "O"],
-        "requiredElements": ["C"],
+        "allowedElements": [
+          "C",
+          "H",
+          "O"
+        ],
+        "requiredElements": [
+          "C"
+        ],
         "requireNeutral": true,
         "requirePositiveOxygenDemand": true
       },
-      "coReactantStructures": ["O=O"],
-      "productStructures": ["O=C=O", "O"],
+      "coReactantStructures": [
+        "O=O"
+      ],
+      "productStructures": [
+        "O=C=O",
+        "O"
+      ],
       "conditions": {
         "minimumTemperatureKelvin": 500.0
+      },
+      "displayNameKey": "reaction.chemmod.complete_combustion",
+      "kinetics": {
+        "preExponentialFactorPerSecond": 1000.0,
+        "activationEnergyJoulesPerMole": 35000.0
       }
     },
     {
@@ -25,10 +41,19 @@
         "bondOrder": "DOUBLE"
       },
       "targetProductBondOrder": "SINGLE",
-      "coReactantStructures": ["[H][H]"],
+      "coReactantStructures": [
+        "[H][H]"
+      ],
       "conditions": {
         "minimumTemperatureKelvin": 300.0,
-        "catalystTags": ["chemmod:palladium"]
+        "catalystTags": [
+          "chemmod:palladium"
+        ]
+      },
+      "displayNameKey": "reaction.chemmod.alkene_hydrogenation",
+      "kinetics": {
+        "preExponentialFactorPerSecond": 150.0,
+        "activationEnergyJoulesPerMole": 32000.0
       }
     },
     {
@@ -42,10 +67,19 @@
         "secondMinimumHydrogens": 1
       },
       "targetProductBondOrder": "DOUBLE",
-      "productStructures": ["[H][H]"],
+      "productStructures": [
+        "[H][H]"
+      ],
       "conditions": {
         "minimumTemperatureKelvin": 600.0,
-        "catalystTags": ["chemmod:chromium_oxide"]
+        "catalystTags": [
+          "chemmod:chromium_oxide"
+        ]
+      },
+      "displayNameKey": "reaction.chemmod.alkane_dehydrogenation",
+      "kinetics": {
+        "preExponentialFactorPerSecond": 900.0,
+        "activationEnergyJoulesPerMole": 45000.0
       }
     },
     {
@@ -57,10 +91,19 @@
         "bondOrder": "DOUBLE"
       },
       "targetProductBondOrder": "SINGLE",
-      "coReactantStructures": ["[H][H]"],
+      "coReactantStructures": [
+        "[H][H]"
+      ],
       "conditions": {
         "minimumTemperatureKelvin": 300.0,
-        "catalystTags": ["chemmod:nickel"]
+        "catalystTags": [
+          "chemmod:nickel"
+        ]
+      },
+      "displayNameKey": "reaction.chemmod.carbonyl_hydrogenation",
+      "kinetics": {
+        "preExponentialFactorPerSecond": 200.0,
+        "activationEnergyJoulesPerMole": 30000.0
       }
     },
     {
@@ -74,10 +117,19 @@
         "secondMinimumHydrogens": 1
       },
       "targetProductBondOrder": "DOUBLE",
-      "productStructures": ["[H][H]"],
+      "productStructures": [
+        "[H][H]"
+      ],
       "conditions": {
         "minimumTemperatureKelvin": 550.0,
-        "catalystTags": ["chemmod:copper"]
+        "catalystTags": [
+          "chemmod:copper"
+        ]
+      },
+      "displayNameKey": "reaction.chemmod.alcohol_dehydrogenation",
+      "kinetics": {
+        "preExponentialFactorPerSecond": 900.0,
+        "activationEnergyJoulesPerMole": 45000.0
       }
     }
   ]

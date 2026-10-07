@@ -4,6 +4,7 @@ import io.github.antonovichkorp.chemmod.content.ChemBlockEntities;
 import io.github.antonovichkorp.chemmod.content.ChemBlocks;
 import io.github.antonovichkorp.chemmod.content.ChemComponents;
 import io.github.antonovichkorp.chemmod.content.ChemItems;
+import io.github.antonovichkorp.chemmod.content.ChemMenus;
 import io.github.antonovichkorp.chemmod.integration.create.CreateIntegration;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModList;
@@ -19,6 +20,7 @@ public final class ChemMod {
         ChemBlocks.register(modEventBus);
         ChemBlockEntities.register(modEventBus);
         ChemItems.register(modEventBus);
+        ChemMenus.register(modEventBus);
         if (ModList.get().isLoaded(CreateIntegration.MOD_ID)) {
             CreateIntegration.register(modEventBus);
         }

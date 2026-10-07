@@ -67,6 +67,11 @@ public final class ChemItems {
         () -> new BlockItem(ChemBlocks.REFRACTORY_FURNACE.get(), new Item.Properties())
     );
 
+    public static final DeferredHolder<Item, BlockItem> CHEMICAL_REACTOR = ITEMS.register(
+        "chemical_reactor",
+        () -> new BlockItem(ChemBlocks.CHEMICAL_REACTOR.get(), new Item.Properties().stacksTo(1))
+    );
+
     public static final DeferredHolder<Item, BlockItem> INGOT_MOLD = ITEMS.register(
         "ingot_mold",
         () -> new BlockItem(ChemBlocks.INGOT_MOLD.get(), new Item.Properties())
@@ -136,6 +141,7 @@ public final class ChemItems {
                 output.accept(new ItemStack(ORE_WASHER.get()));
                 output.accept(new ItemStack(ORE_SEPARATOR.get()));
                 output.accept(new ItemStack(REFRACTORY_FURNACE.get()));
+                output.accept(new ItemStack(CHEMICAL_REACTOR.get()));
                 output.accept(new ItemStack(INGOT_MOLD.get()));
                 output.accept(new ItemStack(METALWORKING_BENCH.get()));
                 output.accept(new ItemStack(CERAMIC_CRUCIBLE.get()));

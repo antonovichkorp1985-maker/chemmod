@@ -16,6 +16,18 @@ class ReactionEngineTest {
     }
 
     @Test
+    fun `bundled machine rules declare localized names and Arrhenius kinetics`() {
+        val rules = ReactionRuleSet.bundled().rules.values
+        assertTrue(rules.all { it.displayNameKey.startsWith("reaction.chemmod.") })
+        assertTrue(rules.all { it.kinetics != null })
+
+        val ethanolRule = ReactionRuleSet.bundled().rule(ReactionRuleId.of("chemmod:alcohol_dehydrogenation"))
+        val kinetics = assertNotNull(ethanolRule.kinetics)
+        assertTrue(kinetics.ratePerSecond(750.0) > kinetics.ratePerSecond(600.0))
+        assertTrue(kinetics.ratePerSecond(600.0) > 0.0)
+    }
+
+    @Test
     fun `data rule combusts an unlisted molecular graph with automatic balancing`() {
         val butanol = Molecule.fromSMILESlike("CCCCO")
         assertTrue(butanol.validate().isEmpty())

@@ -86,6 +86,40 @@ data class ReactionConditions(
 }
 
 /**
+ * Data-owned Arrhenius parameters for a machine-scale reaction. The factor is
+ * an intentionally calibrated gameplay rate, while activation energy preserves
+ * the physically meaningful temperature relationship: hotter conditions make
+ * a viable reaction progress faster instead of simply bypassing its gate.
+ */
+data class ReactionKinetics(
+    val preExponentialFactorPerSecond: Double,
+    val activationEnergyJoulesPerMole: Double,
+) {
+    init {
+        require(preExponentialFactorPerSecond.isFinite() && preExponentialFactorPerSecond > 0.0) {
+            "Arrhenius pre-exponential factor must be finite and positive"
+        }
+        require(activationEnergyJoulesPerMole.isFinite() && activationEnergyJoulesPerMole >= 0.0) {
+            "Activation energy must be finite and non-negative"
+        }
+    }
+
+    /** Exact condition checks remain the engine's responsibility; this only supplies the progress rate. */
+    fun ratePerSecond(temperatureKelvin: Double): Double {
+        require(temperatureKelvin.isFinite() && temperatureKelvin > 0.0) {
+            "Temperature must be finite and positive"
+        }
+        return preExponentialFactorPerSecond * kotlin.math.exp(
+            -activationEnergyJoulesPerMole / (GAS_CONSTANT_JOULES_PER_MOLE_KELVIN * temperatureKelvin)
+        )
+    }
+
+    private companion object {
+        const val GAS_CONSTANT_JOULES_PER_MOLE_KELVIN = 8.31446261815324
+    }
+}
+
+/**
  * Content for one chemistry rule. A graph-bond rule rewrites only its matched
  * target bond; all other target atoms and bonds survive unchanged. Static
  * products and co-reactants supply the remaining stoichiometric species.
@@ -97,6 +131,10 @@ data class ReactionRule(
     val coReactantStructures: List<String> = emptyList(),
     val productStructures: List<String> = emptyList(),
     val conditions: ReactionConditions = ReactionConditions(),
+    /** Localized rule name/help key declared with the data rule, never inferred from a substance catalogue. */
+    val displayNameKey: String = "reaction.chemmod.unnamed",
+    /** Null means the rule is valid but has no timed machine execution model yet. */
+    val kinetics: ReactionKinetics? = null,
 ) {
     init {
         val bondMatcher = matcher as? BondOrderPattern
@@ -110,6 +148,9 @@ data class ReactionRule(
         }
         require(productStructures.isNotEmpty() || bondMatcher != null) {
             "Rule $id needs a static product or a transformed target"
+        }
+        require(displayNameKey.matches(Regex("[a-z][a-z0-9_.-]*(\\.[a-z0-9_.-]+)+"))) {
+            "Rule $id needs a lowercase localization key"
         }
         (coReactantStructures + productStructures).forEach { structure ->
             val molecule = Molecule.fromSMILESlike(structure)
@@ -165,6 +206,8 @@ private data class ReactionRuleDocument(
     val coReactantStructures: List<String> = emptyList(),
     val productStructures: List<String> = emptyList(),
     val conditions: ReactionConditionsDocument = ReactionConditionsDocument(),
+    val displayNameKey: String = "reaction.chemmod.unnamed",
+    val kinetics: ReactionKineticsDocument? = null,
 ) {
     fun toDomain() = ReactionRule(
         id = ReactionRuleId.of(id),
@@ -173,6 +216,8 @@ private data class ReactionRuleDocument(
         coReactantStructures = coReactantStructures,
         productStructures = productStructures,
         conditions = conditions.toDomain(),
+        displayNameKey = displayNameKey,
+        kinetics = kinetics?.toDomain(),
     )
 }
 
@@ -220,6 +265,17 @@ private data class ReactionConditionsDocument(
         maximumTemperatureKelvin,
         minimumPressureKilopascals,
         catalystTags,
+    )
+}
+
+@Serializable
+private data class ReactionKineticsDocument(
+    val preExponentialFactorPerSecond: Double,
+    val activationEnergyJoulesPerMole: Double,
+) {
+    fun toDomain() = ReactionKinetics(
+        preExponentialFactorPerSecond = preExponentialFactorPerSecond,
+        activationEnergyJoulesPerMole = activationEnergyJoulesPerMole,
     )
 }
 

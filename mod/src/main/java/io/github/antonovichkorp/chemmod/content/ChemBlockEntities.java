@@ -21,6 +21,15 @@ public final class ChemBlockEntities {
             ).build(null)
         );
 
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<ChemicalReactorBlockEntity>> CHEMICAL_REACTOR =
+        BLOCK_ENTITY_TYPES.register(
+            "chemical_reactor",
+            () -> BlockEntityType.Builder.of(
+                ChemicalReactorBlockEntity::new,
+                ChemBlocks.CHEMICAL_REACTOR.get()
+            ).build(null)
+        );
+
     private ChemBlockEntities() {}
 
     public static void register(IEventBus eventBus) {

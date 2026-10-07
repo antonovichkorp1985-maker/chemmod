@@ -1,0 +1,6 @@
+{
+  "variants": {
+    "active=false": {"model": "chemmod:block/chemical_reactor"},
+    "active=true": {"model": "chemmod:block/chemical_reactor_active"}
+  }
+}
