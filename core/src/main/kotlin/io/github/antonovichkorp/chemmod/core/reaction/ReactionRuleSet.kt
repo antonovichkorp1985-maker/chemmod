@@ -131,8 +131,10 @@ data class ReactionRule(
     val coReactantStructures: List<String> = emptyList(),
     val productStructures: List<String> = emptyList(),
     val conditions: ReactionConditions = ReactionConditions(),
-    /** Localized rule name/help key declared with the data rule, never inferred from a substance catalogue. */
+    /** Localized rule name key declared with the data rule, never inferred from a substance catalogue. */
     val displayNameKey: String = "reaction.chemmod.unnamed",
+    /** Localized explanatory text the reactor's UI can show for this data rule. */
+    val displayDescriptionKey: String = "reaction.chemmod.unnamed.description",
     /** Null means the rule is valid but has no timed machine execution model yet. */
     val kinetics: ReactionKinetics? = null,
 ) {
@@ -150,7 +152,10 @@ data class ReactionRule(
             "Rule $id needs a static product or a transformed target"
         }
         require(displayNameKey.matches(Regex("[a-z][a-z0-9_.-]*(\\.[a-z0-9_.-]+)+"))) {
-            "Rule $id needs a lowercase localization key"
+            "Rule $id needs a lowercase display-name localization key"
+        }
+        require(displayDescriptionKey.matches(Regex("[a-z][a-z0-9_.-]*(\\.[a-z0-9_.-]+)+"))) {
+            "Rule $id needs a lowercase display-description localization key"
         }
         (coReactantStructures + productStructures).forEach { structure ->
             val molecule = Molecule.fromSMILESlike(structure)
@@ -207,6 +212,7 @@ private data class ReactionRuleDocument(
     val productStructures: List<String> = emptyList(),
     val conditions: ReactionConditionsDocument = ReactionConditionsDocument(),
     val displayNameKey: String = "reaction.chemmod.unnamed",
+    val displayDescriptionKey: String = "reaction.chemmod.unnamed.description",
     val kinetics: ReactionKineticsDocument? = null,
 ) {
     fun toDomain() = ReactionRule(
@@ -217,6 +223,7 @@ private data class ReactionRuleDocument(
         productStructures = productStructures,
         conditions = conditions.toDomain(),
         displayNameKey = displayNameKey,
+        displayDescriptionKey = displayDescriptionKey,
         kinetics = kinetics?.toDomain(),
     )
 }

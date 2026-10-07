@@ -144,5 +144,19 @@
   "gui.chemmod.reactor.products": "Продукты",
   "gui.chemmod.reactor.catalyst": "Кат.",
   "gui.chemmod.reactor.progress": "Ход",
-  "reaction.chemmod.unnamed": "Правило реакции без названия"
+  "reaction.chemmod.unnamed": "Правило реакции без названия",
+  "reaction.chemmod.unnamed.description": "Для этого правила данных нет объяснения для игрока.",
+  "reaction.chemmod.complete_combustion.description": "Окисляет горючее углеродное соединение кислородом до углекислого газа и воды.",
+  "reaction.chemmod.alkene_hydrogenation.description": "Присоединяет водород по двойной связи углерод—углерод в присутствии палладия.",
+  "reaction.chemmod.alkane_dehydrogenation.description": "Отщепляет водород от одинарной связи углерод—углерод над оксидом хрома при высокой температуре.",
+  "reaction.chemmod.carbonyl_hydrogenation.description": "Восстанавливает двойную связь углерод—кислород водородом над никелем.",
+  "reaction.chemmod.alcohol_dehydrogenation.description": "Отщепляет водород от связи углерод—кислород спирта над медью, образуя карбонильное соединение и водород.",
+  "gui.chemmod.reactor.rule": "Правило: %s",
+  "gui.chemmod.reactor.status": "Статус: %s",
+  "gui.chemmod.reactor.help": "Сведения о правиле",
+  "reaction.chemmod.none": "Физическое правило не выбрано",
+  "reaction.chemmod.none.description": "Поместите чистую целевую колбу и все необходимые чистые co-reactant колбы. Реактор называет правило только после точного совпадения реальных входов.",
+  "reactor_status.chemmod.needs_temperature_control": "нужна более низкая рабочая температура",
+  "reactor_status.chemmod.needs_catalyst": "нужен катализатор этого правила",
+  "reactor_status.chemmod.needs_pressure": "нужно давление выше, чем у открытого реактора"
 }

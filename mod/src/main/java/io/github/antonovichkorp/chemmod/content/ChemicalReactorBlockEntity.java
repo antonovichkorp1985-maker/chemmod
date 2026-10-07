@@ -66,6 +66,7 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
     private static final String PROCESSING_OPERATOR_KEY = "processing_operator";
     private static final String LAST_RULE_KEY = "last_completed_rule";
     private static final String LAST_RULE_NAME_KEY = "last_completed_rule_name";
+    private static final String DISPLAYED_RULE_KEY = "displayed_rule";
 
     private static final ReactionRuleSet RULE_SET = ReactionRuleSet.bundled();
     private static final PureSubstanceReactionPlanner PLANNER = PureSubstanceReactionPlanner.bundled();
@@ -78,6 +79,13 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
         .distinct()
         .sorted()
         .toList();
+    private static final List<RuleDisplay> RULE_DISPLAYS = TIMED_RULES.stream()
+        .map(rule -> new RuleDisplay(
+            rule.getId().getValue(),
+            rule.getDisplayNameKey(),
+            rule.getDisplayDescriptionKey()
+        ))
+        .toList();
 
     private final NonNullList<ItemStack> items = NonNullList.withSize(SLOT_COUNT, ItemStack.EMPTY);
     private double reactionProgress;
@@ -86,11 +94,18 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
     private String progressingOperator = "";
     private String lastCompletedRule = "";
     private String lastCompletedRuleName = "";
+    /** Selected only from a currently viable physical plan; never from a command or registry lookup. */
+    private String displayedRuleId = "";
     private ReactorStatus status = ReactorStatus.IDLE;
     private final ContainerData menuData = new ContainerData() {
         @Override
         public int get(int index) {
-            return index == 0 ? (int) Math.round(reactionProgress * 1_000.0) : 0;
+            return switch (index) {
+                case 0 -> (int) Math.round(reactionProgress * 1_000.0);
+                case 1 -> status.ordinal();
+                case 2 -> displayRuleIndex(status == ReactorStatus.COMPLETE ? lastCompletedRule : displayedRuleId);
+                default -> 0;
+            };
         }
 
         @Override
@@ -100,7 +115,7 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
 
         @Override
         public int getCount() {
-            return 1;
+            return 3;
         }
     };
 
@@ -151,6 +166,27 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
         return lastCompletedRule;
     }
 
+    /** Client-safe localized status resolved from the synchronized status code. */
+    public static Component statusComponent(int statusCode) {
+        ReactorStatus[] values = ReactorStatus.values();
+        ReactorStatus value = statusCode >= 0 && statusCode < values.length ? values[statusCode] : ReactorStatus.IDLE;
+        return Component.translatable(value.translationKey);
+    }
+
+    /** Client-safe localized name from a rule selected by the physical planner, or a neutral fallback. */
+    public static Component ruleNameComponent(int displayIndex) {
+        RuleDisplay display = displayForIndex(displayIndex);
+        return Component.translatable(display == null ? "reaction.chemmod.none" : display.nameKey());
+    }
+
+    /** Text declared beside the data rule, displayed by the GUI's help affordance. */
+    public static Component ruleDescriptionComponent(int displayIndex) {
+        RuleDisplay display = displayForIndex(displayIndex);
+        return Component.translatable(display == null
+            ? "reaction.chemmod.none.description"
+            : display.descriptionKey());
+    }
+
     private void tickOneSecond() {
         if (level == null || level.isClientSide()) return;
 
@@ -159,6 +195,7 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
             resetProgress(statusWithoutCandidate());
             return;
         }
+        setDisplayedRule(candidate.rule());
         if (!outputsReady(candidate)) {
             resetProgress(ReactorStatus.NEEDS_OUTPUT_VIALS);
             return;
@@ -234,27 +271,78 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
      * co-reactant. An ambiguous structural match is deliberately not selected.
      */
     private Candidate findCandidate() {
+        ReactorInputs inputs = reactorInputs();
+        return inputs == null ? null : uniqueCandidate(candidates(inputs, environment()));
+    }
+
+    /**
+     * Finds a structural/stoichiometric candidate under the rule's own valid
+     * condition envelope. It is diagnostic UI state only: it cannot progress or
+     * mutate until {@link #findCandidate()} succeeds against the real world.
+     */
+    private Candidate findPotentialCandidate() {
+        ReactorInputs inputs = reactorInputs();
+        if (inputs == null) return null;
+        List<Candidate> candidates = new ArrayList<>();
+        for (ReactionRule rule : TIMED_RULES) {
+            candidates.addAll(candidates(inputs, rule, conditionSatisfyingEnvironment(rule)));
+        }
+        return uniqueCandidate(candidates);
+    }
+
+    private ReactorInputs reactorInputs() {
         SubstanceContents target = pureContents(items.get(TARGET_SLOT));
         if (target == null) return null;
-
         List<SubstanceContents> coReactants = new ArrayList<>();
         for (ItemStack slot : occupiedCoReactantSlots()) {
             SubstanceContents contents = pureContents(slot);
             if (contents == null) return null;
             coReactants.add(contents);
         }
+        return new ReactorInputs(target, List.copyOf(coReactants));
+    }
 
-        ReactionEnvironment environment = environment();
+    private List<Candidate> candidates(ReactorInputs inputs, ReactionEnvironment environment) {
         List<Candidate> candidates = new ArrayList<>();
         for (ReactionRule rule : TIMED_RULES) {
-            List<PureSubstanceReactionPlanner.PlannedSubstanceReaction> plans = PLANNER.plan(
-                target, coReactants, rule.getId(), environment
-            );
-            for (PureSubstanceReactionPlanner.PlannedSubstanceReaction plan : plans) {
-                if (plan.products().size() <= outputCapacity()) candidates.add(new Candidate(rule, plan));
-            }
+            candidates.addAll(candidates(inputs, rule, environment));
         }
+        return candidates;
+    }
+
+    private List<Candidate> candidates(ReactorInputs inputs, ReactionRule rule, ReactionEnvironment environment) {
+        List<Candidate> candidates = new ArrayList<>();
+        List<PureSubstanceReactionPlanner.PlannedSubstanceReaction> plans = PLANNER.plan(
+            inputs.target(), inputs.coReactants(), rule.getId(), environment
+        );
+        for (PureSubstanceReactionPlanner.PlannedSubstanceReaction plan : plans) {
+            if (plan.products().size() <= outputCapacity()) candidates.add(new Candidate(rule, plan));
+        }
+        return candidates;
+    }
+
+    private static Candidate uniqueCandidate(List<Candidate> candidates) {
         return candidates.size() == 1 ? candidates.getFirst() : null;
+    }
+
+    private static ReactionEnvironment conditionSatisfyingEnvironment(ReactionRule rule) {
+        var conditions = rule.getConditions();
+        double temperature = conditions.getMinimumTemperatureKelvin() != null
+            ? conditions.getMinimumTemperatureKelvin()
+            : conditions.getMaximumTemperatureKelvin() != null
+                ? conditions.getMaximumTemperatureKelvin()
+                : 293.15;
+        if (conditions.getMinimumTemperatureKelvin() != null && conditions.getMaximumTemperatureKelvin() != null) {
+            temperature = (conditions.getMinimumTemperatureKelvin() + conditions.getMaximumTemperatureKelvin()) / 2.0;
+        }
+        return new ReactionEnvironment(
+            temperature,
+            conditions.getMinimumPressureKilopascals() == null
+                ? ATMOSPHERIC_PRESSURE_KILOPASCALS
+                : conditions.getMinimumPressureKilopascals(),
+            conditions.getCatalystTags(),
+            java.util.Set.of()
+        );
     }
 
     private ReactionEnvironment environment() {
@@ -299,10 +387,38 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
     }
 
     private ReactorStatus statusWithoutCandidate() {
-        if (items.get(TARGET_SLOT).isEmpty()) return ReactorStatus.IDLE;
-        if (pureContents(items.get(TARGET_SLOT)) == null) return ReactorStatus.PURE_VIALS_ONLY;
-        if (temperatureKelvin() < 500.0) return ReactorStatus.NEEDS_HEAT;
-        if (items.get(CATALYST_SLOT).isEmpty()) return ReactorStatus.NO_MATCH;
+        if (items.get(TARGET_SLOT).isEmpty()) {
+            clearDisplayedRule();
+            return ReactorStatus.IDLE;
+        }
+        if (reactorInputs() == null) {
+            clearDisplayedRule();
+            return ReactorStatus.PURE_VIALS_ONLY;
+        }
+
+        Candidate potential = findPotentialCandidate();
+        if (potential == null) {
+            clearDisplayedRule();
+            return ReactorStatus.NO_MATCH;
+        }
+        setDisplayedRule(potential.rule());
+        var conditions = potential.rule().getConditions();
+        double temperature = temperatureKelvin();
+        if (conditions.getMinimumTemperatureKelvin() != null
+            && temperature < conditions.getMinimumTemperatureKelvin()) {
+            return ReactorStatus.NEEDS_HEAT;
+        }
+        if (conditions.getMaximumTemperatureKelvin() != null
+            && temperature > conditions.getMaximumTemperatureKelvin()) {
+            return ReactorStatus.NEEDS_TEMPERATURE_CONTROL;
+        }
+        if (!catalystTags().containsAll(conditions.getCatalystTags())) {
+            return ReactorStatus.NEEDS_CATALYST;
+        }
+        if (conditions.getMinimumPressureKilopascals() != null
+            && ATMOSPHERIC_PRESSURE_KILOPASCALS < conditions.getMinimumPressureKilopascals()) {
+            return ReactorStatus.NEEDS_PRESSURE;
+        }
         return ReactorStatus.NO_MATCH;
     }
 
@@ -373,6 +489,18 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
         if (stack == null || stack.isEmpty() || stack.getCount() != 1) return false;
         return CATALYST_TAG_IDS.stream()
             .anyMatch(tag -> stack.is(TagKey.create(Registries.ITEM, ResourceLocation.parse(tag))));
+    }
+
+    private void setDisplayedRule(ReactionRule rule) {
+        String next = rule == null ? "" : rule.getId().getValue();
+        if (!Objects.equals(displayedRuleId, next)) {
+            displayedRuleId = next;
+            setChanged();
+        }
+    }
+
+    private void clearDisplayedRule() {
+        setDisplayedRule(null);
     }
 
     private void resetProgress(ReactorStatus newStatus) {
@@ -476,6 +604,7 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
         tag.putString(PROCESSING_OPERATOR_KEY, progressingOperator);
         tag.putString(LAST_RULE_KEY, lastCompletedRule);
         tag.putString(LAST_RULE_NAME_KEY, lastCompletedRuleName);
+        tag.putString(DISPLAYED_RULE_KEY, displayedRuleId);
     }
 
     @Override
@@ -488,6 +617,7 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
         progressingOperator = tag.getString(PROCESSING_OPERATOR_KEY);
         lastCompletedRule = tag.getString(LAST_RULE_KEY);
         lastCompletedRuleName = tag.getString(LAST_RULE_NAME_KEY);
+        displayedRuleId = tag.getString(DISPLAYED_RULE_KEY);
     }
 
     @Override
@@ -505,6 +635,22 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
     private static boolean validSlot(int slot) {
         return slot >= 0 && slot < SLOT_COUNT;
     }
+
+    /** Menu data index zero is the neutral fallback; timed bundled rules start at one. */
+    private static int displayRuleIndex(String ruleId) {
+        if (ruleId == null || ruleId.isBlank()) return 0;
+        for (int index = 0; index < RULE_DISPLAYS.size(); index++) {
+            if (RULE_DISPLAYS.get(index).id().equals(ruleId)) return index + 1;
+        }
+        return 0;
+    }
+
+    private static RuleDisplay displayForIndex(int displayIndex) {
+        int index = displayIndex - 1;
+        return index >= 0 && index < RULE_DISPLAYS.size() ? RULE_DISPLAYS.get(index) : null;
+    }
+
+    private record RuleDisplay(String id, String nameKey, String descriptionKey) {}
 
     private record Candidate(
         ReactionRule rule,
@@ -535,6 +681,9 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
         IDLE("reactor_status.chemmod.idle"),
         PURE_VIALS_ONLY("reactor_status.chemmod.pure_vials_only"),
         NEEDS_HEAT("reactor_status.chemmod.needs_heat"),
+        NEEDS_TEMPERATURE_CONTROL("reactor_status.chemmod.needs_temperature_control"),
+        NEEDS_CATALYST("reactor_status.chemmod.needs_catalyst"),
+        NEEDS_PRESSURE("reactor_status.chemmod.needs_pressure"),
         NEEDS_OUTPUT_VIALS("reactor_status.chemmod.needs_output_vials"),
         NO_MATCH("reactor_status.chemmod.no_match"),
         NO_TIMED_MODEL("reactor_status.chemmod.no_timed_model"),

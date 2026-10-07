@@ -144,5 +144,19 @@
   "gui.chemmod.reactor.products": "Products",
   "gui.chemmod.reactor.catalyst": "Cat.",
   "gui.chemmod.reactor.progress": "Progress",
-  "reaction.chemmod.unnamed": "Unnamed reaction rule"
+  "reaction.chemmod.unnamed": "Unnamed reaction rule",
+  "reaction.chemmod.unnamed.description": "This data rule has no player-facing explanation.",
+  "reaction.chemmod.complete_combustion.description": "Oxidizes a combustible carbon compound with oxygen into carbon dioxide and water.",
+  "reaction.chemmod.alkene_hydrogenation.description": "Adds hydrogen across a carbon-carbon double bond in the presence of palladium.",
+  "reaction.chemmod.alkane_dehydrogenation.description": "Removes hydrogen from a carbon-carbon single bond over chromium oxide at high heat.",
+  "reaction.chemmod.carbonyl_hydrogenation.description": "Reduces a carbonyl carbon-oxygen double bond with hydrogen over nickel.",
+  "reaction.chemmod.alcohol_dehydrogenation.description": "Removes hydrogen from an alcohol carbon-oxygen single bond over copper, yielding a carbonyl compound and hydrogen.",
+  "gui.chemmod.reactor.rule": "Rule: %s",
+  "gui.chemmod.reactor.status": "Status: %s",
+  "gui.chemmod.reactor.help": "Rule details",
+  "reaction.chemmod.none": "No physical rule selected",
+  "reaction.chemmod.none.description": "Place a pure target vial and any required pure co-reactant vials. The reactor only names a rule after its physical inputs match exactly.",
+  "reactor_status.chemmod.needs_temperature_control": "requires a lower operating temperature",
+  "reactor_status.chemmod.needs_catalyst": "requires the rule’s catalyst",
+  "reactor_status.chemmod.needs_pressure": "requires pressure beyond this open reactor"
 }

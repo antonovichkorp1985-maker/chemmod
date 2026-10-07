@@ -30,7 +30,8 @@
       "kinetics": {
         "preExponentialFactorPerSecond": 1000.0,
         "activationEnergyJoulesPerMole": 35000.0
-      }
+      },
+      "displayDescriptionKey": "reaction.chemmod.complete_combustion.description"
     },
     {
       "id": "chemmod:alkene_hydrogenation",
@@ -54,7 +55,8 @@
       "kinetics": {
         "preExponentialFactorPerSecond": 150.0,
         "activationEnergyJoulesPerMole": 32000.0
-      }
+      },
+      "displayDescriptionKey": "reaction.chemmod.alkene_hydrogenation.description"
     },
     {
       "id": "chemmod:alkane_dehydrogenation",
@@ -80,7 +82,8 @@
       "kinetics": {
         "preExponentialFactorPerSecond": 900.0,
         "activationEnergyJoulesPerMole": 45000.0
-      }
+      },
+      "displayDescriptionKey": "reaction.chemmod.alkane_dehydrogenation.description"
     },
     {
       "id": "chemmod:carbonyl_hydrogenation",
@@ -104,7 +107,8 @@
       "kinetics": {
         "preExponentialFactorPerSecond": 200.0,
         "activationEnergyJoulesPerMole": 30000.0
-      }
+      },
+      "displayDescriptionKey": "reaction.chemmod.carbonyl_hydrogenation.description"
     },
     {
       "id": "chemmod:alcohol_dehydrogenation",
@@ -130,7 +134,8 @@
       "kinetics": {
         "preExponentialFactorPerSecond": 900.0,
         "activationEnergyJoulesPerMole": 45000.0
-      }
+      },
+      "displayDescriptionKey": "reaction.chemmod.alcohol_dehydrogenation.description"
     }
   ]
 }

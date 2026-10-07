@@ -19,6 +19,7 @@ class ReactionEngineTest {
     fun `bundled machine rules declare localized names and Arrhenius kinetics`() {
         val rules = ReactionRuleSet.bundled().rules.values
         assertTrue(rules.all { it.displayNameKey.startsWith("reaction.chemmod.") })
+        assertTrue(rules.all { it.displayDescriptionKey.startsWith("reaction.chemmod.") })
         assertTrue(rules.all { it.kinetics != null })
 
         val ethanolRule = ReactionRuleSet.bundled().rule(ReactionRuleId.of("chemmod:alcohol_dehydrogenation"))

@@ -32,7 +32,7 @@ public final class ChemicalReactorMenu extends AbstractContainerMenu {
             containerId,
             playerInventory,
             new SimpleContainer(MACHINE_SLOT_COUNT),
-            new SimpleContainerData(1),
+            new SimpleContainerData(3),
             ContainerLevelAccess.NULL
         );
         // The client does not read the block entity directly, but consuming the
@@ -60,7 +60,7 @@ public final class ChemicalReactorMenu extends AbstractContainerMenu {
     ) {
         super(ChemMenus.CHEMICAL_REACTOR.get(), containerId);
         checkContainerSize(reactor, MACHINE_SLOT_COUNT);
-        checkContainerDataCount(data, 1);
+        checkContainerDataCount(data, 3);
         this.data = data;
         this.access = access;
 
@@ -78,6 +78,14 @@ public final class ChemicalReactorMenu extends AbstractContainerMenu {
 
     public int progressPermille() {
         return Math.max(0, Math.min(PROGRESS_SCALE, data.get(0)));
+    }
+
+    public int statusCode() {
+        return data.get(1);
+    }
+
+    public int ruleDisplayIndex() {
+        return data.get(2);
     }
 
     @Override
@@ -113,11 +121,11 @@ public final class ChemicalReactorMenu extends AbstractContainerMenu {
     private void addPlayerInventory(Inventory playerInventory) {
         for (int row = 0; row < 3; row++) {
             for (int column = 0; column < 9; column++) {
-                addSlot(new Slot(playerInventory, column + row * 9 + 9, 8 + column * 18, 84 + row * 18));
+                addSlot(new Slot(playerInventory, column + row * 9 + 9, 8 + column * 18, 140 + row * 18));
             }
         }
         for (int column = 0; column < 9; column++) {
-            addSlot(new Slot(playerInventory, column, 8 + column * 18, 142));
+            addSlot(new Slot(playerInventory, column, 8 + column * 18, 198));
         }
     }
 

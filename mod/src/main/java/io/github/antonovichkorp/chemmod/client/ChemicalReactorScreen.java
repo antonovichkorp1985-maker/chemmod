@@ -1,7 +1,9 @@
 package io.github.antonovichkorp.chemmod.client;
 
+import io.github.antonovichkorp.chemmod.content.ChemicalReactorBlockEntity;
 import io.github.antonovichkorp.chemmod.content.ChemicalReactorMenu;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
@@ -14,14 +16,24 @@ public final class ChemicalReactorScreen extends AbstractContainerScreen<Chemica
     private static final int PROGRESS_FULL = 0xFFB55B25;
     private static final int TEXT = 0xFF404040;
 
+    private boolean showingRuleHelp;
+
     public ChemicalReactorScreen(ChemicalReactorMenu menu, Inventory playerInventory, Component title) {
         super(menu, playerInventory, title);
         imageWidth = 176;
-        imageHeight = 166;
+        imageHeight = 222;
         titleLabelX = 8;
         titleLabelY = 6;
         inventoryLabelX = 8;
-        inventoryLabelY = 73;
+        inventoryLabelY = 128;
+    }
+
+    @Override
+    protected void init() {
+        super.init();
+        addRenderableWidget(Button.builder(Component.literal("?"), button -> showingRuleHelp = !showingRuleHelp)
+            .bounds(leftPos + 157, topPos + 4, 12, 12)
+            .build());
     }
 
     @Override
@@ -36,9 +48,9 @@ public final class ChemicalReactorScreen extends AbstractContainerScreen<Chemica
         drawSlot(graphics, 128, 34);
         drawSlot(graphics, 150, 34);
         for (int row = 0; row < 3; row++) {
-            for (int column = 0; column < 9; column++) drawSlot(graphics, 8 + column * 18, 84 + row * 18);
+            for (int column = 0; column < 9; column++) drawSlot(graphics, 8 + column * 18, 140 + row * 18);
         }
-        for (int column = 0; column < 9; column++) drawSlot(graphics, 8 + column * 18, 142);
+        for (int column = 0; column < 9; column++) drawSlot(graphics, 8 + column * 18, 198);
 
         // This bar is the synchronized data-owned Arrhenius process progress.
         int barX = leftPos + 26;
@@ -62,5 +74,31 @@ public final class ChemicalReactorScreen extends AbstractContainerScreen<Chemica
         graphics.drawString(font, Component.translatable("gui.chemmod.reactor.products"), 108, 21, TEXT, false);
         graphics.drawString(font, Component.translatable("gui.chemmod.reactor.catalyst"), 147, 21, TEXT, false);
         graphics.drawString(font, Component.translatable("gui.chemmod.reactor.progress"), 8, 57, TEXT, false);
+        graphics.drawString(
+            font,
+            Component.translatable("gui.chemmod.reactor.status", ChemicalReactorBlockEntity.statusComponent(menu.statusCode())),
+            8,
+            68,
+            TEXT,
+            false
+        );
+        graphics.drawString(
+            font,
+            Component.translatable("gui.chemmod.reactor.rule", ChemicalReactorBlockEntity.ruleNameComponent(menu.ruleDisplayIndex())),
+            8,
+            80,
+            TEXT,
+            false
+        );
+        if (showingRuleHelp) {
+            graphics.drawWordWrap(
+                font,
+                ChemicalReactorBlockEntity.ruleDescriptionComponent(menu.ruleDisplayIndex()),
+                8,
+                91,
+                160,
+                TEXT
+            );
+        }
     }
 }
