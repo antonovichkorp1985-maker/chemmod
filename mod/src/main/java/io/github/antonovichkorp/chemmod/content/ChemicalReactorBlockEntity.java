@@ -460,7 +460,16 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
         } catch (IllegalArgumentException exception) {
             return null;
         }
-        return state.mixture() == null ? state.substance() : null;
+        // A vial with a single structural component may still be analytically
+        // impure. The first reactor is intentionally restricted to a 100% pure
+        // component: passing an impure single-component vial to the pure batch
+        // planner would throw during the server tick instead of refusing it.
+        SubstanceContents substance = state.substance();
+        return state.mixture() == null
+            && substance != null
+            && substance.purityPpm() == 1_000_000
+            ? substance
+            : null;
     }
 
     private static boolean isFilledVial(ItemStack stack) {
