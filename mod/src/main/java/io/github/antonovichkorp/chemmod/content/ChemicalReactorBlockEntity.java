@@ -465,7 +465,9 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
         // component: passing an impure single-component vial to the pure batch
         // planner would throw during the server tick instead of refusing it.
         SubstanceContents substance = state.substance();
-        return state.mixture() == null && ReactorInputPolicy.isExactlyPure(substance)
+        return state.mixture() == null
+            && substance != null
+            && ReactorInputPolicy.isExactlyPurePpm(substance.purityPpm())
             ? substance
             : null;
     }

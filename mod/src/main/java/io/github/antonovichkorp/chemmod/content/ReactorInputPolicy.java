@@ -15,7 +15,8 @@ final class ReactorInputPolicy {
 
     private ReactorInputPolicy() {}
 
-    static boolean isExactlyPure(SubstanceContents contents) {
-        return contents != null && contents.purityPpm() == PURE_PPM;
+    /** A dependency-free value boundary that is safe to exercise in JVM CI. */
+    static boolean isExactlyPurePpm(int purityPpm) {
+        return purityPpm == PURE_PPM;
     }
 }
