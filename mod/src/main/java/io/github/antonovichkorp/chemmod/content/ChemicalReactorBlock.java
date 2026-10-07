@@ -1,5 +1,6 @@
 package io.github.antonovichkorp.chemmod.content;
 
+import com.mojang.serialization.MapCodec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.Containers;
 import net.minecraft.world.InteractionHand;
@@ -28,10 +29,16 @@ import net.minecraft.world.phys.BlockHitResult;
  */
 public final class ChemicalReactorBlock extends BaseEntityBlock {
     public static final BooleanProperty ACTIVE = BooleanProperty.create("active");
+    private static final MapCodec<ChemicalReactorBlock> CODEC = simpleCodec(ChemicalReactorBlock::new);
 
     public ChemicalReactorBlock(Properties properties) {
         super(properties);
         registerDefaultState(stateDefinition.any().setValue(ACTIVE, false));
+    }
+
+    @Override
+    protected MapCodec<? extends BaseEntityBlock> codec() {
+        return CODEC;
     }
 
     @Override
@@ -80,7 +87,7 @@ public final class ChemicalReactorBlock extends BaseEntityBlock {
     }
 
     @Override
-    public void setPlacedBy(Level level, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack stack) {
+    public void setPlacedBy(Level level, BlockPos pos, BlockState state, LivingEntity placer, ItemStack stack) {
         super.setPlacedBy(level, pos, state, placer, stack);
         if (!level.isClientSide() && placer instanceof Player player
             && level.getBlockEntity(pos) instanceof ChemicalReactorBlockEntity reactor) {
