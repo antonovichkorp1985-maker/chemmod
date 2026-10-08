@@ -229,4 +229,11 @@ echo "NeoForge test jar: $mod_jar"
 ./scripts/server-smoke-test.sh standalone
 ./scripts/server-smoke-test.sh create
 
+# Required in-world M3 regression: this runs the dedicated GameTest server and
+# exits non-zero if the physical ethanol/copper/heat batch does not complete.
+# It is intentionally supplementary to the player acceptance checklist; it
+# does not use an in-game command path to award discovery or simulate survival.
+echo "==> Running Chemical Reactor GameTests"
+./gradlew --no-daemon :mod:runGameTestServer
+
 echo "==> Smoke test passed"

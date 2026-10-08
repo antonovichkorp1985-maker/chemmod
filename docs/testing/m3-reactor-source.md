@@ -80,7 +80,14 @@ is consumed**.
    successful transaction; no creative placement, refusal, or hand-mixing path
    may create a discovery record.
 
-## Gate for the next test release
+## Automated guard and release gate
+
+JDK-21 CI also runs a required headless GameTest for the physical
+ethanol + copper + heated-blast-furnace route. It asserts that the target is
+consumed, copper remains, and `C2H4O`/`H2` are created as two separate vials.
+That regression test contains no player discovery or command shortcut, but it
+cannot replace this real client/server checklist: it does not test the GUI,
+persistence across a real restart, or multiplayer observation.
 
 The next prerelease is not created merely because CI compiles. It is eligible
 only when this checklist succeeds on a real client/server build, the automated
