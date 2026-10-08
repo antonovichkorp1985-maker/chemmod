@@ -83,9 +83,10 @@ is consumed**.
 ## Automated guard and release gate
 
 JDK-21 CI also runs required headless GameTests for the physical
-ethanol + copper + heated-blast-furnace route and its slot-change boundary.
-They assert that the target is consumed, copper remains, and `C2H4O`/`H2` are
-created as two separate vials; a deliberately slow lit-furnace batch then
+ethanol + copper + heated-blast-furnace route and its refusal/slot-change
+boundaries. They assert that the target is consumed, copper remains, and
+`C2H4O`/`H2` are created as two separate vials; missing heat or copper leaves
+all input/output contents untouched; and a deliberately slow lit-furnace batch
 proves that removing an output vial clears progress without consuming ethanol
 or producing a partial result. These regression tests contain no player
 discovery or command shortcut, but they cannot replace this real client/server

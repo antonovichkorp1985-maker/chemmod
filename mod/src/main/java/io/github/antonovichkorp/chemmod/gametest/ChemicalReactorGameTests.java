@@ -39,7 +39,8 @@ public final class ChemicalReactorGameTests {
     public static void ethanolBatchProducesSeparateProductsAndRetainsCatalyst(GameTestHelper helper) {
         ChemicalReactorBlockEntity reactor = setupBatch(
             helper,
-            Blocks.BLAST_FURNACE.defaultBlockState().setValue(AbstractFurnaceBlock.LIT, true)
+            Blocks.BLAST_FURNACE.defaultBlockState().setValue(AbstractFurnaceBlock.LIT, true),
+            true
         );
 
         // At 900 K the bundled Arrhenius model completes within the first
@@ -61,13 +62,45 @@ public final class ChemicalReactorGameTests {
         });
     }
 
+    @GameTest(template = "chemical_reactor_batch", timeoutTicks = 80)
+    public static void missingHeatRefusesBatchWithoutConsumingInputs(GameTestHelper helper) {
+        ChemicalReactorBlockEntity reactor = setupBatch(helper, Blocks.AIR.defaultBlockState(), true);
+
+        helper.runAfterDelay(45, () -> {
+            assertEthanolRetained(helper, reactor, "missing heat consumed ethanol");
+            assertEmptyOutputs(helper, reactor, "missing heat created a product");
+            helper.assertTrue(reactor.reactionProgress() == 0.0, "missing heat accumulated reactor progress");
+            assertCopperRetained(helper, reactor);
+            helper.succeed();
+        });
+    }
+
+    @GameTest(template = "chemical_reactor_batch", timeoutTicks = 80)
+    public static void missingCatalystRefusesBatchWithoutConsumingInputs(GameTestHelper helper) {
+        ChemicalReactorBlockEntity reactor = setupBatch(
+            helper,
+            Blocks.BLAST_FURNACE.defaultBlockState().setValue(AbstractFurnaceBlock.LIT, true),
+            false
+        );
+
+        helper.runAfterDelay(45, () -> {
+            assertEthanolRetained(helper, reactor, "missing catalyst consumed ethanol");
+            assertEmptyOutputs(helper, reactor, "missing catalyst created a product");
+            helper.assertTrue(reactor.reactionProgress() == 0.0, "missing catalyst accumulated reactor progress");
+            helper.assertTrue(reactor.getItem(ChemicalReactorBlockEntity.CATALYST_SLOT).isEmpty(),
+                "a missing catalyst was unexpectedly introduced");
+            helper.succeed();
+        });
+    }
+
     @GameTest(template = "chemical_reactor_batch", timeoutTicks = 100)
     public static void removingOutputVialCancelsPartialBatchWithoutConsumingEthanol(GameTestHelper helper) {
         // A regular lit furnace is intentionally valid but slow (650 K), so a
         // real partial Arrhenius batch exists before the output is removed.
         ChemicalReactorBlockEntity reactor = setupBatch(
             helper,
-            Blocks.FURNACE.defaultBlockState().setValue(AbstractFurnaceBlock.LIT, true)
+            Blocks.FURNACE.defaultBlockState().setValue(AbstractFurnaceBlock.LIT, true),
+            true
         );
 
         helper.runAfterDelay(25, () -> {
@@ -95,7 +128,11 @@ public final class ChemicalReactorGameTests {
         });
     }
 
-    private static ChemicalReactorBlockEntity setupBatch(GameTestHelper helper, net.minecraft.world.level.block.state.BlockState heatSource) {
+    private static ChemicalReactorBlockEntity setupBatch(
+        GameTestHelper helper,
+        net.minecraft.world.level.block.state.BlockState heatSource,
+        boolean includeCopperCatalyst
+    ) {
         var level = helper.getLevel();
         level.setBlock(helper.absolutePos(HEAT_SOURCE), heatSource, 3);
         level.setBlock(helper.absolutePos(REACTOR), ChemBlocks.CHEMICAL_REACTOR.get().defaultBlockState(), 3);
@@ -104,10 +141,23 @@ public final class ChemicalReactorGameTests {
         helper.assertTrue(blockEntity instanceof ChemicalReactorBlockEntity, "chemical reactor block entity was not created");
         ChemicalReactorBlockEntity reactor = (ChemicalReactorBlockEntity) blockEntity;
         reactor.setItem(ChemicalReactorBlockEntity.TARGET_SLOT, filledVial("CCO"));
-        reactor.setItem(ChemicalReactorBlockEntity.CATALYST_SLOT, new ItemStack(copperItem()));
+        if (includeCopperCatalyst) reactor.setItem(ChemicalReactorBlockEntity.CATALYST_SLOT, new ItemStack(copperItem()));
         reactor.setItem(ChemicalReactorBlockEntity.OUTPUT_FIRST_SLOT, emptyVial());
         reactor.setItem(ChemicalReactorBlockEntity.OUTPUT_SECOND_SLOT, emptyVial());
         return reactor;
+    }
+
+    private static void assertEthanolRetained(GameTestHelper helper, ChemicalReactorBlockEntity reactor, String message) {
+        helper.assertTrue(
+            canonicalKey("CCO").equals(pureCanonicalKey(reactor.getItem(ChemicalReactorBlockEntity.TARGET_SLOT))),
+            message
+        );
+    }
+
+    private static void assertEmptyOutputs(GameTestHelper helper, ChemicalReactorBlockEntity reactor, String message) {
+        boolean bothEmpty = VialContentsState.fromStack(reactor.getItem(ChemicalReactorBlockEntity.OUTPUT_FIRST_SLOT)).isEmpty()
+            && VialContentsState.fromStack(reactor.getItem(ChemicalReactorBlockEntity.OUTPUT_SECOND_SLOT)).isEmpty();
+        helper.assertTrue(bothEmpty, message);
     }
 
     private static void assertCopperRetained(GameTestHelper helper, ChemicalReactorBlockEntity reactor) {
