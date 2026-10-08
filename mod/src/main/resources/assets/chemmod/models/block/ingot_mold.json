@@ -1,0 +1,11 @@
+{
+  "parent":"minecraft:block/block",
+  "textures":{"stone":"minecraft:block/smooth_stone","particle":"minecraft:block/smooth_stone"},
+  "elements":[
+    {"from":[1,0,1],"to":[15,4,15],"faces":{"down":{"texture":"#stone","cullface":"down"},"up":{"texture":"#stone"},"north":{"texture":"#stone"},"south":{"texture":"#stone"},"west":{"texture":"#stone"},"east":{"texture":"#stone"}}},
+    {"from":[3,4,3],"to":[13,6,5],"faces":{"up":{"texture":"#stone"},"north":{"texture":"#stone"},"south":{"texture":"#stone"},"west":{"texture":"#stone"},"east":{"texture":"#stone"}}},
+    {"from":[3,4,11],"to":[13,6,13],"faces":{"up":{"texture":"#stone"},"north":{"texture":"#stone"},"south":{"texture":"#stone"},"west":{"texture":"#stone"},"east":{"texture":"#stone"}}},
+    {"from":[3,4,5],"to":[5,6,11],"faces":{"up":{"texture":"#stone"},"north":{"texture":"#stone"},"south":{"texture":"#stone"},"west":{"texture":"#stone"},"east":{"texture":"#stone"}}},
+    {"from":[11,4,5],"to":[13,6,11],"faces":{"up":{"texture":"#stone"},"north":{"texture":"#stone"},"south":{"texture":"#stone"},"west":{"texture":"#stone"},"east":{"texture":"#stone"}}}
+  ]
+}

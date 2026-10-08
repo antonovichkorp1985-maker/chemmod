@@ -1,0 +1,1 @@
+{"type":"minecraft:crafting_shaped","category":"misc","pattern":["III","WCW","W W"],"key":{"I":{"item":"minecraft:iron_ingot"},"W":{"tag":"minecraft:planks"},"C":{"item":"minecraft:crafting_table"}},"result":{"id":"chemmod:metalworking_bench","count":1}}

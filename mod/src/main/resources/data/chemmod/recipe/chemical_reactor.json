@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": ["PIP", "ICI", "PBP"],
+  "key": {
+    "P": {"item": "chemmod:copper_plate"},
+    "I": {"item": "minecraft:iron_ingot"},
+    "C": {"item": "minecraft:cauldron"},
+    "B": {"item": "minecraft:blast_furnace"}
+  },
+  "result": {"id": "chemmod:chemical_reactor", "count": 1}
+}

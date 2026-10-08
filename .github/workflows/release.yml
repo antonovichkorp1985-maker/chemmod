@@ -1,0 +1,73 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Test and build the NeoForge jar
+        run: ./scripts/smoke-test.sh
+      - name: Publish prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          artifact=$(find mod/build/libs -maxdepth 1 -type f -name 'chemmod-*.jar' ! -name '*sources*' -print -quit)
+          test -n "$artifact"
+          artifact_dir=$(dirname "$artifact")
+          artifact_name=$(basename "$artifact")
+          (
+            cd "$artifact_dir"
+            sha256sum "$artifact_name" > "$artifact_name.sha256"
+          )
+          notes=$(cat <<'EOF'
+          Тестовая сборка ChemMod для Minecraft 1.21.1 / NeoForge 21.1.251.
+
+          ## Назначение этого prerelease
+
+          `v0.9.0-test.4` впервые несёт M3 Chemical Reactor для реального
+          player-тестирования. Он не объявляет M3 завершённым: GUI, restart и
+          multiplayer-приёмка по инструкции ниже являются целью этого релиза.
+
+          ## Что проверить в этой сборке
+
+          - Первый Chemical Reactor — физическая машина с ограниченными слотами,
+            а не команда или creative-shortcut. Он запускает только data-defined
+            реакции из отдельных чистых колб при фактических условиях мира.
+          - Базовый маршрут: поставьте reactor над работающей blast furnace,
+            положите чистый этанол в target, copper ingot в catalyst и две пустые
+            колбы в выходы. Ожидаются раздельные `C2H4O` и `H2`; медь остаётся.
+          - Интерфейс показывает выбранное JSON-owned правило, server-authoritative
+            статус условий и его локализованное объяснение через `?`.
+          - При отсутствии тепла/катализатора, нечистой или explicit-mixture
+            колбе, занятом либо изменённом выходе входы не должны исчезать и
+            продукты не должны возникать частично.
+          - В игровом JAR нет `/chem`-команд, выдающих вещества, синтезирующих
+            продукты или открывающих discovery. Discovery допустим только после
+            успешного физического commit; core CLI остаётся внутренним CI-инструментом.
+
+          Полная инструкция и формат отчёта: docs/testing/v0.9.0-test.4.md.
+          Разделение и реакторные маршруты смесей, фазы и равновесие остаются
+          следующими слоями. Create 6.0.10 optional и не встраивается в JAR.
+          EOF
+          )
+          gh release create "$GITHUB_REF_NAME" \
+            "$artifact" "$artifact.sha256" \
+            --prerelease \
+            --title "ChemMod $GITHUB_REF_NAME — техническая тестовая сборка" \
+            --notes "$notes"

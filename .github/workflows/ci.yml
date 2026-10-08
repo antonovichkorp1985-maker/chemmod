@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Build and test
+        shell: bash
+        run: |
+          set -o pipefail
+          set +e
+          ./scripts/smoke-test.sh 2>&1 | tee build.log
+          status=${PIPESTATUS[0]}
+          set -e
+          {
+            echo '```text'
+            tail -n 200 build.log
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [[ "$status" -ne 0 ]]; then
+            diagnostic=$(tail -n 80 build.log | sed 's/%/%25/g; s/\r/%0D/g; s/$/%0A/' | tr -d '\n')
+            echo "::error title=Gradle build failed::$diagnostic"
+          fi
+          exit "$status"
+      # This is deliberately a short-lived CI artifact, not a GitHub release:
+      # M3 still needs player client/server acceptance before v0.9.0-test.4 is
+      # tagged. It lets that acceptance use the exact JDK-21-tested JAR.
+      - name: Write manual-acceptance checksum
+        shell: bash
+        run: |
+          set -euo pipefail
+          artifact=$(find mod/build/libs -maxdepth 1 -type f -name 'chemmod-*.jar' ! -name '*sources*' -print -quit)
+          test -n "$artifact"
+          sha256sum "$artifact" > "$artifact.sha256"
+      - name: Upload M3 manual-acceptance JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: chemmod-m3-manual-acceptance-${{ github.sha }}
+          path: |
+            mod/build/libs/chemmod-*.jar
+            !mod/build/libs/*sources*.jar
+            mod/build/libs/chemmod-*.jar.sha256
+          if-no-files-found: error
+          retention-days: 14

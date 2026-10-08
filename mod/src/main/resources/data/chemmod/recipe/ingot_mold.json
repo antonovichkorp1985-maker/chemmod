@@ -1,0 +1,1 @@
+{"type":"minecraft:crafting_shaped","category":"misc","pattern":["S S","SIS"],"key":{"S":{"item":"minecraft:smooth_stone"},"I":{"item":"minecraft:iron_ingot"}},"result":{"id":"chemmod:ingot_mold","count":1}}

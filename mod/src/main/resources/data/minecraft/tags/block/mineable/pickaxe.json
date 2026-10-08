@@ -1,0 +1,12 @@
+{
+  "replace": false,
+  "values": [
+    "chemmod:native_copper_ore",
+    "chemmod:refractory_furnace",
+    "chemmod:ingot_mold",
+    "chemmod:copper_block",
+    "chemmod:ore_washer",
+    "chemmod:ore_separator",
+    "chemmod:chemical_reactor"
+  ]
+}
