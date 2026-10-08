@@ -93,6 +93,31 @@ public final class ChemicalReactorGameTests {
         });
     }
 
+    @GameTest(template = "chemical_reactor_batch", timeoutTicks = 80)
+    public static void impureVialRefusesBatchWithoutCrashingOrLosingMatter(GameTestHelper helper) {
+        ChemicalReactorBlockEntity reactor = setupBatch(
+            helper,
+            Blocks.BLAST_FURNACE.defaultBlockState().setValue(AbstractFurnaceBlock.LIT, true),
+            true
+        );
+        reactor.setItem(ChemicalReactorBlockEntity.TARGET_SLOT, filledVial("CCO", 999_999));
+
+        helper.runAfterDelay(45, () -> {
+            VialContentsState target = VialContentsState.fromStack(reactor.getItem(ChemicalReactorBlockEntity.TARGET_SLOT));
+            helper.assertTrue(
+                target.substance() != null
+                    && target.mixture() == null
+                    && target.substance().purityPpm() == 999_999
+                    && canonicalKey("CCO").equals(target.substance().canonicalKey()),
+                "impure ethanol was consumed or rewritten"
+            );
+            assertEmptyOutputs(helper, reactor, "impure ethanol created a product");
+            helper.assertTrue(reactor.reactionProgress() == 0.0, "impure ethanol accumulated reactor progress");
+            assertCopperRetained(helper, reactor);
+            helper.succeed();
+        });
+    }
+
     @GameTest(template = "chemical_reactor_batch", timeoutTicks = 100)
     public static void removingOutputVialCancelsPartialBatchWithoutConsumingEthanol(GameTestHelper helper) {
         // A regular lit furnace is intentionally valid but slow (650 K), so a
@@ -176,8 +201,12 @@ public final class ChemicalReactorGameTests {
     }
 
     private static ItemStack filledVial(String structure) {
+        return filledVial(structure, 1_000_000);
+    }
+
+    private static ItemStack filledVial(String structure, int purityPpm) {
         ItemStack vial = emptyVial();
-        vial.set(ChemComponents.SUBSTANCE.get(), new SubstanceContents(structure, VIAL_MICROMOLES, 1_000_000));
+        vial.set(ChemComponents.SUBSTANCE.get(), new SubstanceContents(structure, VIAL_MICROMOLES, purityPpm));
         return vial;
     }
 
