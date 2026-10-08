@@ -1,22 +1,23 @@
 # M3 chemical reactor — manual acceptance checklist
 
-> This guide applies to the source branch after the `Chemical Reactor` commits.
-> It **does not** apply to the published `v0.9.0-test.3` JAR: that artifact has
-> no reactor and must remain the M2 vial/mixing prerelease.
+> This is the developer/source acceptance reference for M3. Player testing of
+> the published reactor prerelease uses
+> [`v0.9.0-test.4.md`](v0.9.0-test.4.md). It **does not** apply to
+> `v0.9.0-test.3`: that artifact has no reactor and remains the M2
+> vial/mixing prerelease.
 
 This is a player path. Do not use `/chem`, an item-giving command, an internal
 CLI, a save editor, or a synthetic test item to replace it.
 
 ## Setup
 
-1. Use the `chemmod-m3-manual-acceptance-<commit>` artifact from the newest
-   successful **CI** run of this branch. It contains the exact JDK-21-tested
-   mod JAR and its SHA-256 file; artifacts expire after 14 days and are not a
-   GitHub prerelease. If it has expired, build the same branch locally with
-   `./scripts/smoke-test.sh` on JDK 21.
-2. Put that JAR in both the client and dedicated-server `mods` directories and
-   verify the SHA-256 value before testing. Do not substitute the published
-   `v0.9.0-test.3` JAR: it has no reactor.
+1. For the published player test, follow
+   [`v0.9.0-test.4.md`](v0.9.0-test.4.md) and use its tagged prerelease. To
+   validate later source changes, use the matching CI artifact or build the
+   branch locally with `./gradlew :mod:jar` on JDK 21.
+2. Put the chosen JAR in both the client and dedicated-server `mods`
+   directories and verify its SHA-256 value before testing. Do not substitute
+   the published `v0.9.0-test.3` JAR: it has no reactor.
 3. In a creative test world obtain: one Chemical Reactor, one blast furnace (or
    another supported heat source), fuel, one copper ingot, one 100% ethanol
    vial, and two empty laboratory vials.
@@ -94,8 +95,11 @@ discovery or command shortcut, but they cannot replace this real client/server
 checklist: they do not test the GUI, persistence across a real restart, or
 multiplayer observation.
 
-The next prerelease is not created merely because CI compiles. It is eligible
-only when this checklist succeeds on a real client/server build, the automated
-JDK 21 CI is green, and no regression reintroduces gameplay `/chem` shortcuts.
-The first release carrying this M3 reactor will be versioned separately from
-`v0.9.0-test.3` (planned next label: `v0.9.0-test.4`).
+## M3 test-release and completion gates
+
+`v0.9.0-test.4` is the player-test artifact for this checklist, not proof that
+M3 is already complete. Its publication requires green automated JDK 21 CI and
+no regression that introduces gameplay `/chem` shortcuts. The **completion**
+gate for M3 is this checklist succeeding on a real client/server build. A failed
+case is reported against `test.4` and fixed in a later test prerelease rather
+than silently reissuing `test.4`.
