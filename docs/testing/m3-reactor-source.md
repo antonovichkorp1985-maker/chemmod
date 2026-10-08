@@ -95,6 +95,40 @@ discovery or command shortcut, but they cannot replace this real client/server
 checklist: they do not test the GUI, persistence across a real restart, or
 multiplayer observation.
 
+## Post-test.4 source regression: persisted operation identity
+
+These changes are **not in the published test.4 JAR**. Validate them with the
+matching commit's CI artifact; test.4 and its tag remain unchanged.
+
+The reactor now saves a frozen `processing_operation` witness containing the
+rule ID and the full serialized slot inventory (positions, items, counts and
+components). On the next server evaluation the witness must equal the current
+physical plan before old progress can continue. A mismatch starts a new batch
+from zero, without modifying any vial. Heat and catalyst conditions are still
+checked from the current world, not trusted from the save.
+
+Only finite progress in `(0, 1]` with an operation witness is resumable. NaN,
+infinities and out-of-range values reset progress rather than bypassing the
+completion check. Saves made by test.4 or earlier lack that witness: migration
+retains all items and vial contents, but discards unfinished progress and its
+processing-operator attribution. No completed product is undone or duplicated.
+
+Eight additional headless GameTests exercise:
+
+- fresh block-entity NBT reload of a real partial batch, including a second save
+  before its first tick, continuation, exact products, and completed-state reload;
+- changed input quantity under the same rule, and mismatching saved rule;
+- old-format progress without a witness;
+- NaN, both infinities and finite out-of-range progress;
+- loss of actual heat after saving;
+- a filled product vial and a non-vial product item, preserving the entire inventory.
+
+They use the actual Minecraft item codecs and a newly constructed block entity.
+They are **not a process restart, disk flush, chunk-unload test, multiplayer test
+or discovery test**. Real server restart and player UI acceptance remain open.
+When testing migration, keep a backup of the test.4 world and expect only the
+unfinished progress to restart on first load with the new source build.
+
 ## M3 test-release and completion gates
 
 `v0.9.0-test.4` is the player-test artifact for this checklist, not proof that

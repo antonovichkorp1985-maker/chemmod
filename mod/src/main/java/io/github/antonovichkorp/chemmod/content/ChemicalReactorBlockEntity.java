@@ -9,9 +9,9 @@ import io.github.antonovichkorp.chemmod.discovery.DiscoverySavedData;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
@@ -60,7 +60,7 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
     public static final int SLOT_COUNT = 6;
     private static final double ATMOSPHERIC_PRESSURE_KILOPASCALS = 101.325;
 
-    private static final String ITEMS_KEY = "items";
+    private static final String OPERATION_KEY = "processing_operation";
     private static final String PROGRESS_KEY = "reaction_progress";
     private static final String OPERATOR_KEY = "last_operator";
     private static final String PROCESSING_OPERATOR_KEY = "processing_operator";
@@ -202,13 +202,9 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
         }
 
         OperationSignature signature = OperationSignature.from(candidate, this);
-        // The signature itself is reconstructed from persisted physical slots.
-        // A non-zero saved progress can therefore resume only when those slots
-        // still describe the same valid operation after a world reload.
-        if (progressingOperation == null && reactionProgress > 0.0) {
-            progressingOperation = signature;
-            if (progressingOperator.isBlank()) progressingOperator = lastOperator;
-        } else if (!signature.equals(progressingOperation)) {
+        // Saved progress belongs to the saved rule and exact physical slots,
+        // not merely to whichever valid reaction happens to match after loading.
+        if (!signature.equals(progressingOperation)) {
             reactionProgress = 0.0;
             progressingOperation = signature;
             progressingOperator = lastOperator;
@@ -632,6 +628,10 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
         super.saveAdditional(tag, registries);
         ContainerHelper.saveAllItems(tag, items, registries);
         tag.putDouble(PROGRESS_KEY, reactionProgress);
+        tag.remove(OPERATION_KEY);
+        if (progressingOperation != null && reactionProgress > 0.0) {
+            tag.put(OPERATION_KEY, progressingOperation.state().copy());
+        }
         tag.putString(OPERATOR_KEY, lastOperator);
         tag.putString(PROCESSING_OPERATOR_KEY, progressingOperator);
         tag.putString(LAST_RULE_KEY, lastCompletedRule);
@@ -643,10 +643,18 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
     protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.loadAdditional(tag, registries);
         ContainerHelper.loadAllItems(tag, items, registries);
-        reactionProgress = Math.max(0.0, Math.min(1.0, tag.getDouble(PROGRESS_KEY)));
-        progressingOperation = null; // Re-plan from current physical slots after loading.
+        double savedProgress = tag.getDouble(PROGRESS_KEY);
+        // NaN bypasses the ordinary '< 1' completion check. Reject non-finite
+        // and out-of-range values rather than letting damaged NBT commit early.
+        // Legacy saves have no operation witness: retain their inventory but
+        // restart only the uncommitted progress, never infer its provenance.
+        boolean resumable = Double.isFinite(savedProgress) && savedProgress > 0.0 && savedProgress <= 1.0
+            && tag.contains(OPERATION_KEY, Tag.TAG_COMPOUND);
+        reactionProgress = resumable ? savedProgress : 0.0;
+        progressingOperation = resumable ? new OperationSignature(tag.getCompound(OPERATION_KEY).copy()) : null;
         lastOperator = tag.getString(OPERATOR_KEY);
-        progressingOperator = tag.getString(PROCESSING_OPERATOR_KEY);
+        progressingOperator = resumable ? tag.getString(PROCESSING_OPERATOR_KEY) : "";
+        status = ReactorStatus.IDLE; // Re-evaluate conditions on the next server tick.
         lastCompletedRule = tag.getString(LAST_RULE_KEY);
         lastCompletedRuleName = tag.getString(LAST_RULE_NAME_KEY);
         displayedRuleId = tag.getString(DISPLAYED_RULE_KEY);
@@ -695,23 +703,13 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
         PureSubstanceReactionPlanner.PlannedSubstanceReaction plan
     ) {}
 
-    private record OperationSignature(
-        String ruleId,
-        VialContentsState target,
-        List<VialContentsState> coReactants,
-        String catalystItemId
-    ) {
+    /** Frozen NBT witness: includes exact amounts, slot positions and all item components. */
+    private record OperationSignature(CompoundTag state) {
         private static OperationSignature from(Candidate candidate, ChemicalReactorBlockEntity reactor) {
-            List<VialContentsState> coReactants = reactor.occupiedCoReactantSlots().stream()
-                .map(VialContentsState::fromStack)
-                .toList();
-            ItemStack catalyst = reactor.items.get(CATALYST_SLOT);
-            return new OperationSignature(
-                candidate.rule().getId().getValue(),
-                VialContentsState.fromStack(reactor.items.get(TARGET_SLOT)),
-                List.copyOf(coReactants),
-                catalyst.isEmpty() ? "" : BuiltInRegistries.ITEM.getKey(catalyst.getItem()).toString()
-            );
+            CompoundTag state = new CompoundTag();
+            state.putString("rule", candidate.rule().getId().getValue());
+            ContainerHelper.saveAllItems(state, reactor.items, reactor.level.registryAccess());
+            return new OperationSignature(state);
         }
     }
 

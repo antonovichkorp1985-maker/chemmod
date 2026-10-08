@@ -37,8 +37,8 @@ jobs:
           fi
           exit "$status"
       # This is deliberately a short-lived CI artifact, not a GitHub release:
-      # M3 still needs player client/server acceptance before v0.9.0-test.4 is
-      # tagged. It lets that acceptance use the exact JDK-21-tested JAR.
+      # test.4 is already published for player acceptance. Subsequent source
+      # fixes use this exact-commit artifact until the next test prerelease.
       - name: Write manual-acceptance checksum
         shell: bash
         run: |
