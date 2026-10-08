@@ -85,13 +85,14 @@ is consumed**.
 JDK-21 CI also runs required headless GameTests for the physical
 ethanol + copper + heated-blast-furnace route and its refusal/slot-change
 boundaries. They assert that the target is consumed, copper remains, and
-`C2H4O`/`H2` are created as two separate vials; missing heat/copper or an
-analytically impure ethanol vial leaves all input/output contents untouched;
-and a deliberately slow lit-furnace batch proves that removing an output vial
-clears progress without consuming ethanol or producing a partial result. These
-regression tests contain no player discovery or command shortcut, but they
-cannot replace this real client/server checklist: they do not test the GUI,
-persistence across a real restart, or multiplayer observation.
+`C2H4O`/`H2` are created as two separate vials; missing heat/copper, an
+analytically impure ethanol vial, or an explicit ethanol/water mixture leaves
+all input/output contents untouched; and a deliberately slow lit-furnace batch
+proves that removing an output vial clears progress without consuming ethanol
+or producing a partial result. These regression tests contain no player
+discovery or command shortcut, but they cannot replace this real client/server
+checklist: they do not test the GUI, persistence across a real restart, or
+multiplayer observation.
 
 The next prerelease is not created merely because CI compiles. It is eligible
 only when this checklist succeeds on a real client/server build, the automated

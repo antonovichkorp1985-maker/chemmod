@@ -5,8 +5,11 @@ import io.github.antonovichkorp.chemmod.content.ChemBlocks;
 import io.github.antonovichkorp.chemmod.content.ChemComponents;
 import io.github.antonovichkorp.chemmod.content.ChemItems;
 import io.github.antonovichkorp.chemmod.content.ChemicalReactorBlockEntity;
+import io.github.antonovichkorp.chemmod.content.MixtureContents;
 import io.github.antonovichkorp.chemmod.content.SubstanceContents;
 import io.github.antonovichkorp.chemmod.content.VialContentsState;
+import io.github.antonovichkorp.chemmod.core.mixture.MolecularMixture;
+import io.github.antonovichkorp.chemmod.core.reaction.MolecularPortion;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.gametest.framework.GameTest;
@@ -20,6 +23,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -118,6 +122,30 @@ public final class ChemicalReactorGameTests {
         });
     }
 
+    @GameTest(template = "chemical_reactor_batch", timeoutTicks = 80)
+    public static void explicitMixtureRefusesBatchWithoutExtractingAComponent(GameTestHelper helper) {
+        ChemicalReactorBlockEntity reactor = setupBatch(
+            helper,
+            Blocks.BLAST_FURNACE.defaultBlockState().setValue(AbstractFurnaceBlock.LIT, true),
+            true
+        );
+        reactor.setItem(ChemicalReactorBlockEntity.TARGET_SLOT, ethanolWaterMixtureVial());
+
+        helper.runAfterDelay(45, () -> {
+            VialContentsState target = VialContentsState.fromStack(reactor.getItem(ChemicalReactorBlockEntity.TARGET_SLOT));
+            helper.assertTrue(
+                target.substance() == null
+                    && target.mixture() != null
+                    && target.mixture().mixture().portions().size() == 2,
+                "reactor extracted or rewrote a component from an explicit mixture"
+            );
+            assertEmptyOutputs(helper, reactor, "explicit mixture created a product");
+            helper.assertTrue(reactor.reactionProgress() == 0.0, "explicit mixture accumulated reactor progress");
+            assertCopperRetained(helper, reactor);
+            helper.succeed();
+        });
+    }
+
     @GameTest(template = "chemical_reactor_batch", timeoutTicks = 100)
     public static void removingOutputVialCancelsPartialBatchWithoutConsumingEthanol(GameTestHelper helper) {
         // A regular lit furnace is intentionally valid but slow (650 K), so a
@@ -198,6 +226,18 @@ public final class ChemicalReactorGameTests {
 
     private static ItemStack emptyVial() {
         return new ItemStack(ChemItems.SUBSTANCE_VIAL.get());
+    }
+
+    private static ItemStack ethanolWaterMixtureVial() {
+        SubstanceContents ethanol = new SubstanceContents("CCO", VIAL_MICROMOLES / 2, 1_000_000);
+        SubstanceContents water = new SubstanceContents("O", VIAL_MICROMOLES / 2, 1_000_000);
+        MolecularMixture mixture = new MolecularMixture(List.of(
+            new MolecularPortion(ethanol.molecule(), ethanol.micromoles()),
+            new MolecularPortion(water.molecule(), water.micromoles())
+        ));
+        ItemStack vial = emptyVial();
+        vial.set(ChemComponents.MIXTURE.get(), MixtureContents.fromMolecularMixture(mixture));
+        return vial;
     }
 
     private static ItemStack filledVial(String structure) {
