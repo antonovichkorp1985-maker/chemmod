@@ -23,11 +23,10 @@ neoForge {
             programArgument("--nogui")
         }
         create("gameTestServer") {
-            gameTestServer()
-            // A required failed GameTest must reach Gradle as a non-zero exit
-            // rather than being masked by ModDevGradle's normal force-exit
-            // behavior for interactive dev runs.
-            setForceExit(false)
+            // ModDevGradle has client/data/server convenience methods, but a
+            // game-test server is selected through the documented run type.
+            // It exits with the required failed-test count on its own.
+            type = "gameTestServer"
         }
     }
 
