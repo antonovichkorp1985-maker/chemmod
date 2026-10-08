@@ -368,12 +368,15 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
         if ((below.is(Blocks.CAMPFIRE) || below.is(Blocks.SOUL_CAMPFIRE))
             && below.hasProperty(CampfireBlock.LIT)
             && below.getValue(CampfireBlock.LIT)) {
-            return 800.0;
+            return below.is(Blocks.SOUL_CAMPFIRE) ? 800.0 : 700.0;
         }
-        if ((below.is(Blocks.FURNACE) || below.is(Blocks.BLAST_FURNACE) || below.is(Blocks.SMOKER))
-            && below.hasProperty(AbstractFurnaceBlock.LIT)
-            && below.getValue(AbstractFurnaceBlock.LIT)) {
-            return 900.0;
+        if (below.hasProperty(AbstractFurnaceBlock.LIT) && below.getValue(AbstractFurnaceBlock.LIT)) {
+            // Distinct real blocks provide a small, visible thermal ladder for
+            // M3's Arrhenius progress: a lit furnace is valid but deliberately
+            // slow, while a blast furnace is the documented fast route.
+            if (below.is(Blocks.FURNACE)) return 650.0;
+            if (below.is(Blocks.SMOKER)) return 750.0;
+            if (below.is(Blocks.BLAST_FURNACE)) return 900.0;
         }
         return 293.15;
     }

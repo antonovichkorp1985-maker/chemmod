@@ -82,12 +82,15 @@ is consumed**.
 
 ## Automated guard and release gate
 
-JDK-21 CI also runs a required headless GameTest for the physical
-ethanol + copper + heated-blast-furnace route. It asserts that the target is
-consumed, copper remains, and `C2H4O`/`H2` are created as two separate vials.
-That regression test contains no player discovery or command shortcut, but it
-cannot replace this real client/server checklist: it does not test the GUI,
-persistence across a real restart, or multiplayer observation.
+JDK-21 CI also runs required headless GameTests for the physical
+ethanol + copper + heated-blast-furnace route and its slot-change boundary.
+They assert that the target is consumed, copper remains, and `C2H4O`/`H2` are
+created as two separate vials; a deliberately slow lit-furnace batch then
+proves that removing an output vial clears progress without consuming ethanol
+or producing a partial result. These regression tests contain no player
+discovery or command shortcut, but they cannot replace this real client/server
+checklist: they do not test the GUI, persistence across a real restart, or
+multiplayer observation.
 
 The next prerelease is not created merely because CI compiles. It is eligible
 only when this checklist succeeds on a real client/server build, the automated
