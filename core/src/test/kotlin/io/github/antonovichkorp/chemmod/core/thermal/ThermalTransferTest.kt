@@ -159,4 +159,59 @@ class ThermalTransferTest {
         assertEquals(ThermalBody(100.0, 500.0), hot)
         assertEquals(ThermalBody(400.0, 300.0), cold)
     }
+
+    @Test fun reservoirApproachesMaintainedTemperatureWithoutChargingItself() {
+        val result = ThermalTransfer.reservoir(cold, 900.0, 240.0, 1.0)
+        close(900.0 - 600.0 * exp(-0.6), result.body.temperatureKelvin)
+        close(400.0 * (result.body.temperatureKelvin - 300.0), result.heatFromReservoirJoules)
+        assertTrue(result.body.temperatureKelvin in 300.0..900.0)
+    }
+
+    @Test fun reservoirHeatingAndCoolingShareOneSignedLedger() {
+        val heated = ThermalTransfer.reservoir(cold, 900.0, 240.0, 1.0)
+        val cooled = ThermalTransfer.reservoir(hot, 300.0, 20.0, 5.0)
+        close(300.0 + 200.0 * exp(-1.0), cooled.body.temperatureKelvin)
+        assertTrue(heated.heatFromReservoirJoules > 0.0)
+        assertTrue(cooled.heatFromReservoirJoules < 0.0)
+        close(100.0 * (cooled.body.temperatureKelvin - 500.0), cooled.heatFromReservoirJoules)
+    }
+
+    @Test fun reservoirTimestepSubdivisionMatchesOneLongStep() {
+        val full = ThermalTransfer.reservoir(hot, 320.0, 25.0, 10.0)
+        var body = hot
+        var total = 0.0
+        repeat(200) {
+            val next = ThermalTransfer.reservoir(body, 320.0, 25.0, 0.05)
+            body = next.body
+            total += next.heatFromReservoirJoules
+        }
+        close(full.body.temperatureKelvin, body.temperatureKelvin)
+        close(full.heatFromReservoirJoules, total)
+    }
+
+    @Test fun zeroReservoirConductanceTimeOrEqualTemperatureDoesNothing() {
+        for ((conductance, time) in listOf(0.0 to 4.0, 25.0 to 0.0)) {
+            val result = ThermalTransfer.reservoir(cold, 900.0, conductance, time)
+            assertSame(cold, result.body)
+            assertEquals(0.0, result.heatFromReservoirJoules)
+        }
+        val result = ThermalTransfer.reservoir(cold, 300.0, 25.0, 10.0)
+        assertSame(cold, result.body)
+        assertEquals(0.0, result.heatFromReservoirJoules)
+    }
+
+    @Test fun saturatedReservoirConductanceReachesReservoirTemperatureExactly() {
+        val result = ThermalTransfer.reservoir(hot, 300.0, Double.MAX_VALUE, 1e5)
+        assertEquals(300.0, result.body.temperatureKelvin)
+        close(-20000.0, result.heatFromReservoirJoules)
+    }
+
+    @Test fun reservoirRejectsInvalidParametersWithoutMutatingTheBody() {
+        for (bad in listOf(-1.0, Double.NaN, Double.POSITIVE_INFINITY)) {
+            assertFailsWith<IllegalArgumentException> { ThermalTransfer.reservoir(cold, bad, 10.0, 1.0) }
+            assertFailsWith<IllegalArgumentException> { ThermalTransfer.reservoir(cold, 400.0, bad, 1.0) }
+            assertFailsWith<IllegalArgumentException> { ThermalTransfer.reservoir(cold, 400.0, 10.0, bad) }
+        }
+        assertEquals(ThermalBody(400.0, 300.0), cold)
+    }
 }

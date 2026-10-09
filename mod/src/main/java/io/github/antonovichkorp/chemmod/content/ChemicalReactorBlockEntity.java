@@ -68,6 +68,7 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
     private static final String LAST_RULE_KEY = "last_completed_rule";
     private static final String LAST_RULE_NAME_KEY = "last_completed_rule_name";
     private static final String DISPLAYED_RULE_KEY = "displayed_rule";
+    private static final String TEMPERATURE_KEY = "body_temperature_kelvin";
 
     private static final ReactionRuleSet RULE_SET = ReactionRuleSet.bundled();
     private static final PureSubstanceReactionPlanner PLANNER = PureSubstanceReactionPlanner.bundled();
@@ -91,6 +92,8 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
     private final NonNullList<ItemStack> items = NonNullList.withSize(SLOT_COUNT, ItemStack.EMPTY);
     private long inventoryRevision;
     private double reactionProgress;
+    /** Lumped body temperature; the vessel has to be heated, it does not teleport to the source. */
+    private double bodyTemperatureKelvin = ApparatusThermalModel.AMBIENT_TEMPERATURE_KELVIN;
     private OperationSignature progressingOperation;
     private OperationSignature completedOperation;
     private String lastOperator = "";
@@ -195,6 +198,10 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
 
     private void tickOneSecond() {
         if (level == null || level.isClientSide()) return;
+
+        // Thermal inertia advances even while the machine is otherwise idle, so
+        // lighting or removing the source has a lasting physical consequence.
+        advanceThermalState(1.0);
 
         // Keep the successful result visible while its exact physical inventory
         // remains in place. An empty source vial is the result, not an impure input.
@@ -382,14 +389,32 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
         );
     }
 
+    /** One exact exponential step of the vessel body toward its current boundary conditions. */
+    private void advanceThermalState(double elapsedSeconds) {
+        double next = ApparatusThermalModel.advance(bodyTemperatureKelvin, elapsedSeconds, heatSourceTemperatureKelvin());
+        // Equilibrium is approached asymptotically; do not mark the chunk dirty
+        // and re-broadcast the block for changes nobody can observe.
+        if (Math.abs(next - bodyTemperatureKelvin) < 0.01) return;
+        bodyTemperatureKelvin = next;
+        setChanged();
+    }
+
     /**
-     * M3 has no global thermal or pressure field yet. The reactor therefore
-     * reads only an actual adjacent heat source and the fixed open-vessel
-     * atmospheric pressure; later fields can replace this narrow adapter
-     * without changing core rule evaluation or vial transactions.
+     * Current vessel body temperature in kelvin. This is the value reaction
+     * rules and the Arrhenius rate are evaluated against.
      */
-    private double temperatureKelvin() {
-        if (level == null) return 293.15;
+    public double temperatureKelvin() {
+        return bodyTemperatureKelvin;
+    }
+
+    /**
+     * Maintained temperature of the real lit block below the reactor, or null
+     * when nothing is heating it. These are boundary conditions supplied by
+     * another block's own fuel, not the reactor's temperature: the vessel still
+     * warms toward them and cools toward the room when they disappear.
+     */
+    private Double heatSourceTemperatureKelvin() {
+        if (level == null) return null;
         BlockState below = level.getBlockState(worldPosition.below());
         if (below.is(Blocks.LAVA)) return 1_200.0;
         if (below.is(Blocks.FIRE) || below.is(Blocks.SOUL_FIRE)) return 900.0;
@@ -400,13 +425,13 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
         }
         if (below.hasProperty(AbstractFurnaceBlock.LIT) && below.getValue(AbstractFurnaceBlock.LIT)) {
             // Distinct real blocks provide a small, visible thermal ladder for
-            // M3's Arrhenius progress: a lit furnace is valid but deliberately
-            // slow, while a blast furnace is the documented fast route.
+            // Arrhenius progress: a lit furnace is valid but deliberately slow,
+            // while a blast furnace is the documented fast route.
             if (below.is(Blocks.FURNACE)) return 650.0;
             if (below.is(Blocks.SMOKER)) return 750.0;
             if (below.is(Blocks.BLAST_FURNACE)) return 900.0;
         }
-        return 293.15;
+        return null;
     }
 
     private java.util.Set<String> catalystTags() {
@@ -672,6 +697,7 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
         super.saveAdditional(tag, registries);
         ContainerHelper.saveAllItems(tag, items, registries);
         tag.putDouble(PROGRESS_KEY, reactionProgress);
+        tag.putDouble(TEMPERATURE_KEY, bodyTemperatureKelvin);
         tag.remove(OPERATION_KEY);
         if (progressingOperation != null && reactionProgress > 0.0) {
             tag.put(OPERATION_KEY, progressingOperation.state().copy());
@@ -700,6 +726,11 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
         progressingOperation = resumable ? new OperationSignature(tag.getCompound(OPERATION_KEY).copy()) : null;
         completedOperation = !resumable && tag.contains(COMPLETED_OPERATION_KEY, Tag.TAG_COMPOUND)
             ? new OperationSignature(tag.getCompound(COMPLETED_OPERATION_KEY).copy()) : null;
+        double savedTemperature = tag.getDouble(TEMPERATURE_KEY);
+        // Damaged values and pre-thermal saves fall back to room temperature
+        // instead of resuming from NaN, absolute zero or an impossible body.
+        bodyTemperatureKelvin = Double.isFinite(savedTemperature) && savedTemperature > 0.0
+            ? savedTemperature : ApparatusThermalModel.AMBIENT_TEMPERATURE_KELVIN;
         lastOperator = tag.getString(OPERATOR_KEY);
         progressingOperator = resumable ? tag.getString(PROCESSING_OPERATOR_KEY) : "";
         status = ReactorStatus.IDLE; // Re-evaluate conditions on the next server tick.

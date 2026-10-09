@@ -26,6 +26,12 @@ data class ContactTransfer(
     val heatFromFirstToSecondJoules: Double,
 )
 
+data class ReservoirTransfer(
+    val body: ThermalBody,
+    /** Signed heat from the maintained reservoir into the body; negative when the body cools into it. */
+    val heatFromReservoirJoules: Double,
+)
+
 data class PoweredTransfer(
     val body: ThermalBody,
     val suppliedEnergyJoules: Double,
@@ -43,6 +49,7 @@ data class PoweredTransfer(
  */
 object ThermalTransfer {
     /** Exact isolated two-body relaxation for constant thermal conductance (W/K). */
+    @JvmStatic
     fun contact(
         first: ThermalBody,
         second: ThermalBody,
@@ -76,6 +83,7 @@ object ThermalTransfer {
      * P is nonnegative heat actually delivered to this body, not an electrical
      * nameplate rating or free energy obtained from a nearby block's temperature.
      */
+    @JvmStatic
     fun powered(
         body: ThermalBody,
         deliveredPowerWatts: Double,
@@ -111,6 +119,33 @@ object ThermalTransfer {
             supplied * lossFraction, "Heat to ambient")
         finite(supplied - ambientHeat, "Net energy")
         return PoweredTransfer(body.copy(temperatureKelvin = next), supplied, ambientHeat)
+    }
+
+    /**
+     * Exact relaxation of one body against a maintained-temperature reservoir:
+     * a flame or heated surface whose own temperature is held by its fuel or
+     * power supply. The reservoir is not charged and does not change
+     * temperature, so the exchanged heat is accounted to the body alone. The
+     * body approaches the reservoir temperature asymptotically and never
+     * crosses it, whatever the step length.
+     */
+    @JvmStatic
+    fun reservoir(
+        body: ThermalBody,
+        reservoirTemperatureKelvin: Double,
+        conductanceWattsPerKelvin: Double,
+        elapsedSeconds: Double,
+    ): ReservoirTransfer {
+        nonnegative(reservoirTemperatureKelvin, "Reservoir temperature")
+        nonnegative(conductanceWattsPerKelvin, "Conductance")
+        nonnegative(elapsedSeconds, "Elapsed time")
+        if (conductanceWattsPerKelvin == 0.0 || elapsedSeconds == 0.0 ||
+            body.temperatureKelvin == reservoirTemperatureKelvin) return ReservoirTransfer(body, 0.0)
+        val difference = body.temperatureKelvin - reservoirTemperatureKelvin
+        val decay = exp(-relaxation(conductanceWattsPerKelvin, elapsedSeconds, body.heatCapacityJoulesPerKelvin))
+        val next = finite(reservoirTemperatureKelvin + difference * decay, "Body temperature")
+        val heat = finite(body.heatCapacityJoulesPerKelvin * (next - body.temperatureKelvin), "Reservoir heat")
+        return ReservoirTransfer(body.copy(temperatureKelvin = next), heat)
     }
 
     private fun nonnegative(value: Double, name: String) {
