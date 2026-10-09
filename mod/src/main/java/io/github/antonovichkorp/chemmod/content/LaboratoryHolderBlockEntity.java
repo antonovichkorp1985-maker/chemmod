@@ -28,14 +28,14 @@ public final class LaboratoryHolderBlockEntity extends BlockEntity {
         return slot >= 0 && slot < 10 && getBlockState().getValue(slot < 6 ? LaboratoryHolderBlock.RACK : LaboratoryHolderBlock.TRAY);
     }
     public boolean insert(int slot, ItemStack held) {
-        if (level == null || level.isClientSide() || dropped || !available(slot)
+        if (!liveServerHolder() || !available(slot)
             || !contents.get(slot).isEmpty() || !held.is(ChemItems.SUBSTANCE_VIAL.get())) return false;
         contents.set(slot, held.split(1));
         changed();
         return true;
     }
     public ItemStack extract(int slot) {
-        if (level == null || level.isClientSide() || dropped || !available(slot)) return ItemStack.EMPTY;
+        if (!liveServerHolder() || !available(slot)) return ItemStack.EMPTY;
         ItemStack result = contents.get(slot);
         contents.set(slot, ItemStack.EMPTY);
         if (!result.isEmpty()) changed();
@@ -70,6 +70,81 @@ public final class LaboratoryHolderBlockEntity extends BlockEntity {
             }
         }
         return new ItemStack(rack ? ChemItems.TEST_TUBE_RACK.get() : ChemItems.LABORATORY_TRAY.get());
+    }
+
+    /** Transfer a whole selected holder to one non-stackable item, including empty slot positions. */
+    public ItemStack takeHolder(boolean rack) {
+        if (!liveServerHolder()) return ItemStack.EMPTY;
+        var part = rack ? LaboratoryHolderBlock.RACK : LaboratoryHolderBlock.TRAY;
+        var other = rack ? LaboratoryHolderBlock.TRAY : LaboratoryHolderBlock.RACK;
+        var state = getBlockState();
+        if (!state.getValue(part)) return ItemStack.EMPTY;
+        int start = rack ? 0 : 6;
+        int end = rack ? 6 : 10;
+        // Hidden contents in an absent neighbour must not disappear with the last host.
+        if (!state.getValue(other)) {
+            for (int slot = 0; slot < 10; slot++) {
+                if ((slot < start || slot >= end) && !contents.get(slot).isEmpty()) return ItemStack.EMPTY;
+            }
+        }
+        var copies = new java.util.ArrayList<ItemStack>();
+        for (int slot = start; slot < end; slot++) copies.add(contents.get(slot).copy());
+        final PackedLaboratoryHolder packed;
+        try {
+            packed = new PackedLaboratoryHolder(rack, holderId(rack),
+                net.minecraft.world.item.component.ItemContainerContents.fromItems(copies));
+        } catch (IllegalArgumentException invalid) {
+            return ItemStack.EMPTY; // Do not erase malformed saved contents.
+        }
+        ItemStack result = new ItemStack(rack ? ChemItems.TEST_TUBE_RACK.get() : ChemItems.LABORATORY_TRAY.get());
+        result.set(ChemComponents.PACKED_HOLDER.get(), packed);
+        result.set(net.minecraft.core.component.DataComponents.MAX_STACK_SIZE, 1);
+        if (state.getValue(other)) {
+            if (!level.setBlock(worldPosition, state.setValue(part, false), 3)) return ItemStack.EMPTY;
+        } else {
+            dropped = true; // No loose contents/holder drop in addition to the returned packed item.
+            if (!level.removeBlock(worldPosition, false)) {
+                dropped = false;
+                return ItemStack.EMPTY;
+            }
+        }
+        for (int slot = start; slot < end; slot++) contents.set(slot, ItemStack.EMPTY);
+        if (rack) rackId = UUID.randomUUID(); else trayId = UUID.randomUUID();
+        if (!dropped) changed();
+        return result;
+    }
+
+    private boolean liveServerHolder() {
+        return level != null && !level.isClientSide() && !dropped && level.getBlockEntity(worldPosition) == this;
+    }
+    /** Can be checked before adding the part to an existing host. No mutation on refusal. */
+    public boolean canRestorePacked(boolean rack, PackedLaboratoryHolder packed) {
+        if (!liveServerHolder() || packed.rack() != rack) return false;
+        var other = rack ? LaboratoryHolderBlock.TRAY : LaboratoryHolderBlock.RACK;
+        if (getBlockState().getValue(other) && holderId(!rack).equals(packed.holderId())) return false;
+        for (int slot = rack ? 0 : 6; slot < (rack ? 6 : 10); slot++) {
+            if (!contents.get(slot).isEmpty()) return false;
+        }
+        return true;
+    }
+    public boolean restorePacked(boolean rack, PackedLaboratoryHolder packed) {
+        if (!canRestorePacked(rack, packed)
+            || !getBlockState().getValue(rack ? LaboratoryHolderBlock.RACK : LaboratoryHolderBlock.TRAY)) return false;
+        var slots = packed.copySlots();
+        for (int slot = 0; slot < slots.size(); slot++) contents.set((rack ? 0 : 6) + slot, slots.get(slot));
+        if (rack) rackId = packed.holderId(); else trayId = packed.holderId();
+        changed();
+        return true;
+    }
+    /** Rollback guard for a freshly placed, still-empty host if restoration is refused. */
+    public void cancelEmptyPlacement() {
+        if (liveServerHolder() && contents.stream().allMatch(ItemStack::isEmpty)) dropped = true;
+    }
+    @Override protected void applyImplicitComponents(DataComponentInput input) {
+        super.applyImplicitComponents(input);
+        // Placement already restored the snapshot. Do not keep a second, stale copy on the BE.
+        input.get(ChemComponents.PACKED_HOLDER.get());
+        input.get(net.minecraft.core.component.DataComponents.MAX_STACK_SIZE);
     }
 
     private void changed() {

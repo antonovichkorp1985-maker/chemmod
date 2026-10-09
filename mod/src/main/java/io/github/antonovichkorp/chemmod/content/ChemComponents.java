@@ -43,6 +43,12 @@ public final class ChemComponents {
             .networkSynchronized(RadioactiveContents.STREAM_CODEC)
             .build());
 
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<PackedLaboratoryHolder>> PACKED_HOLDER =
+        COMPONENTS.register("packed_laboratory_holder", () -> DataComponentType.<PackedLaboratoryHolder>builder()
+            .persistent(PackedLaboratoryHolder.CODEC)
+            .networkSynchronized(PackedLaboratoryHolder.STREAM_CODEC)
+            .build());
+
     private ChemComponents() {}
 
     public static void register(IEventBus eventBus) {

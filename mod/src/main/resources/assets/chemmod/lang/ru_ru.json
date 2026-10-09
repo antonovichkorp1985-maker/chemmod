@@ -182,7 +182,10 @@
   "tooltip.chemmod.reactor.co_reactants": "Дополнительные реагенты, например кислород. Это не выходные слоты.",
   "tooltip.chemmod.reactor.products": "Поставьте пустые колбы для продуктов реакции.",
   "tooltip.chemmod.reactor.catalyst": "Катализатор — твёрдый предмет, нужный правилу реакции. Например, медный слиток для превращения этанола.",
-  "tooltip.chemmod.holder.remove": "Shift + ПКМ пустой рукой — снять выбранный пустой держатель.",
+  "tooltip.chemmod.holder.remove": "Shift + ПКМ пустой рукой — перенести держатель вместе с сосудами.",
   "message.chemmod.holder.empty_first": "Сначала заберите все сосуды из выбранного держателя.",
-  "tooltip.chemmod.holder.orientation": "Направление задаётся при установке. Вторая часть наследует поворот первой."
+  "tooltip.chemmod.holder.orientation": "Направление задаётся при установке. Вторая часть наследует поворот первой.",
+  "message.chemmod.holder.cannot_pack": "Не удалось безопасно упаковать держатель. Содержимое оставлено на месте.",
+  "tooltip.chemmod.holder.packed": "Переносимый держатель: занято %s из %s мест.",
+  "tooltip.chemmod.holder.position": "Место %s: %s"
 }

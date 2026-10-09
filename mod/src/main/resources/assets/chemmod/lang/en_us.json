@@ -182,7 +182,10 @@
   "tooltip.chemmod.reactor.co_reactants": "Additional reactants, such as oxygen. These are not output slots.",
   "tooltip.chemmod.reactor.products": "Insert empty vials to receive reaction products.",
   "tooltip.chemmod.reactor.catalyst": "Catalyst: a solid item required by the reaction rule. For example, a copper ingot for ethanol conversion.",
-  "tooltip.chemmod.holder.remove": "Sneak + right-click with an empty hand to remove the selected empty holder.",
+  "tooltip.chemmod.holder.remove": "Sneak + right-click with an empty hand to carry the holder and its vessels.",
   "message.chemmod.holder.empty_first": "Remove all vessels from the selected holder first.",
-  "tooltip.chemmod.holder.orientation": "Placement sets orientation. The second holder shares the first holder’s orientation."
+  "tooltip.chemmod.holder.orientation": "Placement sets orientation. The second holder shares the first holder’s orientation.",
+  "message.chemmod.holder.cannot_pack": "Cannot safely pack this holder. Its contents remain in place.",
+  "tooltip.chemmod.holder.packed": "Carried holder: %s of %s positions occupied.",
+  "tooltip.chemmod.holder.position": "Position %s: %s"
 }
