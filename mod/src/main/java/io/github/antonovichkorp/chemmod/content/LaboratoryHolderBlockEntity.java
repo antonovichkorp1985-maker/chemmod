@@ -153,7 +153,7 @@ public final class LaboratoryHolderBlockEntity extends BlockEntity {
     }
     /** Destruction/support loss drains once; loot table is deliberately empty. */
     public void dropAll() {
-        if (level == null || level.isClientSide() || dropped) return;
+        if (level == null || level.isClientSide() || dropped || level.restoringBlockSnapshots) return;
         dropped = true;
         for (int i = 0; i < contents.size(); i++) {
             Containers.dropItemStack(level, worldPosition.getX(), worldPosition.getY(), worldPosition.getZ(), contents.get(i));

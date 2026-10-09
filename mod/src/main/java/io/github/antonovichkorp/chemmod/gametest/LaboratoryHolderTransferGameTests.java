@@ -65,6 +65,71 @@ public final class LaboratoryHolderTransferGameTests {
     }
 
     @GameTest(template = "chemical_reactor_batch", timeoutTicks = 20)
+    public static void sneakInteractionCarriesLoadedTrayWithoutChangingRack(GameTestHelper helper) {
+        var holder = setup(helper, true, true);
+        holder.insert(0, ChemItems.vial("вода")); holder.insert(9, ChemItems.mixtureVial("вода", "этанол"));
+        var id = holder.holderId(false); var expected = holder.contents(9); var neighbour = holder.contents(0);
+        var player = player(helper, ItemStack.EMPTY, false); player.setShiftKeyDown(true);
+        var pos = helper.absolutePos(POS);
+        var hit = new BlockHitResult(new Vec3(pos.getX() + 0.75, pos.getY() + 0.25, pos.getZ() + 0.75), Direction.UP, pos, false);
+        holder.getBlockState().useWithoutItem(helper.getLevel(), player, hit);
+        var carried = player.getMainHandItem();
+        helper.assertTrue(carried.is(ChemItems.LABORATORY_TRAY.get()) && carried.getCount() == 1, "interaction did not return a packed tray");
+        var packed = carried.get(ChemComponents.PACKED_HOLDER.get());
+        helper.assertTrue(packed != null && packed.holderId().equals(id), "interaction lost holder identity");
+        same(helper, expected, packed.copySlots().get(3), "interaction changed tray contents");
+        same(helper, neighbour, holder.contents(0), "interaction changed neighbour");
+        holder.getBlockState().useWithoutItem(helper.getLevel(), player, hit);
+        helper.assertTrue(player.getInventory().countItem(ChemItems.LABORATORY_TRAY.get()) == 1, "repeated interaction duplicated tray");
+        helper.succeed();
+    }
+
+    @GameTest(template = "chemical_reactor_batch", timeoutTicks = 20)
+    public static void canceledNewPlacementKeepsPackedItemAndCreatesNoDrops(GameTestHelper helper) {
+        var holder = setup(helper, false, true);
+        holder.insert(9, ChemItems.mixtureVial("вода", "этанол"));
+        var carried = holder.takeHolder(false); var before = carried.copy();
+        helper.setBlock(DEST.below(), Blocks.STONE);
+        var player = player(helper, carried, false);
+        java.util.function.Consumer<net.neoforged.neoforge.event.level.BlockEvent.EntityPlaceEvent> cancel = event -> {
+            if (event.getEntity() == player) event.setCanceled(true);
+        };
+        net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(cancel);
+        try {
+            helper.assertTrue(!carried.useOn(tableContext(helper, player)).consumesAction(), "placement veto ignored");
+        } finally { net.neoforged.neoforge.common.NeoForge.EVENT_BUS.unregister(cancel); }
+        same(helper, before, carried, "cancellation consumed packed item");
+        var pos = helper.absolutePos(DEST); var level = helper.getLevel();
+        helper.assertTrue(level.getBlockState(pos).isAir() && level.getBlockEntity(pos) == null, "cancellation left a host");
+        helper.assertTrue(level.getEntitiesOfClass(ItemEntity.class, new AABB(pos).inflate(2)).isEmpty(), "canceled placement duplicated drops");
+        // The same item remains usable after cancellation.
+        helper.assertTrue(carried.useOn(tableContext(helper, player)).consumesAction() && carried.isEmpty(), "item unusable after cancellation");
+        helper.succeed();
+    }
+
+    @GameTest(template = "chemical_reactor_batch", timeoutTicks = 20)
+    public static void canceledMergeRestoresNeighbourAndPackedSourceExactly(GameTestHelper helper) {
+        var holder = setup(helper, true, true);
+        holder.insert(0, ChemItems.vial("вода")); holder.insert(9, ChemItems.mixtureVial("вода", "этанол"));
+        var carried = holder.takeHolder(false); var beforeItem = carried.copy();
+        var level = helper.getLevel(); var pos = helper.absolutePos(POS);
+        var beforeState = holder.getBlockState(); var beforeTag = holder.saveWithoutMetadata(level.registryAccess());
+        var player = player(helper, carried, true);
+        java.util.function.Consumer<net.neoforged.neoforge.event.level.BlockEvent.EntityPlaceEvent> cancel = event -> {
+            if (event.getEntity() == player) event.setCanceled(true);
+        };
+        net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(cancel);
+        try {
+            helper.assertTrue(!carried.useOn(hostContext(helper, player)).consumesAction(), "merge veto ignored");
+        } finally { net.neoforged.neoforge.common.NeoForge.EVENT_BUS.unregister(cancel); }
+        same(helper, beforeItem, carried, "canceled merge consumed snapshot");
+        helper.assertTrue(level.getBlockState(pos).equals(beforeState), "canceled merge left second part");
+        helper.assertTrue(beforeTag.equals(level.getBlockEntity(pos).saveWithoutMetadata(level.registryAccess())), "rollback changed neighbour NBT");
+        helper.assertTrue(level.getEntitiesOfClass(ItemEntity.class, new AABB(pos).inflate(1)).isEmpty(), "canceled merge spawned copies");
+        helper.succeed();
+    }
+
+    @GameTest(template = "chemical_reactor_batch", timeoutTicks = 20)
     public static void pickupPreservesHolesComponentsAndIdentityWithoutTouchingNeighbour(GameTestHelper helper) {
         var holder = setup(helper, true, true);
         holder.insert(0, ChemItems.vial("вода"));
