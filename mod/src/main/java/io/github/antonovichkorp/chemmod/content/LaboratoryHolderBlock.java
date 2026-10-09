@@ -81,7 +81,9 @@ public final class LaboratoryHolderBlock extends BaseEntityBlock {
     }
     @Override protected ItemInteractionResult useItemOn(ItemStack held, BlockState state, Level level, BlockPos pos,
             Player player, InteractionHand hand, BlockHitResult hit) {
-        if (!held.is(ChemItems.SUBSTANCE_VIAL.get())) return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+        if (!held.is(ChemItems.SUBSTANCE_VIAL.get())) return held.isEmpty()
+            ? ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION
+            : ItemInteractionResult.SKIP_DEFAULT_BLOCK_INTERACTION;
         int slot = slotAt(pos, hit, state);
         if (!player.mayBuild() || slot < 0) return ItemInteractionResult.FAIL;
         if (level.isClientSide()) return ItemInteractionResult.SUCCESS;
@@ -94,7 +96,7 @@ public final class LaboratoryHolderBlock extends BaseEntityBlock {
     }
     @Override protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hit) {
         int slot = slotAt(pos, hit, state);
-        if (!player.mayBuild() || slot < 0) return InteractionResult.PASS;
+        if (!player.mayBuild() || !player.getMainHandItem().isEmpty() || slot < 0) return InteractionResult.PASS;
         if (level.isClientSide()) return InteractionResult.SUCCESS;
         if (level.getBlockEntity(pos) instanceof LaboratoryHolderBlockEntity holder) {
             ItemStack taken = holder.extract(slot);

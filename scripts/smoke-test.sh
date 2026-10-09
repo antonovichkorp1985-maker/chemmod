@@ -3,6 +3,9 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
+echo "==> Checking laboratory resource contracts"
+python3 -m unittest discover -s scripts -p 'test_lab_assets.py'
+
 echo "==> Compiling and running unit tests"
 ./gradlew --no-daemon check installDist :mod:build
 

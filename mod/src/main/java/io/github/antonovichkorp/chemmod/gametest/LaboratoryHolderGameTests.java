@@ -28,6 +28,29 @@ public final class LaboratoryHolderGameTests {
         return (LaboratoryHolderBlockEntity) helper.getLevel().getBlockEntity(helper.absolutePos(POS));
     }
     @GameTest(template = "chemical_reactor_batch", timeoutTicks = 20)
+    public static void heldTrayReachesItemPlacementInsteadOfStealingRackVial(GameTestHelper helper) {
+        var holder = setup(helper, false);
+        holder.insert(0, ChemItems.vial("вода"));
+        var level = helper.getLevel(); var pos = helper.absolutePos(POS);
+        var player = net.neoforged.neoforge.common.util.FakePlayerFactory.get(level,
+            new com.mojang.authlib.GameProfile(java.util.UUID.randomUUID(), "lab_test"));
+        player.setPos(pos.getX() + 3, pos.getY(), pos.getZ() + 3);
+        var held = new ItemStack(ChemItems.LABORATORY_TRAY.get(), 2);
+        player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, held);
+        var hit = new BlockHitResult(new Vec3(pos.getX() + 0.25, pos.getY() + 0.5, pos.getZ() + 2.5 / 16), Direction.UP, pos, false);
+        var result = holder.getBlockState().useItemOn(held, level, player, net.minecraft.world.InteractionHand.MAIN_HAND, hit);
+        helper.assertTrue(result == net.minecraft.world.ItemInteractionResult.SKIP_DEFAULT_BLOCK_INTERACTION,
+            "held tray was intercepted by empty-hand extraction");
+        var placement = held.useOn(new net.minecraft.world.item.context.UseOnContext(player, net.minecraft.world.InteractionHand.MAIN_HAND, hit));
+        helper.assertTrue(placement.consumesAction() && held.getCount() == 1, "tray did not install exactly once");
+        helper.assertTrue(holder.getBlockState().getValue(LaboratoryHolderBlock.TRAY) && !holder.contents(0).isEmpty(),
+            "tray installation removed rack contents");
+        var duplicate = held.useOn(new net.minecraft.world.item.context.UseOnContext(player, net.minecraft.world.InteractionHand.MAIN_HAND, hit));
+        helper.assertTrue(!duplicate.consumesAction() && held.getCount() == 1, "duplicate tray consumed item");
+        helper.succeed();
+    }
+
+    @GameTest(template = "chemical_reactor_batch", timeoutTicks = 20)
     public static void physicalTransferPreservesComponentsAndRefusesOccupiedSlot(GameTestHelper helper) {
         var holder = setup(helper, false);
         ItemStack held = ChemItems.vial("этанол");
