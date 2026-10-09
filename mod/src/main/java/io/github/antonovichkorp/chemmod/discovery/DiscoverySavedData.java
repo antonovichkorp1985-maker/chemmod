@@ -19,8 +19,8 @@ import java.util.List;
  *
  * The ledger is deliberately attached to the overworld's data storage so a
  * server has one world-wide discovery history rather than divergent records for
- * every dimension. No command or item creation writes it: only a future real
- * synthesis machine may call {@link #recordSynthesis}.
+ * every dimension. No command or item creation writes it: the reactor calls this only after
+ * a successful physical transaction via {@link #recordSynthesis}.
  */
 public final class DiscoverySavedData extends SavedData {
     private static final String DATA_FILE = "chemmod_discoveries";
@@ -72,7 +72,8 @@ public final class DiscoverySavedData extends SavedData {
         return List.copyOf(ledger.records());
     }
 
-    private static DiscoverySavedData load(CompoundTag tag, HolderLookup.Provider registries) {
+    // Package-private so in-world codec tests exercise the same loader as SavedData.Factory.
+    static DiscoverySavedData load(CompoundTag tag, HolderLookup.Provider registries) {
         int schema = tag.contains(SCHEMA_KEY, Tag.TAG_INT) ? tag.getInt(SCHEMA_KEY) : 1;
         if (schema != CURRENT_SCHEMA) {
             throw new IllegalArgumentException("Unsupported ChemMod discovery schema: " + schema);

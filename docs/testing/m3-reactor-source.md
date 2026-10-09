@@ -129,6 +129,33 @@ or discovery test**. Real server restart and player UI acceptance remain open.
 When testing migration, keep a backup of the test.4 world and expect only the
 unfinished progress to restart on first load with the new source build.
 
+## Post-test.4 source regression: discovery after physical commit
+
+Three further GameTests exercise discovery without adding gameplay commands:
+
+1. A single physical lifecycle uses two named NeoForge fake players. The real
+   sneak-use mixing path, sample insertion, operator selection, no-heat refusal,
+   partial progress, and cancellation of the **first** synthesis must all leave
+   the world ledger unchanged. A subsequent valid partial batch is saved and
+   loaded after another player becomes the most recent viewer. Only completed
+   physical product vials may register discoveries, credited to the initiating
+   operator. Repeating the synthesis as the second player preserves the original
+   author and timestamp.
+2. An isolated ledger round-trip verifies Cyrillic names, optional trivial names,
+   millisecond timestamps and the SavedData dirty flag. Replaying an existing
+   discovery must not overwrite it or mark a freshly loaded ledger dirty.
+3. Unsupported schema versions and duplicate canonical keys must be rejected,
+   not silently replaced by an empty ledger. This is validation, not a repair
+   or migration tool for damaged worlds.
+
+The physical first-synthesis test requires a fresh, disposable GameTest world;
+its setup never clears real discovery history. Isolated codec tests do not
+write synthetic records to the world ledger. Fake players test the server-side
+operator hooks; they do **not** test GUI opening packets, two-client networking,
+creative-tab rendering or full process restart. There is still no player-facing
+registry viewer, so the discovery parts of manual acceptance remain distinct
+from what can currently be observed in the reactor GUI.
+
 ## M3 test-release and completion gates
 
 `v0.9.0-test.4` is the player-test artifact for this checklist, not proof that
