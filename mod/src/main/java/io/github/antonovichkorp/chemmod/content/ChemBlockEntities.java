@@ -30,6 +30,10 @@ public final class ChemBlockEntities {
             ).build(null)
         );
 
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<LaboratoryHolderBlockEntity>> LABORATORY_HOLDER =
+        BLOCK_ENTITY_TYPES.register("laboratory_holder", () -> BlockEntityType.Builder.of(
+            LaboratoryHolderBlockEntity::new, ChemBlocks.LABORATORY_HOLDER.get()).build(null));
+
     private ChemBlockEntities() {}
 
     public static void register(IEventBus eventBus) {

@@ -2,7 +2,7 @@
   "textures": {
     "glass": "chemmod:block/lab/glass",
     "cap": "chemmod:block/lab/dark",
-    "label": "chemmod:block/lab/empty_label",
+    "label": "chemmod:block/lab/pure_label",
     "particle": "chemmod:block/lab/glass"
   },
   "elements": [
@@ -360,19 +360,5 @@
         0.5
       ]
     }
-  },
-  "overrides": [
-    {
-      "predicate": {
-        "chemmod:contents": 1
-      },
-      "model": "chemmod:item/substance_vial_pure"
-    },
-    {
-      "predicate": {
-        "chemmod:contents": 2
-      },
-      "model": "chemmod:item/substance_vial_mixture"
-    }
-  ]
+  }
 }

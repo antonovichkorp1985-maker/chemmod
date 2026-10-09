@@ -114,6 +114,11 @@ public final class ChemBlocks {
         )
     );
 
+    public static final DeferredHolder<Block, LaboratoryHolderBlock> LABORATORY_HOLDER = BLOCKS.register(
+        "laboratory_holder", () -> new LaboratoryHolderBlock(BlockBehaviour.Properties.of()
+            .mapColor(MapColor.METAL).strength(1.0F).sound(SoundType.METAL).noOcclusion()
+            .pushReaction(net.minecraft.world.level.material.PushReaction.BLOCK)));
+
     private ChemBlocks() {}
 
     public static void register(IEventBus eventBus) {

@@ -118,6 +118,11 @@ public final class ChemItems {
             ))
     );
 
+    public static final DeferredHolder<Item, LaboratoryHolderItem> TEST_TUBE_RACK = ITEMS.register(
+        "test_tube_rack", () -> new LaboratoryHolderItem(new Item.Properties().stacksTo(16), true));
+    public static final DeferredHolder<Item, LaboratoryHolderItem> LABORATORY_TRAY = ITEMS.register(
+        "laboratory_tray", () -> new LaboratoryHolderItem(new Item.Properties().stacksTo(16), false));
+
     private static final List<String> TEST_SUBSTANCES = List.of(
         "вода", "водород", "кислород", "углекислый_газ", "метан", "метанол",
         "этанол", "диметиловый_эфир", "пропан", "уксусная_кислота", "хлор"
@@ -142,6 +147,8 @@ public final class ChemItems {
                 output.accept(new ItemStack(ORE_SEPARATOR.get()));
                 output.accept(new ItemStack(REFRACTORY_FURNACE.get()));
                 output.accept(new ItemStack(CHEMICAL_REACTOR.get()));
+                output.accept(new ItemStack(TEST_TUBE_RACK.get()));
+                output.accept(new ItemStack(LABORATORY_TRAY.get()));
                 output.accept(new ItemStack(INGOT_MOLD.get()));
                 output.accept(new ItemStack(METALWORKING_BENCH.get()));
                 output.accept(new ItemStack(CERAMIC_CRUCIBLE.get()));

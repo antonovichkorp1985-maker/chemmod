@@ -1,0 +1,20 @@
+{
+  "multipart": [
+    {
+      "when": {
+        "rack": "true"
+      },
+      "apply": {
+        "model": "chemmod:block/test_tube_rack"
+      }
+    },
+    {
+      "when": {
+        "tray": "true"
+      },
+      "apply": {
+        "model": "chemmod:block/laboratory_tray"
+      }
+    }
+  ]
+}

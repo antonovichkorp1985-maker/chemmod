@@ -84,11 +84,11 @@ public final class ChemicalReactorMenu extends AbstractContainerMenu {
 
         // Target, co-reactants, product vials, then reusable catalyst.
         addSlot(new ReactorSlot(reactor, ChemicalReactorBlockEntity.TARGET_SLOT, 26, 34));
-        addSlot(new ReactorSlot(reactor, ChemicalReactorBlockEntity.CO_REACTANT_FIRST_SLOT, 48, 34));
-        addSlot(new ReactorSlot(reactor, ChemicalReactorBlockEntity.CO_REACTANT_SECOND_SLOT, 66, 34));
-        addSlot(new ReactorSlot(reactor, ChemicalReactorBlockEntity.OUTPUT_FIRST_SLOT, 110, 34));
-        addSlot(new ReactorSlot(reactor, ChemicalReactorBlockEntity.OUTPUT_SECOND_SLOT, 128, 34));
-        addSlot(new ReactorSlot(reactor, ChemicalReactorBlockEntity.CATALYST_SLOT, 150, 34));
+        addSlot(new ReactorSlot(reactor, ChemicalReactorBlockEntity.CO_REACTANT_FIRST_SLOT, 62, 34));
+        addSlot(new ReactorSlot(reactor, ChemicalReactorBlockEntity.CO_REACTANT_SECOND_SLOT, 80, 34));
+        addSlot(new ReactorSlot(reactor, ChemicalReactorBlockEntity.OUTPUT_FIRST_SLOT, 130, 34));
+        addSlot(new ReactorSlot(reactor, ChemicalReactorBlockEntity.OUTPUT_SECOND_SLOT, 148, 34));
+        addSlot(new ReactorSlot(reactor, ChemicalReactorBlockEntity.CATALYST_SLOT, 210, 34));
 
         addPlayerInventory(playerInventory);
         addDataSlots(data);
@@ -211,11 +211,11 @@ public final class ChemicalReactorMenu extends AbstractContainerMenu {
     private void addPlayerInventory(Inventory playerInventory) {
         for (int row = 0; row < 3; row++) {
             for (int column = 0; column < 9; column++) {
-                addSlot(new Slot(playerInventory, column + row * 9 + 9, 8 + column * 18, 140 + row * 18));
+                addSlot(new Slot(playerInventory, column + row * 9 + 9, 47 + column * 18, 140 + row * 18));
             }
         }
         for (int column = 0; column < 9; column++) {
-            addSlot(new Slot(playerInventory, column, 8 + column * 18, 198));
+            addSlot(new Slot(playerInventory, column, 47 + column * 18, 198));
         }
     }
 
