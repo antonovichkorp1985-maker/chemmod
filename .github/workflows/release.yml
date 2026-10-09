@@ -2,6 +2,8 @@ name: Release
 
 on:
   push:
+    branches:
+      - "arena/bf508e30-chemmod"
     tags:
       - "v*"
   workflow_dispatch:
@@ -20,6 +22,14 @@ concurrency:
 
 jobs:
   release:
+    # Only an explicit release-request commit publishes from the work branch.
+    # Ordinary development pushes and pull requests cannot publish a release.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      startsWith(github.ref, 'refs/tags/') ||
+      (github.event_name == 'push' &&
+       github.ref == 'refs/heads/arena/bf508e30-chemmod' &&
+       startsWith(github.event.head_commit.message, 'release: publish '))
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -28,10 +38,14 @@ jobs:
       - name: Validate release identity and documents
         id: metadata
         env:
-          RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+          RELEASE_TAG: ${{ inputs.tag || (startsWith(github.ref, 'refs/tags/') && github.ref_name) || '' }}
         run: |
           set -euo pipefail
           python3 -m unittest discover -s scripts -p 'test_release_metadata.py'
+          if [[ -z "$RELEASE_TAG" ]]; then
+            RELEASE_TAG=$(python3 scripts/release_metadata.py | sed -n 's/^tag=//p')
+            test "$(git log -1 --format=%s)" = "release: publish $RELEASE_TAG"
+          fi
           python3 scripts/release_metadata.py "$RELEASE_TAG" >> "$GITHUB_OUTPUT"
           source_sha=$(git rev-parse HEAD)
           echo "source_sha=$source_sha" >> "$GITHUB_OUTPUT"

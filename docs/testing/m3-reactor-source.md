@@ -306,3 +306,15 @@ new tags to the exact tested source commit. It refuses an existing tag pointing
 elsewhere and does not edit existing releases. `workflow_dispatch` can publish
 from the explicitly selected work branch after running the full smoke suite;
 it does not merge that branch or require calling a player test "complete".
+
+
+### Explicit work-branch publication
+
+When the integration cannot dispatch Actions manually, the Release workflow
+also accepts a push to `arena/bf508e30-chemmod` whose commit subject is exactly
+`release: publish <tag>`, with `<tag>` matching `build.gradle.kts`. Ordinary
+pushes do not publish. The workflow pins checkout to that event's commit, runs
+the full smoke suite, verifies the JAR version and checksum, and creates the
+prerelease inside the runner. It does not merge or push another branch and
+never overwrites an existing release/tag. This is an alternative trigger, not
+a bypass of tests or a declaration that manual M3 acceptance is complete.
