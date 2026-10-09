@@ -1,8 +1,9 @@
 # M3 chemical reactor — manual acceptance checklist
 
 > This is the developer/source acceptance reference for M3. Player testing of
-> the published reactor prerelease uses
-> [`v0.9.0-test.4.md`](v0.9.0-test.4.md). It **does not** apply to
+> the consolidated reactor candidate uses
+> [`v0.9.0-test.5.md`](v0.9.0-test.5.md). The original test.4 has its own
+> historical checklist in [`v0.9.0-test.4.md`](v0.9.0-test.4.md). It **does not** apply to
 > `v0.9.0-test.3`: that artifact has no reactor and remains the M2
 > vial/mixing prerelease.
 
@@ -12,7 +13,7 @@ CLI, a save editor, or a synthetic test item to replace it.
 ## Setup
 
 1. For the published player test, follow
-   [`v0.9.0-test.4.md`](v0.9.0-test.4.md) and use its tagged prerelease. To
+   [`v0.9.0-test.5.md`](v0.9.0-test.5.md) and use its tagged prerelease. To
    validate later source changes, use the matching CI artifact or build the
    branch locally with `./gradlew :mod:jar` on JDK 21.
 2. Put the chosen JAR in both the client and dedicated-server `mods`
@@ -268,9 +269,16 @@ Manual checks on matching new client/server builds:
 
 ## M3 test-release and completion gates
 
-`v0.9.0-test.4` is the player-test artifact for this checklist, not proof that
-M3 is already complete. Its publication requires green automated JDK 21 CI and
-no regression that introduces gameplay `/chem` shortcuts. The **completion**
-gate for M3 is this checklist succeeding on a real client/server build. A failed
-case is reported against `test.4` and fixed in a later test prerelease rather
-than silently reissuing `test.4`.
+`v0.9.0-test.4` remains the original reactor player-test artifact.
+`v0.9.0-test.5` consolidates the post-test.4 changes documented above, with a
+separate migration/player checklist. Neither version asserts that M3 is complete.
+Publication requires green automated JDK 21 checks and no gameplay `/chem`
+shortcuts. The **completion** gate remains successful real client/server
+acceptance. Bugs produce a later test prerelease, not an overwritten old JAR.
+
+The publisher validates tag/project/JAR version agreement, requires versioned
+release notes and a checklist, checks the portable SHA-256 manifest, and pins
+new tags to the exact tested source commit. It refuses an existing tag pointing
+elsewhere and does not edit existing releases. `workflow_dispatch` can publish
+from the explicitly selected work branch after running the full smoke suite;
+it does not merge that branch or require calling a player test "complete".

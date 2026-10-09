@@ -12,6 +12,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+      - name: Validate prerelease metadata
+        id: metadata
+        run: |
+          python3 -m unittest discover -s scripts -p 'test_release_metadata.py'
+          python3 scripts/release_metadata.py >> "$GITHUB_OUTPUT"
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
@@ -37,15 +42,18 @@ jobs:
           fi
           exit "$status"
       # This is deliberately a short-lived CI artifact, not a GitHub release:
-      # test.4 is already published for player acceptance. Subsequent source
-      # fixes use this exact-commit artifact until the next test prerelease.
+      # Exact-commit builds remain available alongside numbered player-test
+      # prereleases; neither artifact type closes the manual M3 acceptance gate.
       - name: Write manual-acceptance checksum
         shell: bash
         run: |
           set -euo pipefail
-          artifact=$(find mod/build/libs -maxdepth 1 -type f -name 'chemmod-*.jar' ! -name '*sources*' -print -quit)
-          test -n "$artifact"
-          sha256sum "$artifact" > "$artifact.sha256"
+          python3 scripts/release_metadata.py --verify-jar
+          artifact="${{ steps.metadata.outputs.artifact }}"
+          artifact_name=$(basename "$artifact")
+          cd "$(dirname "$artifact")"
+          sha256sum "$artifact_name" > "$artifact_name.sha256"
+          sha256sum -c "$artifact_name.sha256"
       - name: Upload M3 manual-acceptance JAR
         uses: actions/upload-artifact@v4
         with:

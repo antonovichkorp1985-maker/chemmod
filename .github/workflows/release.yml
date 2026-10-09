@@ -4,15 +4,42 @@ on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Exact test tag matching the selected branch's project version"
+        required: true
+        type: string
 
 permissions:
   contents: write
+
+concurrency:
+  group: chemmod-release-${{ inputs.tag || github.ref_name }}
+  cancel-in-progress: false
 
 jobs:
   release:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Validate release identity and documents
+        id: metadata
+        env:
+          RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s scripts -p 'test_release_metadata.py'
+          python3 scripts/release_metadata.py "$RELEASE_TAG" >> "$GITHUB_OUTPUT"
+          source_sha=$(git rev-parse HEAD)
+          echo "source_sha=$source_sha" >> "$GITHUB_OUTPUT"
+          # Existing tags must resolve to this exact source commit, never a
+          # different build. The publisher does not overwrite tags or releases.
+          if git rev-parse --verify "refs/tags/$RELEASE_TAG^{commit}" >/dev/null 2>&1; then
+            test "$(git rev-parse "refs/tags/$RELEASE_TAG^{commit}")" = "$source_sha"
+          fi
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
@@ -24,50 +51,32 @@ jobs:
       - name: Publish prerelease
         env:
           GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.metadata.outputs.tag }}
+          ARTIFACT: ${{ steps.metadata.outputs.artifact }}
+          NOTES: ${{ steps.metadata.outputs.notes }}
+          SOURCE_SHA: ${{ steps.metadata.outputs.source_sha }}
         shell: bash
         run: |
           set -euo pipefail
-          artifact=$(find mod/build/libs -maxdepth 1 -type f -name 'chemmod-*.jar' ! -name '*sources*' -print -quit)
-          test -n "$artifact"
-          artifact_dir=$(dirname "$artifact")
-          artifact_name=$(basename "$artifact")
+          python3 scripts/release_metadata.py "$RELEASE_TAG" --verify-jar
+          artifact_dir=$(dirname "$ARTIFACT")
+          artifact_name=$(basename "$ARTIFACT")
           (
             cd "$artifact_dir"
             sha256sum "$artifact_name" > "$artifact_name.sha256"
+            sha256sum -c "$artifact_name.sha256"
           )
-          notes=$(cat <<'EOF'
-          Тестовая сборка ChemMod для Minecraft 1.21.1 / NeoForge 21.1.251.
-
-          ## Назначение этого prerelease
-
-          `v0.9.0-test.4` впервые несёт M3 Chemical Reactor для реального
-          player-тестирования. Он не объявляет M3 завершённым: GUI, restart и
-          multiplayer-приёмка по инструкции ниже являются целью этого релиза.
-
-          ## Что проверить в этой сборке
-
-          - Первый Chemical Reactor — физическая машина с ограниченными слотами,
-            а не команда или creative-shortcut. Он запускает только data-defined
-            реакции из отдельных чистых колб при фактических условиях мира.
-          - Базовый маршрут: поставьте reactor над работающей blast furnace,
-            положите чистый этанол в target, copper ingot в catalyst и две пустые
-            колбы в выходы. Ожидаются раздельные `C2H4O` и `H2`; медь остаётся.
-          - Интерфейс показывает выбранное JSON-owned правило, server-authoritative
-            статус условий и его локализованное объяснение через `?`.
-          - При отсутствии тепла/катализатора, нечистой или explicit-mixture
-            колбе, занятом либо изменённом выходе входы не должны исчезать и
-            продукты не должны возникать частично.
-          - В игровом JAR нет `/chem`-команд, выдающих вещества, синтезирующих
-            продукты или открывающих discovery. Discovery допустим только после
-            успешного физического commit; core CLI остаётся внутренним CI-инструментом.
-
-          Полная инструкция и формат отчёта: docs/testing/v0.9.0-test.4.md.
-          Разделение и реакторные маршруты смесей, фазы и равновесие остаются
-          следующими слоями. Create 6.0.10 optional и не встраивается в JAR.
-          EOF
-          )
-          gh release create "$GITHUB_REF_NAME" \
-            "$artifact" "$artifact.sha256" \
+          notes_file="$RUNNER_TEMP/chemmod-release-notes.md"
+          cp "$NOTES" "$notes_file"
+          {
+            printf '\n## Идентичность сборки\n\nИсходный commit: `%s`.\n\nSHA-256 JAR: `%s`.\n' \
+              "$SOURCE_SHA" "$(sha256sum "$ARTIFACT" | cut -d ' ' -f 1)"
+          } >> "$notes_file"
+          # --target pins creation of a new tag to this tested commit even when
+          # dispatched from a work branch. Existing releases are never edited.
+          gh release create "$RELEASE_TAG" \
+            "$ARTIFACT" "$ARTIFACT.sha256" \
+            --target "$SOURCE_SHA" \
             --prerelease \
-            --title "ChemMod $GITHUB_REF_NAME — техническая тестовая сборка" \
-            --notes "$notes"
+            --title "ChemMod $RELEASE_TAG — M3 player-test candidate" \
+            --notes-file "$notes_file"

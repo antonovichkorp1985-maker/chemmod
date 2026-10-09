@@ -6,3 +6,7 @@ build/
 out/
 **/run/
 .DS_Store
+
+# Python prerelease validation helpers
+__pycache__/
+*.pyc
