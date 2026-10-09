@@ -138,7 +138,10 @@ public final class ChemicalReactorThermalGameTests {
     public static void coolingBelowTheRuleMinimumCancelsTheBatchWithoutConsumingEthanol(GameTestHelper helper) {
         ChemicalReactorBlockEntity reactor = setup(helper, lit(Blocks.FURNACE), true);
 
-        helper.runAfterDelay(60, () -> {
+        // The flame is removed early on purpose: a nearly finished batch could
+        // otherwise commit during the residual-heat window and consume its input,
+        // which is correct physics but not what this test is about.
+        helper.runAfterDelay(25, () -> {
             helper.assertTrue(reactor.reactionProgress() > 0.0 && reactor.reactionProgress() < 1.0,
                 "lit furnace did not create a partial batch");
             removeHeat(helper);
@@ -146,7 +149,7 @@ public final class ChemicalReactorThermalGameTests {
         helper.runAfterDelay(220, () -> {
             double temperature = reactor.temperatureKelvin();
             helper.assertTrue(temperature < ETHANOL_RULE_MINIMUM,
-                "vessel was still hot enough to react eight seconds without a source: " + temperature);
+                "vessel was still hot enough to react ten seconds without a source: " + temperature);
             helper.assertTrue(reactor.reactionProgress() == 0.0, "a cooled vessel kept accumulating progress");
             helper.assertTrue(canonicalKey("CCO").equals(pureCanonicalKey(
                     reactor.getItem(ChemicalReactorBlockEntity.TARGET_SLOT))),
