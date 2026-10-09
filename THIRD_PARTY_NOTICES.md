@@ -48,3 +48,12 @@ status. See <https://github.com/Creators-of-Create/Create/blob/mc1.21.1-6.0.10/L
 Minecraft, NeoForge, and their APIs are external platform dependencies and are
 not relicensed as part of ChemMod. Minecraft is a trademark of Microsoft
 Corporation. ChemMod is not affiliated with or endorsed by Microsoft or Mojang.
+
+
+## Original laboratory assets
+
+The rack, tray, vial-label and reactor models/textures introduced in test.7 are
+original ChemMod procedural assets produced by `scripts/generate_lab_assets.py`.
+They do not copy external machine models or textures and are covered by the
+repository's ChemMod license. The generator uses only the Python standard
+library; it introduces no bundled asset-library dependency.

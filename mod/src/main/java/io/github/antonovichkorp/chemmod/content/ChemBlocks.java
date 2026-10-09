@@ -90,6 +90,7 @@ public final class ChemBlocks {
                 .requiresCorrectToolForDrops()
                 .strength(4.0F, 6.0F)
                 .sound(SoundType.METAL)
+                .noOcclusion()
         )
     );
 

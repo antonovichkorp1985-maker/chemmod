@@ -1,4 +1,9 @@
-# Equipment placement foundation (development, not a player release)
+# Equipment placement foundation
+
+This document records the original geometry-only stage. A first fixed-layout
+world adapter now exists in [test.7](v0.9.0-test.7.md); the original limitations
+below describe that earlier stage, not the full current mod. Arbitrary furniture
+support and cross-cell in-game equipment are still not implemented.
 
 ## Implemented
 

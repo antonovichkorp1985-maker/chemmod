@@ -28,6 +28,26 @@ public final class LaboratoryHolderGameTests {
         return (LaboratoryHolderBlockEntity) helper.getLevel().getBlockEntity(helper.absolutePos(POS));
     }
     @GameTest(template = "chemical_reactor_batch", timeoutTicks = 20)
+    public static void firstHolderPlacesThroughSurvivalItemPathWithoutReplacingTable(GameTestHelper helper) {
+        helper.setBlock(POS.below(), Blocks.STONE);
+        var level = helper.getLevel(); var pos = helper.absolutePos(POS);
+        var player = net.neoforged.neoforge.common.util.FakePlayerFactory.get(level,
+            new com.mojang.authlib.GameProfile(java.util.UUID.randomUUID(), "lab_place"));
+        player.setPos(pos.getX() + 3, pos.getY(), pos.getZ() + 3);
+        var held = new ItemStack(ChemItems.TEST_TUBE_RACK.get(), 2);
+        player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, held);
+        var hit = new BlockHitResult(new Vec3(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5),
+            Direction.UP, pos.below(), false);
+        var result = held.useOn(new net.minecraft.world.item.context.UseOnContext(player, net.minecraft.world.InteractionHand.MAIN_HAND, hit));
+        helper.assertTrue(result.consumesAction() && held.getCount() == 1, "first placement did not consume one rack");
+        helper.assertTrue(level.getBlockState(pos.below()).is(Blocks.STONE), "holder replaced table");
+        helper.assertTrue(level.getBlockEntity(pos) instanceof LaboratoryHolderBlockEntity
+            && level.getBlockState(pos).getValue(LaboratoryHolderBlock.RACK)
+            && !level.getBlockState(pos).getValue(LaboratoryHolderBlock.TRAY), "wrong initial holder state");
+        helper.succeed();
+    }
+
+    @GameTest(template = "chemical_reactor_batch", timeoutTicks = 20)
     public static void heldTrayReachesItemPlacementInsteadOfStealingRackVial(GameTestHelper helper) {
         var holder = setup(helper, false);
         holder.insert(0, ChemItems.vial("вода"));
