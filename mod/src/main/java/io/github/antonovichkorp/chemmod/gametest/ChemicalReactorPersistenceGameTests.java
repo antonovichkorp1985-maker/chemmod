@@ -40,9 +40,11 @@ public final class ChemicalReactorPersistenceGameTests {
     public static void partialBatchResumesAndCompletedProductsSurviveReload(GameTestHelper helper) {
         ChemicalReactorBlockEntity original = setupSlowBatch(helper);
         CompoundTag[] completedInventory = new CompoundTag[1];
+        double[] resumedFrom = new double[1];
         helper.runAfterDelay(25, () -> {
             assertPartial(helper, original);
             double progress = original.reactionProgress();
+            resumedFrom[0] = progress;
             CompoundTag before = inventory(helper, original);
             ChemicalReactorBlockEntity restored = reload(helper, save(helper, original));
             helper.assertTrue(restored != original, "reload reused the old block entity");
@@ -54,9 +56,13 @@ public final class ChemicalReactorPersistenceGameTests {
         });
         helper.runAfterDelay(45, () -> {
             ChemicalReactorBlockEntity restored = reactor(helper);
-            // 650 K gives about 0.218 progress/second. By now at least two
-            // evaluations occurred: resetting during load would leave only one.
-            helper.assertTrue(restored.reactionProgress() > 0.4 && restored.reactionProgress() < 1.0,
+            // The vessel starts cold and warms toward the 650 K furnace, so the
+            // first seconds are slower than the plateau rate of about 0.19
+            // progress/second. Exactly one more evaluation happens in this
+            // 20-tick window, so a reloaded batch must have gained that much:
+            // resetting during load would leave only the single new evaluation.
+            helper.assertTrue(restored.reactionProgress() > resumedFrom[0] + 0.15
+                    && restored.reactionProgress() < 1.0,
                 "valid saved operation did not continue from its previous progress");
             helper.getLevel().setBlock(helper.absolutePos(HEAT_SOURCE),
                 Blocks.BLAST_FURNACE.defaultBlockState().setValue(AbstractFurnaceBlock.LIT, true), 3);

@@ -39,12 +39,16 @@ jobs:
           if [[ "$status" -ne 0 ]]; then
             # Progress bars can exhaust GitHub's annotation limit before the real failure.
             # Emit short individual diagnostics, available through the Checks API too.
-            grep -Ei 'error|failed|failure|exception|assert' build.log | tail -n 20 | cut -c 1-300 > failure-lines.txt || true
+            # The JUnit summary itself contains "failures=0"; keep those lines
+            # out of the failure diagnostics or they crowd out the real cause.
+            grep -Ei 'error|failed|failure|exception|assert' build.log \
+              | grep -vE '^(core|core-cli|mod) |^JUnit totals:' \
+              | tail -n 20 | cut -c 1-300 > failure-lines.txt || true
             while IFS= read -r line; do
               escaped=$(printf '%s' "$line" | sed 's/%/%25/g; s/\r/%0D/g')
               echo "::error title=Test diagnostic::$escaped"
             done < failure-lines.txt
-            diagnostic=$(tail -n 12 build.log | sed 's/%/%25/g; s/\r/%0D/g; s/$/%0A/' | tr -d '\n')
+            diagnostic=$(tail -n 40 build.log | cut -c 1-300 | sed 's/%/%25/g; s/\r/%0D/g; s/$/%0A/' | tr -d '\n')
             echo "::error title=Gradle build failed::$diagnostic"
           fi
           exit "$status"
