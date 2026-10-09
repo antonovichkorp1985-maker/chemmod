@@ -1,7 +1,8 @@
 # M3 chemical reactor — manual acceptance checklist
 
 > This is the developer/source acceptance reference for M3. Player testing of
-> the consolidated reactor candidate uses
+> the current visibility hotfix uses
+> [`v0.9.0-test.6.md`](v0.9.0-test.6.md), with the full M3 checks in
 > [`v0.9.0-test.5.md`](v0.9.0-test.5.md). The original test.4 has its own
 > historical checklist in [`v0.9.0-test.4.md`](v0.9.0-test.4.md). It **does not** apply to
 > `v0.9.0-test.3`: that artifact has no reactor and remains the M2
@@ -318,3 +319,19 @@ the full smoke suite, verifies the JAR version and checksum, and creates the
 prerelease inside the runner. It does not merge or push another branch and
 never overwrites an existing release/tag. This is an alternative trigger, not
 a bypass of tests or a declaration that manual M3 acceptance is complete.
+
+
+## Player feedback: test.5 invisible reactor / test.6 hotfix
+
+The owner supplied a client screenshot showing the selected reactor's outline
+and inventory overlay but no model, and explicitly confirmed that its reaction
+works. Record this as a reported functional success and a visual defect, **not**
+as full GUI/restart/multiplayer acceptance. No shaders or pack mod are blamed:
+the source lacked the model render-shape override on BaseEntityBlock.
+
+Test.6 selects `RenderShape.MODEL` and adds a headless contract test for both
+active states while preserving the block entity and inventory. This test is
+not a screenshot/rendering test. See the short
+[test.6 checklist](v0.9.0-test.6.md) for actual client confirmation. The owner
+also clarified required physical laboratory vessels/heaters; those requirements
+are in ADR-0003 and are not presented as implemented by this hotfix.

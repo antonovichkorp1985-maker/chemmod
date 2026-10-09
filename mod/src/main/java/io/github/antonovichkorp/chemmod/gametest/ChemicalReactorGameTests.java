@@ -20,6 +20,8 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.AbstractFurnaceBlock;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.RenderShape;
+import io.github.antonovichkorp.chemmod.content.ChemicalReactorBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
 import java.util.HashSet;
@@ -38,6 +40,26 @@ public final class ChemicalReactorGameTests {
     private static final long VIAL_MICROMOLES = 1_000_000L;
 
     private ChemicalReactorGameTests() {}
+
+    @GameTest(template = "chemical_reactor_batch", timeoutTicks = 20)
+    public static void reactorStatesUseBlockModelRenderingWithoutReplacingInventory(GameTestHelper helper) {
+        ChemicalReactorBlockEntity reactor = setupBatch(helper, Blocks.AIR.defaultBlockState(), true);
+        var level = helper.getLevel();
+        BlockPos pos = helper.absolutePos(REACTOR);
+        var before = reactor.saveWithoutMetadata(level.registryAccess());
+        for (boolean active : new boolean[] { false, true, false }) {
+            var state = ChemBlocks.CHEMICAL_REACTOR.get().defaultBlockState()
+                .setValue(ChemicalReactorBlock.ACTIVE, active);
+            level.setBlock(pos, state, 3);
+            helper.assertTrue(level.getBlockState(pos).getRenderShape() == RenderShape.MODEL,
+                "reactor state selects invisible rendering instead of its block model");
+            helper.assertTrue(level.getBlockEntity(pos) == reactor,
+                "visual state change replaced the physical reactor");
+            helper.assertTrue(before.equals(reactor.saveWithoutMetadata(level.registryAccess())),
+                "visual state change modified the reactor contents");
+        }
+        helper.succeed();
+    }
 
     @GameTest(template = "chemical_reactor_batch", timeoutTicks = 80)
     public static void ethanolBatchProducesSeparateProductsAndRetainsCatalyst(GameTestHelper helper) {

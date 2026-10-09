@@ -51,6 +51,35 @@ surfaces and tool interaction require checking the actual installed version and
 available API before claiming compatibility. A custom equipment host cannot
 silently replace and discard someone else's block/bit contents.
 
+### Required laboratory equipment and heating (owner follow-up)
+
+The owner explicitly requires physical laboratory equipment, not an inventory
+screen permanently standing in for an apparatus:
+- individually placeable flasks and test tubes, with suitable stands/racks;
+- graduated cylinders and other measuring vessels, with meaningful capacity
+  and graduations rather than identical decorative bottle icons;
+- identifiable heat-compatible vessels, with material/geometry/rating-based
+  operating limits; measuring/calibrated glassware is not interchangeable with
+  vessels intended for heating, and reference measurement temperature matters;
+- alcohol/spirit lamps with actual fuel consumption;
+- gas burners fed through physical hose connections, with gas supply and flow
+  conditions rather than a decorative hose painted on the model;
+- heating plates/tables with defined energy supply and thermal contact.
+
+The heat-source block below the current M3 reactor is a temporary test adapter,
+not the final laboratory workflow. Future heating must model transfer into the
+vessel/contents over time, accounting for supported heat capacities, losses,
+power and material limits. Source temperature must not simply be equated to
+instantaneous sample temperature. Relevant boiling, evaporation and damage
+behaviour require explicit models and validation; they are not implemented by
+adding a heat-resistance icon alone.
+
+A first future vertical slice should combine a working surface, independently
+placeable/selectable vessels and holders, and one actual controllable heater.
+Additional vessel types, gas supply/hoses and more elaborate installations can
+extend that foundation. This is a design direction, not a claim that the
+current cube or a visibility hotfix already provides this system.
+
 ## 2. Large installations and installation mechanics
 
 A large installation consists of functional modules and connections, not a
