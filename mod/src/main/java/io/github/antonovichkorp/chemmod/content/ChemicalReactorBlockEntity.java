@@ -100,6 +100,7 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
     /** Selected only from a currently viable physical plan; never from a command or registry lookup. */
     private String displayedRuleId = "";
     private ReactorStatus status = ReactorStatus.IDLE;
+    private boolean unrepresentableBatch;
     private final ContainerData menuData = new ContainerData() {
         @Override
         public int get(int index) {
@@ -207,9 +208,15 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
             setChanged();
         }
 
+        unrepresentableBatch = false;
         Candidate candidate = findCandidate();
         if (candidate == null) {
-            resetProgress(statusWithoutCandidate());
+            if (unrepresentableBatch) {
+                clearDisplayedRule();
+                resetProgress(ReactorStatus.AMOUNT_TOO_LARGE);
+            } else {
+                resetProgress(statusWithoutCandidate());
+            }
             return;
         }
         setDisplayedRule(candidate.rule());
@@ -326,9 +333,16 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
 
     private List<Candidate> candidates(ReactorInputs inputs, ReactionRule rule, ReactionEnvironment environment) {
         List<Candidate> candidates = new ArrayList<>();
-        List<PureSubstanceReactionPlanner.PlannedSubstanceReaction> plans = PLANNER.plan(
-            inputs.target(), inputs.coReactants(), rule.getId(), environment
-        );
+        List<PureSubstanceReactionPlanner.PlannedSubstanceReaction> plans;
+        try {
+            plans = PLANNER.plan(inputs.target(), inputs.coReactants(), rule.getId(), environment);
+        } catch (ArithmeticException overflow) {
+            // Core uses exact arithmetic: an output can exceed the long-micromole
+            // storage range even when every input individually fits. Refuse the
+            // batch before any mutation; never clamp, wrap, or crash the server tick.
+            unrepresentableBatch = true;
+            return List.of();
+        }
         for (PureSubstanceReactionPlanner.PlannedSubstanceReaction plan : plans) {
             if (plan.products().size() <= outputCapacity()) candidates.add(new Candidate(rule, plan));
         }
@@ -416,7 +430,7 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
         Candidate potential = findPotentialCandidate();
         if (potential == null) {
             clearDisplayedRule();
-            return ReactorStatus.NO_MATCH;
+            return unrepresentableBatch ? ReactorStatus.AMOUNT_TOO_LARGE : ReactorStatus.NO_MATCH;
         }
         setDisplayedRule(potential.rule());
         var conditions = potential.rule().getConditions();
@@ -759,7 +773,8 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
         NO_TIMED_MODEL("reactor_status.chemmod.no_timed_model"),
         PROCESSING("reactor_status.chemmod.processing"),
         COMPLETE("reactor_status.chemmod.complete"),
-        INPUT_CHANGED("reactor_status.chemmod.input_changed");
+        INPUT_CHANGED("reactor_status.chemmod.input_changed"),
+        AMOUNT_TOO_LARGE("reactor_status.chemmod.amount_too_large");
 
         private final String translationKey;
 

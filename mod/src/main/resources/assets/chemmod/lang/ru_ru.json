@@ -168,5 +168,6 @@
   "gui.chemmod.reactor.discovery_pending": "Ожидание данных сервера…",
   "gui.chemmod.reactor.discovery_unknown": "Первый синтез не зарегистрирован",
   "gui.chemmod.reactor.discovery_author": "Первый исследователь: %s",
-  "gui.chemmod.reactor.discovery_date": "Дата (UTC): %s"
+  "gui.chemmod.reactor.discovery_date": "Дата (UTC): %s",
+  "reactor_status.chemmod.amount_too_large": "количество продуктов превышает точный диапазон хранения"
 }

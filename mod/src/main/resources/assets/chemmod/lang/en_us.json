@@ -168,5 +168,6 @@
   "gui.chemmod.reactor.discovery_pending": "Waiting for server data…",
   "gui.chemmod.reactor.discovery_unknown": "No first synthesis registered",
   "gui.chemmod.reactor.discovery_author": "First discoverer: %s",
-  "gui.chemmod.reactor.discovery_date": "Date (UTC): %s"
+  "gui.chemmod.reactor.discovery_date": "Date (UTC): %s",
+  "reactor_status.chemmod.amount_too_large": "product amount exceeds the exact storage range"
 }

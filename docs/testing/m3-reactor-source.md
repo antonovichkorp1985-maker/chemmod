@@ -267,6 +267,30 @@ Manual checks on matching new client/server builds:
   the restarted batch must reflect B. Existing discoveries remain immutable.
 - Try collecting a product with a full inventory; the product must remain intact.
 
+## Multi-input quantities and representability guard
+
+Seven additional in-world tests use the **existing** JSON complete-combustion
+rule, not a new machine recipe. Ethanol and physical oxygen vials exercise
+both limiting reagents, including oxygen in the second co-reactant slot while
+the first is empty. Tests compare exact integer-micromole input residuals and
+the separate CO2/water product amounts, retaining non-divisible remainders.
+They also verify no implicit oxygen, no rounding a sub-extent oxygen quantity
+into a reaction, safe refusal of an unrelated extra co-reactant, and no partial
+consumption when the second product slot is occupied.
+
+The seventh test is an intentionally synthetic storage boundary: ethylene
+glycol/oxygen quantities each fit in `long`, but the resulting water quantity
+can exceed it. The reactor now catches exact-arithmetic overflow while planning,
+refuses before any inventory mutation, and reports a localized storage-range
+status instead of allowing an exception to escape the server tick. It does not
+clamp or wrap amounts and does not pretend that a physical laboratory vial can
+hold those synthetic quantities. Vessel-volume physics remains separate work.
+
+These scenarios do not enable mixture processing, pooled duplicate reagent
+slots, new catalysts, food chemistry, or crane/sub-block placement. They extend
+verification of the existing pure-vial M3 boundary. No human operator is assigned
+to these test fixtures, so they do not seed the world's discovery history.
+
 ## M3 test-release and completion gates
 
 `v0.9.0-test.4` remains the original reactor player-test artifact.
