@@ -183,5 +183,6 @@
   "tooltip.chemmod.reactor.products": "Insert empty vials to receive reaction products.",
   "tooltip.chemmod.reactor.catalyst": "Catalyst: a solid item required by the reaction rule. For example, a copper ingot for ethanol conversion.",
   "tooltip.chemmod.holder.remove": "Sneak + right-click with an empty hand to remove the selected empty holder.",
-  "message.chemmod.holder.empty_first": "Remove all vessels from the selected holder first."
+  "message.chemmod.holder.empty_first": "Remove all vessels from the selected holder first.",
+  "tooltip.chemmod.holder.orientation": "Placement sets orientation. The second holder shares the first holder’s orientation."
 }

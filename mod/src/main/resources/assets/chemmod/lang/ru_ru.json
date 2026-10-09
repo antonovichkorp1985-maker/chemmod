@@ -183,5 +183,6 @@
   "tooltip.chemmod.reactor.products": "Поставьте пустые колбы для продуктов реакции.",
   "tooltip.chemmod.reactor.catalyst": "Катализатор — твёрдый предмет, нужный правилу реакции. Например, медный слиток для превращения этанола.",
   "tooltip.chemmod.holder.remove": "Shift + ПКМ пустой рукой — снять выбранный пустой держатель.",
-  "message.chemmod.holder.empty_first": "Сначала заберите все сосуды из выбранного держателя."
+  "message.chemmod.holder.empty_first": "Сначала заберите все сосуды из выбранного держателя.",
+  "tooltip.chemmod.holder.orientation": "Направление задаётся при установке. Вторая часть наследует поворот первой."
 }

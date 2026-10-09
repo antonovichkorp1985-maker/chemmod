@@ -2,18 +2,82 @@
   "multipart": [
     {
       "when": {
-        "rack": "true"
+        "rack": "true",
+        "facing": "north"
       },
       "apply": {
-        "model": "chemmod:block/test_tube_rack"
+        "model": "chemmod:block/test_tube_rack",
+        "y": 0
       }
     },
     {
       "when": {
-        "tray": "true"
+        "tray": "true",
+        "facing": "north"
       },
       "apply": {
-        "model": "chemmod:block/laboratory_tray"
+        "model": "chemmod:block/laboratory_tray",
+        "y": 0
+      }
+    },
+    {
+      "when": {
+        "rack": "true",
+        "facing": "east"
+      },
+      "apply": {
+        "model": "chemmod:block/test_tube_rack",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "tray": "true",
+        "facing": "east"
+      },
+      "apply": {
+        "model": "chemmod:block/laboratory_tray",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "rack": "true",
+        "facing": "south"
+      },
+      "apply": {
+        "model": "chemmod:block/test_tube_rack",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "tray": "true",
+        "facing": "south"
+      },
+      "apply": {
+        "model": "chemmod:block/laboratory_tray",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "rack": "true",
+        "facing": "west"
+      },
+      "apply": {
+        "model": "chemmod:block/test_tube_rack",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "tray": "true",
+        "facing": "west"
+      },
+      "apply": {
+        "model": "chemmod:block/laboratory_tray",
+        "y": 270
       }
     }
   ]

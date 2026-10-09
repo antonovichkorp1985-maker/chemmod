@@ -20,7 +20,8 @@ public final class LaboratoryHolderItem extends BlockItem {
         part = rack ? LaboratoryHolderBlock.RACK : LaboratoryHolderBlock.TRAY;
     }
     @Override protected BlockState getPlacementState(BlockPlaceContext context) {
-        BlockState state = getBlock().defaultBlockState().setValue(part, true);
+        BlockState state = getBlock().defaultBlockState().setValue(part, true)
+            .setValue(LaboratoryHolderBlock.FACING, context.getHorizontalDirection().getOpposite());
         return LaboratoryHolderBlock.validArrangement(state) && canPlace(context, state) ? state : null;
     }
     @Override public InteractionResult useOn(UseOnContext context) {
@@ -48,6 +49,7 @@ public final class LaboratoryHolderItem extends BlockItem {
         tooltip.add(Component.translatable("tooltip.chemmod.holder.use"));
         tooltip.add(Component.translatable("tooltip.chemmod.holder.combine"));
         tooltip.add(Component.translatable("tooltip.chemmod.holder.remove"));
+        tooltip.add(Component.translatable("tooltip.chemmod.holder.orientation"));
     }
     @Override public String getDescriptionId() {
         return part == LaboratoryHolderBlock.RACK ? "item.chemmod.test_tube_rack" : "item.chemmod.laboratory_tray";

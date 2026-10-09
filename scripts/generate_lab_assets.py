@@ -75,8 +75,11 @@ model('test_tube_rack',rack,{'wood':'wood'})
 tray=[box([9,0,1],[15,0.6,15],'steel'),box([9,0.6,1],[9.5,2,15],'steel'),box([14.5,0.6,1],[15,2,15],'steel'),box([9,0.6,1],[15,2,1.5],'steel'),box([9,0.6,14.5],[15,2,15],'steel')]
 model('laboratory_tray',tray,{'steel':'steel'})
 write(ASSETS/'blockstates/laboratory_holder.json',{'multipart':[
-    {'when':{'rack':'true'},'apply':{'model':'chemmod:block/test_tube_rack'}},
-    {'when':{'tray':'true'},'apply':{'model':'chemmod:block/laboratory_tray'}}]})
+    {'when':{part:'true', 'facing': facing},
+     'apply':{'model':'chemmod:block/'+model_name, 'y': angle}}
+    for facing, angle in [('north',0),('east',90),('south',180),('west',270)]
+    for part, model_name in [('rack','test_tube_rack'),('tray','laboratory_tray')]
+]})
 for name,shift in [('test_tube_rack',4),('laboratory_tray',-4)]:
     display={**DISPLAY,'gui':{'rotation':[25,225,0],'translation':[shift,0,0],'scale':[1,1,1]}}
     write(ASSETS/f'models/item/{name}.json',{'parent':'chemmod:block/'+name,'display':display})

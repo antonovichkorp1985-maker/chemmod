@@ -2,6 +2,8 @@ package io.github.antonovichkorp.chemmod.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import io.github.antonovichkorp.chemmod.content.LaboratoryHolderBlockEntity;
+import io.github.antonovichkorp.chemmod.content.LaboratoryHolderBlock;
+import io.github.antonovichkorp.chemmod.content.LaboratoryHolderGeometry;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
@@ -19,8 +21,11 @@ public final class LaboratoryHolderRenderer implements BlockEntityRenderer<Labor
             if (stack.isEmpty()) continue;
             boolean rack = slot < 6;
             pose.pushPose();
-            pose.translate((rack ? 4.0 : 12.0) / 16, (rack ? 5.5 : 3.2) / 16,
-                (rack ? 2.5 + slot * 2.2 : 3.0 + (slot - 6) * 3.3) / 16);
+            var facing = holder.getBlockState().getValue(LaboratoryHolderBlock.FACING);
+            var center = LaboratoryHolderGeometry.vesselCenter(facing, slot);
+            pose.translate(center.x, center.y, center.z);
+            // PoseStack's positive Y rotation is opposite to the baked JSON model convention.
+            pose.mulPose(com.mojang.math.Axis.YP.rotationDegrees(-LaboratoryHolderGeometry.modelRotation(facing)));
             float scale = rack ? 0.5F : 0.35F;
             pose.scale(scale, scale, scale);
             items.renderStatic(stack, ItemDisplayContext.FIXED, light, overlay, pose, buffers, holder.getLevel(), slot);

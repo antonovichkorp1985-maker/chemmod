@@ -31,7 +31,20 @@ class LaboratoryAssetsTest(unittest.TestCase):
 
     def test_independent_holder_models_and_no_duplicate_loot(self):
         state = json.loads((ASSETS / 'blockstates/laboratory_holder.json').read_text())
-        self.assertEqual([part['when'] for part in state['multipart']], [{'rack':'true'}, {'tray':'true'}])
+        self.assertEqual(len(state['multipart']), 8)
+        for facing, angle in [('north', 0), ('east', 90), ('south', 180), ('west', 270)]:
+            for part, model in [('rack', 'test_tube_rack'), ('tray', 'laboratory_tray')]:
+                matching = [entry for entry in state['multipart'] if entry['when'] == {part: 'true', 'facing': facing}]
+                self.assertEqual(len(matching), 1)
+                self.assertEqual(matching[0]['apply'], {'model': 'chemmod:block/' + model, 'y': angle})
+        # Every valid state renders exactly its installed parts, never all rotations at once.
+        for facing in ('north', 'east', 'south', 'west'):
+            for rack in ('false', 'true'):
+                for tray in ('false', 'true'):
+                    values = {'facing': facing, 'rack': rack, 'tray': tray}
+                    matched = [entry for entry in state['multipart']
+                               if all(values[k] == v for k, v in entry['when'].items())]
+                    self.assertEqual(len(matched), (rack == 'true') + (tray == 'true'))
         loot = json.loads((ROOT / 'data/chemmod/loot_table/blocks/laboratory_holder.json').read_text())
         self.assertEqual(loot['pools'], [])  # server holder drain owns all drops
 
