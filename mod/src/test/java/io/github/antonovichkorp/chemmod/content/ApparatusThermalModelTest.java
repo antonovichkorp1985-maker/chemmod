@@ -31,13 +31,23 @@ class ApparatusThermalModelTest {
         double plateau = ApparatusThermalModel.equilibriumTemperatureKelvin(650.0);
         double temperature = AMBIENT;
         double previous = temperature;
-        for (int second = 0; second < 40; second++) {
+        // Ten one-second steps: still far enough from the plateau that every
+        // increment is representable, so strict monotonicity is a real claim.
+        for (int second = 0; second < 10; second++) {
             temperature = ApparatusThermalModel.advance(temperature, 1.0, 650.0);
             assertTrue(temperature > previous, "heating was not monotone at second " + second);
             assertTrue(temperature <= plateau + 1e-9, "heating overshot the plateau");
             previous = temperature;
         }
-        assertEquals(plateau, temperature, 1e-6);
+        // Closer than a double ulp from the plateau, further steps can only hold
+        // it there; demanding another strict increase would test rounding noise.
+        for (int second = 10; second < 40; second++) {
+            temperature = ApparatusThermalModel.advance(temperature, 1.0, 650.0);
+            assertTrue(temperature >= previous, "heating reversed at second " + second);
+            assertTrue(temperature <= plateau + 1e-9, "heating overshot the plateau");
+            previous = temperature;
+        }
+        assertEquals(plateau, temperature, 1e-9);
     }
 
     @Test
@@ -91,7 +101,9 @@ class ApparatusThermalModelTest {
             assertThrows(IllegalArgumentException.class, () -> ApparatusThermalModel.advance(300.0, 1.0, value));
             assertThrows(IllegalArgumentException.class, () -> ApparatusThermalModel.equilibriumTemperatureKelvin(value));
         }
-        // Absolute zero is a legal state, not an error.
-        assertEquals(AMBIENT, ApparatusThermalModel.advance(0.0, 0.0, null), 0.0);
+        // Absolute zero is a legal state, not an error: it is left alone when no
+        // time passes, and the room warms it instead of driving it negative.
+        assertEquals(0.0, ApparatusThermalModel.advance(0.0, 0.0, null), 0.0);
+        assertTrue(ApparatusThermalModel.advance(0.0, 1.0, null) > 0.0);
     }
 }
