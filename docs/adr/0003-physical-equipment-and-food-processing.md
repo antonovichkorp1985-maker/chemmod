@@ -64,7 +64,41 @@ screen permanently standing in for an apparatus:
 - alcohol/spirit lamps with actual fuel consumption;
 - gas burners fed through physical hose connections, with gas supply and flow
   conditions rather than a decorative hose painted on the model;
-- heating plates/tables with defined energy supply and thermal contact.
+- heating plates/tables with defined energy supply and thermal contact;
+- vacuum pumps (owner follow-up), connected to sealed apparatus through suitable
+  tubing/ports. Pumping must account for vessel gas volume, gas removal/exhaust,
+  leaks, finite pumping rate and attainable pressure, rather than a Boolean
+  vacuum flag. Vessel pressure ratings and protective traps/isolation must be
+  considered. Vacuum filtration and reduced-pressure distillation are intended
+  applications, not currently implemented features.
+
+Owner clarification: laboratory furnishing includes full workbenches with
+functional drawers, shelves and cabinets, in metal, stone and wood—not only
+floating worktops or individual decorative tables. Custom-built geometry in the
+style of Chisel/Chisels & Bits is also intended; Macaw's Furniture is one possible
+source of furniture, not a mandated foundation. Storage must be functional and
+preserve item contents; carved geometry alone does not supply an inventory,
+chemical resistance or heat resistance. Material-dependent suitability and
+support must be distinct from visual appearance. Whether storage is provided by
+an existing furniture block or a future ChemMod module requires implementation
+and compatibility checks, without discarding the original block's state.
+
+The same historical inventory lists Chisel 1.4.1, Chisels & Bits 21.1.32,
+Chipped 4.0.2 and Rechiseled 1.2.6. These are distinct mods: decorative block
+variants are not equivalent to editable sub-block geometry or functional
+furniture. Their presence in that snapshot does not establish current runtime
+compatibility with ChemMod equipment.
+
+Existing furniture should be eligible as a supporting work surface where its
+actual support geometry permits it; a special ChemMod table must not be required
+merely to place a flask. The historical pack inventory from 2026-10-05 lists
+`mcw-furniture-3.4.1-mc1.21.1neoforge.jar` (Macaw's Furniture). This is not proof
+of the current PC installation or of tested equipment-placement compatibility.
+Check individual tabletop heights, collision/support shapes and interaction
+behaviour before advertising support. Do not replace another mod's furniture
+block to host equipment. A decorative table does not automatically supply heat,
+chemical resistance or other laboratory capabilities; the independent ChemMod
+baseline and optional integration boundary remain unchanged.
 
 The heat-source block below the current M3 reactor is a temporary test adapter,
 not the final laboratory workflow. Future heating must model transfer into the
@@ -79,6 +113,30 @@ placeable/selectable vessels and holders, and one actual controllable heater.
 Additional vessel types, gas supply/hoses and more elaborate installations can
 extend that foundation. This is a design direction, not a claim that the
 current cube or a visibility hotfix already provides this system.
+
+### Pack furnishing choice — 2026-10-09 clarification
+
+The owner now confirms that the Drive pack matches the PC installation except
+for newer Aeronautics Plus and ChemMod updates. This supersedes earlier warnings
+that the pack inventory is only historical for other mods. A fresh Drive check
+found Chisel 1.4.1, Chisels & Bits 21.1.32 and Chipped 4.0.2 JARs in the current
+mods folder (`1ycFsvYr_O8WXedIz6G-GOU2sgT4q6HaR`). Macaw's Furniture is represented
+by `mods/.index/macaws-furniture.pw.toml`, specifying
+`mcw-furniture-3.4.1-mc1.21.1neoforge.jar` (CurseForge file 7255584), rather than a
+loose JAR in that listing. The index confirms the intended dependency/version, not that the JAR was
+uploaded to Drive or loaded on the PC. The missing loose JAR may reflect an
+incomplete upload; the cause has not been established.
+
+Chosen direction for this pack: Macaw's Furniture for ready-made furnishing
+where its actual blocks and storage behaviour fit; Chisels & Bits for custom
+bench/shelf geometry; Chisel/Chipped for decorative material variants. No new
+furniture mod is required for the initial development target. This is not a
+claim that Macaw's supplies every requested metal/stone lab cabinet. Functional
+storage absent from existing furniture must be supplied by a separately designed
+module, not inferred from carved drawer shapes. ChemMod provides the independent
+apparatus/placement foundation; support for bit-built surfaces is an optional
+integration requiring tests. First validate placement on ordinary surfaces,
+then furniture and partial surfaces without overwriting their block contents.
 
 ## 2. Large installations and installation mechanics
 
@@ -189,3 +247,23 @@ validate material portions and condition-dependent transformations in core;
 then extend equipment assembly, lifting and narrowly scoped compatibility
 adapters. This records the target requirements, not permission to claim these
 systems are already complete or to skip the existing M3 acceptance gate.
+
+
+### Conditional dependency permission — owner clarification, 2026-10-09
+
+The owner permits a required external dependency if it is genuinely needed for
+the many small physical objects. This relaxes the earlier absolute no-required-
+mod constraint for equipment placement; it does not select Chisels & Bits as a
+required dependency now or change the separate food-addon architecture.
+
+Evaluate the actual supported API, NeoForge 1.21.1 compatibility, independent
+object identity/inventory, picking, collision, persistence and multiplayer
+before deciding whether reuse warrants a hard dependency. Editable voxel
+geometry alone is not evidence that a mod supplies these equipment semantics.
+Keep the chemistry/domain model decoupled where practical. Record the concrete
+benefit and maintenance/version costs before introducing a required dependency;
+small object dimensions alone are not sufficient justification.
+
+The owner also flags a possibly incomplete Drive upload: a .pw.toml entry is
+not proof that the corresponding JAR finished uploading. Do not describe
+Macaw's Furniture as confirmed running based on that entry alone.
