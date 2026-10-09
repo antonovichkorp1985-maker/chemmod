@@ -89,6 +89,7 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
         .toList();
 
     private final NonNullList<ItemStack> items = NonNullList.withSize(SLOT_COUNT, ItemStack.EMPTY);
+    private long inventoryRevision;
     private double reactionProgress;
     private OperationSignature progressingOperation;
     private OperationSignature completedOperation;
@@ -136,7 +137,7 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
         return Component.translatable("container.chemmod.chemical_reactor.title");
     }
 
-    /** Records the most recent human operator; only a committed process can create discovery facts. */
+    /** Records the human who supplied/changed physical slots; never call merely for viewing or placement. */
     public void setLastOperator(Player player) {
         if (player == null || player.getGameProfile().getName().isBlank()) return;
         String name = player.getGameProfile().getName();
@@ -144,6 +145,17 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
             lastOperator = name;
             setChanged();
         }
+    }
+
+    /** Transient mutation counter also detects replacement by an identical-looking stack. */
+    public long inventoryRevision() {
+        return inventoryRevision;
+    }
+
+    /** Called by server menus only after an actual machine-slot mutation. */
+    public void recordInventoryInteraction(Player player) {
+        invalidateActiveOperation();
+        setLastOperator(player);
     }
 
     public double reactionProgress() {
@@ -566,6 +578,7 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
         if (!validSlot(slot)) return ItemStack.EMPTY;
         ItemStack result = ContainerHelper.removeItem(items, slot, amount);
         if (!result.isEmpty()) {
+            inventoryRevision++;
             invalidateActiveOperation();
             setChanged();
         }
@@ -577,13 +590,16 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
         // Used by block removal/drops as well as low-level inventory transfer.
         // Do not mutate world state from that removal path; interactive changes
         // use removeItem/setItem and invalidate the batch above.
-        return validSlot(slot) ? ContainerHelper.takeItem(items, slot) : ItemStack.EMPTY;
+        ItemStack removed = validSlot(slot) ? ContainerHelper.takeItem(items, slot) : ItemStack.EMPTY;
+        if (!removed.isEmpty()) inventoryRevision++;
+        return removed;
     }
 
     @Override
     public void setItem(int slot, ItemStack stack) {
         if (!validSlot(slot)) return;
         items.set(slot, stack);
+        inventoryRevision++;
         if (!stack.isEmpty() && stack.getCount() > getMaxStackSize()) stack.setCount(getMaxStackSize());
         // Empty output vials look identical in their serialized contents, so
         // OperationSignature alone cannot tell whether a player replaced one
@@ -612,7 +628,10 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
     public void clearContent() {
         boolean hadContents = !isEmpty();
         for (int slot = 0; slot < items.size(); slot++) items.set(slot, ItemStack.EMPTY);
-        if (hadContents) invalidateActiveOperation();
+        if (hadContents) {
+            inventoryRevision++;
+            invalidateActiveOperation();
+        }
         setChanged();
     }
 

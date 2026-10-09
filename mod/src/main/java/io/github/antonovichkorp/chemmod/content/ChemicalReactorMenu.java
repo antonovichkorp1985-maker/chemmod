@@ -14,6 +14,7 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerData;
+import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.inventory.Slot;
@@ -144,7 +145,46 @@ public final class ChemicalReactorMenu extends AbstractContainerMenu {
     }
 
     @Override
+    public void clicked(int slotId, int button, ClickType clickType, Player player) {
+        MachineSnapshot before = snapshot();
+        try {
+            super.clicked(slotId, button, clickType, player);
+        } finally {
+            recordMachineEdit(before, player);
+        }
+    }
+
+    @Override
     public ItemStack quickMoveStack(Player player, int quickMovedSlotIndex) {
+        MachineSnapshot before = snapshot();
+        try {
+            return transferStack(player, quickMovedSlotIndex);
+        } finally {
+            recordMachineEdit(before, player);
+        }
+    }
+
+    private MachineSnapshot snapshot() {
+        if (serverViewer == null || !(reactorInventory instanceof ChemicalReactorBlockEntity reactor)) return null;
+        return new MachineSnapshot(reactor.inventoryRevision(), java.util.stream.IntStream.range(0, MACHINE_SLOT_COUNT)
+            .mapToObj(index -> reactor.getItem(index).copy()).toList());
+    }
+
+    private void recordMachineEdit(MachineSnapshot before, Player player) {
+        if (before == null || player != serverViewer) return;
+        ChemicalReactorBlockEntity reactor = (ChemicalReactorBlockEntity) reactorInventory;
+        boolean changed = before.revision() != reactor.inventoryRevision();
+        // Vanilla transfers can modify an ItemStack in place before notifying a
+        // slot. Compare counts/components as well as the explicit mutation counter.
+        for (int index = 0; index < MACHINE_SLOT_COUNT && !changed; index++) {
+            changed = !ItemStack.matches(before.items().get(index), reactor.getItem(index));
+        }
+        if (changed) reactor.recordInventoryInteraction(player);
+    }
+
+    private record MachineSnapshot(long revision, List<ItemStack> items) {}
+
+    private ItemStack transferStack(Player player, int quickMovedSlotIndex) {
         ItemStack quickMoved = ItemStack.EMPTY;
         if (quickMovedSlotIndex < 0 || quickMovedSlotIndex >= slots.size()) return quickMoved;
         Slot slot = slots.get(quickMovedSlotIndex);
@@ -186,7 +226,10 @@ public final class ChemicalReactorMenu extends AbstractContainerMenu {
 
         @Override
         public boolean mayPlace(ItemStack stack) {
-            return container.canPlaceItem(getSlotIndex(), stack);
+            // The container validates one physical vial/catalyst. The cursor or
+            // source inventory may hold a stack; vanilla splits it to this
+            // slot's capacity (one). Do not reject the whole source stack.
+            return !stack.isEmpty() && container.canPlaceItem(getSlotIndex(), stack.copyWithCount(1));
         }
     }
 }

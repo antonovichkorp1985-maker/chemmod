@@ -226,6 +226,46 @@ correct author without changing the ledger. The menu test uses a SimpleContainer
 and fake-player inventory, **not a running graphical client or real connection**.
 Actual two-client delivery and rendered UI remain manual acceptance tasks.
 
+## Post-test.4 source: menu interaction and operator ownership
+
+Placement and opening the screen no longer call the operator setter. The actor
+for a new batch is the last player whose server-menu action **actually changed
+machine slots**, captured at the start of that batch. Merely watching, clicking
+an invalid item, moving only personal-inventory items or failing to extract into
+a full inventory cannot take ownership. A real edit during processing cancels
+the old progress and makes that editor eligible for the newly planned batch.
+Previously persisted first-discovery records are not rewritten. Existing saved
+operator names are retained; automation without any recorded human actor still
+cannot invent one, and later automation can retain the last recorded editor.
+
+Menu actions compare an inventory snapshot and a transient slot-mutation
+counter, so identical-stack replacement and in-place stack changes cannot
+silently bypass cancellation. The counter is not part of molecular identity or
+persistent world data. Both ordinary clicks and direct quick-move actions use
+the same attribution boundary. The low-level setter remains available for
+internal fixtures/adapters, but viewing/placement must not call it.
+
+The menu placement predicate now validates a one-item copy of the source stack:
+vanilla then splits it to the slot capacity of one. This fixes rejecting a stack
+of empty vials or copper before it could be split. The machine itself still
+requires exactly one vial/catalyst per occupied slot.
+
+Three headless tests exercise real server `clicked`/`quickMoveStack` paths:
+viewer/placement/rejected/personal-inventory actions preserve attribution;
+a second physical editor cancels and owns the restarted batch; and stacked
+vials/catalysts conserve counts while a full player inventory refuses extraction.
+Fixtures use separate fake players and are cleared before synthesis, so they do
+not seed the shared discovery history. They are not two actual client sessions.
+
+Manual checks on matching new client/server builds:
+- Shift-click a stack of empty vials: one enters each output, the rest stay yours.
+- Insert copper from a stack; verify one ingot in the catalyst slot and no loss.
+- Let player A supply a batch and player B open the screen before it starts;
+  after a genuinely first synthesis, its discovery must belong to A, not B.
+- Let B edit a partial batch: it must cancel, and a later first synthesis from
+  the restarted batch must reflect B. Existing discoveries remain immutable.
+- Try collecting a product with a full inventory; the product must remain intact.
+
 ## M3 test-release and completion gates
 
 `v0.9.0-test.4` is the player-test artifact for this checklist, not proof that

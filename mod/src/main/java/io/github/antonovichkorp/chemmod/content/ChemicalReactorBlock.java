@@ -8,7 +8,6 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.SimpleMenuProvider;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -87,15 +86,6 @@ public final class ChemicalReactorBlock extends BaseEntityBlock {
     }
 
     @Override
-    public void setPlacedBy(Level level, BlockPos pos, BlockState state, LivingEntity placer, ItemStack stack) {
-        super.setPlacedBy(level, pos, state, placer, stack);
-        if (!level.isClientSide() && placer instanceof Player player
-            && level.getBlockEntity(pos) instanceof ChemicalReactorBlockEntity reactor) {
-            reactor.setLastOperator(player);
-        }
-    }
-
-    @Override
     public void onRemove(BlockState state, Level level, BlockPos pos, BlockState replacement, boolean moved) {
         if (!state.is(replacement.getBlock()) && level.getBlockEntity(pos) instanceof ChemicalReactorBlockEntity reactor) {
             Containers.dropContents(level, pos, reactor);
@@ -115,7 +105,6 @@ public final class ChemicalReactorBlock extends BaseEntityBlock {
         if (!(level.getBlockEntity(pos) instanceof ChemicalReactorBlockEntity reactor)) {
             return InteractionResult.PASS;
         }
-        reactor.setLastOperator(player);
         MenuProvider provider = new SimpleMenuProvider(
             (containerId, inventory, ignoredPlayer) -> new ChemicalReactorMenu(containerId, inventory, reactor),
             reactor.menuTitle()

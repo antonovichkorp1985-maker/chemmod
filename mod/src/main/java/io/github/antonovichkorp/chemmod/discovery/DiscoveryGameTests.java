@@ -71,7 +71,7 @@ public final class DiscoveryGameTests {
         level.setBlock(helper.absolutePos(HEAT), Blocks.AIR.defaultBlockState(), 3);
         level.setBlock(helper.absolutePos(REACTOR), ChemBlocks.CHEMICAL_REACTOR.get().defaultBlockState(), 3);
         ChemicalReactorBlockEntity initial = reactor(helper);
-        initial.setLastOperator(initiator); // same hook used by placement/opening
+        initial.setLastOperator(initiator); // fixture: actor that supplied this batch
         supplyBatch(initial);
         helper.assertTrue(ledger.records().equals(before), "creating samples or selecting an operator awarded discovery");
         DiscoveryRecord[] first = new DiscoveryRecord[2];
@@ -99,7 +99,8 @@ public final class DiscoveryGameTests {
             helper.assertTrue(initial.reactionProgress() > 0.0 && initial.reactionProgress() < 1.0,
                 "restored output did not allow a new partial batch");
             helper.assertTrue(ledger.records().equals(before), "restarted partial batch awarded discovery");
-            initial.setLastOperator(observer); // another player looks at an already-running batch
+            // Viewing is deliberately not an operator-changing action.
+            new io.github.antonovichkorp.chemmod.content.ChemicalReactorMenu(31, observer.getInventory(), initial);
             CompoundTag saved = initial.saveWithoutMetadata(level.registryAccess());
             helper.assertTrue(saved.getString("processing_operator").equals("ChemInitiator"),
                 "observer stole attribution before saving");
