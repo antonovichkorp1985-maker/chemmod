@@ -209,6 +209,11 @@ public final class ChemicalReactorPersistenceGameTests {
             assertPartial(helper, original);
             CompoundTag saved = save(helper, original);
             saved.putDouble("reaction_progress", 0.99);
+            // Thermal inertia makes a still-hot vessel legitimately finish a
+            // batch after the flame goes out (covered by the thermal tests).
+            // This test is about the reload not bypassing the heat requirement,
+            // so it reloads a vessel that has already cooled to room temperature.
+            saved.remove("body_temperature_kelvin");
             before[0] = inventory(helper, original);
             helper.getLevel().setBlock(helper.absolutePos(HEAT_SOURCE), Blocks.AIR.defaultBlockState(), 3);
             reload(helper, saved);
