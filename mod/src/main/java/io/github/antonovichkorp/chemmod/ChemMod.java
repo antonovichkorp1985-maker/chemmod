@@ -6,6 +6,8 @@ import io.github.antonovichkorp.chemmod.content.ChemComponents;
 import io.github.antonovichkorp.chemmod.content.ChemItems;
 import io.github.antonovichkorp.chemmod.content.ChemMenus;
 import io.github.antonovichkorp.chemmod.integration.create.CreateIntegration;
+import io.github.antonovichkorp.chemmod.network.ReactorDiscoveryPayload;
+import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModList;
 import net.neoforged.fml.common.Mod;
@@ -21,8 +23,13 @@ public final class ChemMod {
         ChemBlockEntities.register(modEventBus);
         ChemItems.register(modEventBus);
         ChemMenus.register(modEventBus);
+        modEventBus.addListener(ChemMod::registerPayloads);
         if (ModList.get().isLoaded(CreateIntegration.MOD_ID)) {
             CreateIntegration.register(modEventBus);
         }
+    }
+    private static void registerPayloads(RegisterPayloadHandlersEvent event) {
+        event.registrar("1").playToClient(ReactorDiscoveryPayload.TYPE,
+            ReactorDiscoveryPayload.STREAM_CODEC, ReactorDiscoveryPayload::handle);
     }
 }

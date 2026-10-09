@@ -160,5 +160,13 @@
   "reactor_status.chemmod.needs_catalyst": "requires the rule’s catalyst",
   "reactor_status.chemmod.needs_pressure": "requires pressure beyond this open reactor",
   "container.chemmod.chemical_reactor.title": "Chemical Reactor",
-  "gui.chemmod.reactor.progress_value": "Progress: %s%%"
+  "gui.chemmod.reactor.progress_value": "Progress: %s%%",
+  "gui.chemmod.reactor.discoveries": "Output discoveries",
+  "gui.chemmod.reactor.discovery_scope": "First syntheses in this world",
+  "gui.chemmod.reactor.discovery_empty": "Output %s: no single substance",
+  "gui.chemmod.reactor.discovery_output": "Output %s — %s",
+  "gui.chemmod.reactor.discovery_pending": "Waiting for server data…",
+  "gui.chemmod.reactor.discovery_unknown": "No first synthesis registered",
+  "gui.chemmod.reactor.discovery_author": "First discoverer: %s",
+  "gui.chemmod.reactor.discovery_date": "Date (UTC): %s"
 }

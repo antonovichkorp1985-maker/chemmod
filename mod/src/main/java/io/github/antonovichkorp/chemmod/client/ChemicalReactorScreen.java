@@ -2,6 +2,11 @@ package io.github.antonovichkorp.chemmod.client;
 
 import io.github.antonovichkorp.chemmod.content.ChemicalReactorBlockEntity;
 import io.github.antonovichkorp.chemmod.content.ChemicalReactorMenu;
+import io.github.antonovichkorp.chemmod.discovery.ReactorDiscoveryView;
+import net.minecraft.util.FormattedCharSequence;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
@@ -18,6 +23,7 @@ public final class ChemicalReactorScreen extends AbstractContainerScreen<Chemica
     private static final int TEXT = 0xFF404040;
 
     private boolean showingRuleHelp;
+    private boolean showingDiscoveries;
 
     public ChemicalReactorScreen(ChemicalReactorMenu menu, Inventory playerInventory, Component title) {
         super(menu, playerInventory, title);
@@ -32,9 +38,18 @@ public final class ChemicalReactorScreen extends AbstractContainerScreen<Chemica
     @Override
     protected void init() {
         super.init();
-        addRenderableWidget(Button.builder(Component.literal("?"), button -> showingRuleHelp = !showingRuleHelp)
+        addRenderableWidget(Button.builder(Component.literal("?"), button -> {
+                showingRuleHelp = !showingRuleHelp;
+                showingDiscoveries = false;
+            })
             .bounds(leftPos + 157, topPos + 4, 12, 12)
             .tooltip(Tooltip.create(Component.translatable("gui.chemmod.reactor.help")))
+            .build());
+        addRenderableWidget(Button.builder(Component.translatable("gui.chemmod.reactor.discoveries"), button -> {
+                showingDiscoveries = !showingDiscoveries;
+                showingRuleHelp = false;
+            })
+            .bounds(leftPos + 8, topPos + 108, 160, 16)
             .build());
     }
 
@@ -88,7 +103,13 @@ public final class ChemicalReactorScreen extends AbstractContainerScreen<Chemica
         super.render(graphics, mouseX, mouseY, partialTick);
         // Full text is wrapped by Minecraft's screen-bounded tooltip renderer,
         // never painted over the inventory as an unbounded help paragraph.
-        if (showingRuleHelp) {
+        if (showingDiscoveries) {
+            List<FormattedCharSequence> lines = new ArrayList<>();
+            for (Component text : discoveryText()) {
+                lines.addAll(font.split(text, Math.max(40, Math.min(240, width - 20))));
+            }
+            graphics.renderTooltip(font, lines, mouseX, mouseY);
+        } else if (showingRuleHelp) {
             drawFullText(graphics, ChemicalReactorBlockEntity.ruleDescriptionComponent(menu.ruleDisplayIndex()), mouseX, mouseY);
         } else if (overLabel(mouseX, mouseY, 80)) {
             drawFullText(graphics, statusText(), mouseX, mouseY);
@@ -97,6 +118,32 @@ public final class ChemicalReactorScreen extends AbstractContainerScreen<Chemica
         } else {
             renderTooltip(graphics, mouseX, mouseY);
         }
+    }
+
+    private List<Component> discoveryText() {
+        List<Component> text = new ArrayList<>();
+        text.add(Component.translatable("gui.chemmod.reactor.discovery_scope"));
+        for (int index = 0; index < 2; index++) {
+            var contents = ReactorDiscoveryView.singleContents(menu.getSlot(
+                ChemicalReactorBlockEntity.OUTPUT_FIRST_SLOT + index).getItem());
+            if (contents == null) {
+                text.add(Component.translatable("gui.chemmod.reactor.discovery_empty", index + 1));
+                continue;
+            }
+            text.add(Component.translatable("gui.chemmod.reactor.discovery_output", index + 1,
+                contents.molecule().formula()));
+            var entry = menu.discoveryForOutput(index);
+            if (entry.isEmpty()) {
+                text.add(Component.translatable("gui.chemmod.reactor.discovery_pending"));
+            } else if (!entry.get().discovered()) {
+                text.add(Component.translatable("gui.chemmod.reactor.discovery_unknown"));
+            } else {
+                text.add(Component.translatable("gui.chemmod.reactor.discovery_author", entry.get().discoverer()));
+                text.add(Component.translatable("gui.chemmod.reactor.discovery_date",
+                    Instant.ofEpochMilli(entry.get().epochMillis()).toString()));
+            }
+        }
+        return text;
     }
 
     private Component statusText() {

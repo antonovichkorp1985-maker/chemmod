@@ -1,5 +1,12 @@
 package io.github.antonovichkorp.chemmod.content;
 
+import io.github.antonovichkorp.chemmod.discovery.DiscoverySavedData;
+import io.github.antonovichkorp.chemmod.discovery.ReactorDiscoveryView;
+import io.github.antonovichkorp.chemmod.network.ReactorDiscoveryPayload;
+import net.minecraft.server.level.ServerPlayer;
+import net.neoforged.neoforge.network.PacketDistributor;
+import java.util.List;
+import java.util.Optional;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;
@@ -23,6 +30,11 @@ public final class ChemicalReactorMenu extends AbstractContainerMenu {
     private static final int PLAYER_SLOT_END = PLAYER_SLOT_START + 36;
     private static final int PROGRESS_SCALE = 1_000;
 
+    private final Container reactorInventory;
+    private final ServerPlayer serverViewer;
+    private List<ReactorDiscoveryPayload.Entry> discoverySnapshot = List.of();
+    private List<ReactorDiscoveryPayload.Entry> lastSentSnapshot;
+    private long lastSentTime = Long.MIN_VALUE;
     private final ContainerData data;
     private final ContainerLevelAccess access;
 
@@ -33,7 +45,8 @@ public final class ChemicalReactorMenu extends AbstractContainerMenu {
             playerInventory,
             new SimpleContainer(MACHINE_SLOT_COUNT),
             new SimpleContainerData(3),
-            ContainerLevelAccess.NULL
+            ContainerLevelAccess.NULL,
+            null
         );
         // The client does not read the block entity directly, but consuming the
         // position keeps this factory's wire format explicit and extensible.
@@ -47,7 +60,8 @@ public final class ChemicalReactorMenu extends AbstractContainerMenu {
             playerInventory,
             reactor,
             reactor.menuData(),
-            ContainerLevelAccess.create(reactor.getLevel(), reactor.getBlockPos())
+            ContainerLevelAccess.create(reactor.getLevel(), reactor.getBlockPos()),
+            playerInventory.player instanceof ServerPlayer player ? player : null
         );
     }
 
@@ -56,13 +70,16 @@ public final class ChemicalReactorMenu extends AbstractContainerMenu {
         Inventory playerInventory,
         Container reactor,
         ContainerData data,
-        ContainerLevelAccess access
+        ContainerLevelAccess access,
+        ServerPlayer serverViewer
     ) {
         super(ChemMenus.CHEMICAL_REACTOR.get(), containerId);
         checkContainerSize(reactor, MACHINE_SLOT_COUNT);
         checkContainerDataCount(data, 3);
         this.data = data;
         this.access = access;
+        this.reactorInventory = reactor;
+        this.serverViewer = serverViewer;
 
         // Target, co-reactants, product vials, then reusable catalyst.
         addSlot(new ReactorSlot(reactor, ChemicalReactorBlockEntity.TARGET_SLOT, 26, 34));
@@ -74,6 +91,39 @@ public final class ChemicalReactorMenu extends AbstractContainerMenu {
 
         addPlayerInventory(playerInventory);
         addDataSlots(data);
+    }
+
+    @Override
+    public void broadcastChanges() {
+        super.broadcastChanges();
+        if (serverViewer == null) return;
+        List<ReactorDiscoveryPayload.Entry> current = ReactorDiscoveryView.capture(
+            reactorInventory, DiscoverySavedData.get(serverViewer.getServer()));
+        long time = serverViewer.level().getGameTime();
+        // Changed facts are sent immediately; a small one-second heartbeat also
+        // resynchronizes initial menu opening without any client query channel.
+        if (!current.equals(lastSentSnapshot) || time - lastSentTime >= 20L) {
+            PacketDistributor.sendToPlayer(serverViewer, new ReactorDiscoveryPayload(containerId, current));
+            lastSentSnapshot = current;
+            lastSentTime = time;
+        }
+    }
+
+    /** Only the client view of the addressed menu accepts this server-owned projection. */
+    public void acceptDiscoverySnapshot(ReactorDiscoveryPayload payload) {
+        if (serverViewer == null && payload.containerId() == containerId) {
+            discoverySnapshot = payload.entries();
+        }
+    }
+
+    /** Refuse stale facts when vanilla slot synchronization changes a vial's identity. */
+    public Optional<ReactorDiscoveryPayload.Entry> discoveryForOutput(int outputIndex) {
+        if (outputIndex < 0 || outputIndex >= 2 || discoverySnapshot.size() != 2) return Optional.empty();
+        SubstanceContents contents = ReactorDiscoveryView.singleContents(
+            reactorInventory.getItem(ChemicalReactorBlockEntity.OUTPUT_FIRST_SLOT + outputIndex));
+        if (contents == null) return Optional.empty();
+        ReactorDiscoveryPayload.Entry entry = discoverySnapshot.get(outputIndex);
+        return entry.canonicalKey().equals(contents.canonicalKey()) ? Optional.of(entry) : Optional.empty();
     }
 
     public int progressPermille() {

@@ -119,6 +119,13 @@ public final class DiscoveryGameTests {
                     "committed products were not attributed to the original operator after reload");
             }
             helper.assertTrue(ledger.isDirty(), "first synthesis did not mark SavedData dirty");
+            var factsBeforeReading = ledger.records();
+            var outputView = ReactorDiscoveryView.capture(reactor(helper), ledger);
+            for (var entry : outputView) {
+                helper.assertTrue(entry.discovered() && entry.discoverer().equals("ChemInitiator"),
+                    "physical outputs did not project their committed discoveries");
+            }
+            helper.assertTrue(ledger.records().equals(factsBeforeReading), "reading physical outputs changed discovery");
             assertLedgerRoundTrip(helper, ledger);
             // A later batch by another player must not overwrite first-discovery facts.
             ChemicalReactorBlockEntity current = reactor(helper);

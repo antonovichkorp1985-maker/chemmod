@@ -160,5 +160,13 @@
   "reactor_status.chemmod.needs_catalyst": "нужен катализатор этого правила",
   "reactor_status.chemmod.needs_pressure": "нужно давление выше, чем у открытого реактора",
   "container.chemmod.chemical_reactor.title": "Химический реактор",
-  "gui.chemmod.reactor.progress_value": "Ход: %s%%"
+  "gui.chemmod.reactor.progress_value": "Ход: %s%%",
+  "gui.chemmod.reactor.discoveries": "Открытия выходных веществ",
+  "gui.chemmod.reactor.discovery_scope": "Первые синтезы в этом мире",
+  "gui.chemmod.reactor.discovery_empty": "Выход %s: нет отдельного вещества",
+  "gui.chemmod.reactor.discovery_output": "Выход %s — %s",
+  "gui.chemmod.reactor.discovery_pending": "Ожидание данных сервера…",
+  "gui.chemmod.reactor.discovery_unknown": "Первый синтез не зарегистрирован",
+  "gui.chemmod.reactor.discovery_author": "Первый исследователь: %s",
+  "gui.chemmod.reactor.discovery_date": "Дата (UTC): %s"
 }

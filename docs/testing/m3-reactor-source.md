@@ -152,9 +152,9 @@ The physical first-synthesis test requires a fresh, disposable GameTest world;
 its setup never clears real discovery history. Isolated codec tests do not
 write synthetic records to the world ledger. Fake players test the server-side
 operator hooks; they do **not** test GUI opening packets, two-client networking,
-creative-tab rendering or full process restart. There is still no player-facing
-registry viewer, so the discovery parts of manual acceptance remain distinct
-from what can currently be observed in the reactor GUI.
+creative-tab rendering or full process restart. A read-only output discovery
+view was added in later source changes (see below); these tests alone do not
+validate its client rendering or network delivery.
 
 ## Post-test.4 source: stable result display and readable labels
 
@@ -182,6 +182,49 @@ GameTest checks that changed saved products cannot retain a false success label.
 These tests do not render the client. **Manual checks still required:** RU/EN,
 small and large GUI scales, hover text, `?` toggle, item tooltips, a completed
 batch left for several seconds, and collecting its products after reopening.
+
+## Post-test.4 source: read-only output discovery view
+
+The reactor's **Output discoveries / Открытия выходных веществ** button toggles
+information for the two current output vials. For a single molecular content it
+shows whether a first synthesis is registered, its original discoverer and its
+UTC date. Empty slots and explicit mixtures are not presented as a single
+molecule. This is a projection of world-wide first-synthesis facts, **not a claim
+that this particular vial/player just made a new discovery**, and not a browser
+of the complete ledger. Taking the product away removes its entry from this view.
+
+The server sends a bounded, server-to-client-only payload to each viewing menu:
+exactly two canonical keys plus bounded display names and millisecond dates.
+There is no client query/write command. Updates follow slot/ledger changes with
+a one-second resynchronization heartbeat. The client ignores other menu IDs and
+withholds an entry if its key does not match the currently synchronized vial;
+while waiting, it displays "Waiting for server data", not a guessed discovery.
+No discovery metadata is added to ItemStack components or to molecular identity.
+Opening this view never calls `recordSynthesis`.
+
+### Player checks on the new source build (not the original test.4 JAR)
+
+1. Install the **same exact CI build on server and all clients**; the older JAR
+   does not have this network payload or screen control.
+2. Before reaction completion, click the new button: empty outputs must not
+   display an invented discovery. Click again to close; `?` and the discovery
+   panel are mutually exclusive.
+3. Complete the ethanol route. Without reopening the menu, verify both product
+   entries, their original discoverer and UTC dates. An already discovered
+   substance may correctly name an earlier player rather than the current one.
+4. Have a second player observe and repeat the synthesis: first-discovery facts
+   must remain unchanged. Each viewer should receive current slot-specific data.
+5. Collect a product, close/reopen the menu and restart the server. Inspect the
+   remaining products: no stale information should be attached to another vial,
+   and persisted first-discovery facts should still be displayed.
+6. Check RU/EN text, GUI scales, panel wrapping, item tooltips and panel toggling.
+
+Three new headless tests cover read-only projection (unknown/known/mixture),
+packet encoding/decoding and bounds, and a client-style menu's ID/key guards.
+The physical synthesis test also checks that committed products project the
+correct author without changing the ledger. The menu test uses a SimpleContainer
+and fake-player inventory, **not a running graphical client or real connection**.
+Actual two-client delivery and rendered UI remain manual acceptance tasks.
 
 ## M3 test-release and completion gates
 
