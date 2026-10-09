@@ -141,7 +141,7 @@
   "reaction.chemmod.alcohol_dehydrogenation": "Alcohol dehydrogenation",
   "gui.chemmod.reactor.target": "Target",
   "gui.chemmod.reactor.co_reactants": "Co",
-  "gui.chemmod.reactor.products": "Products",
+  "gui.chemmod.reactor.products": "Outputs",
   "gui.chemmod.reactor.catalyst": "Cat.",
   "gui.chemmod.reactor.progress": "Progress",
   "reaction.chemmod.unnamed": "Unnamed reaction rule",
@@ -158,5 +158,7 @@
   "reaction.chemmod.none.description": "Place a pure target vial and any required pure co-reactant vials. The reactor only names a rule after its physical inputs match exactly.",
   "reactor_status.chemmod.needs_temperature_control": "requires a lower operating temperature",
   "reactor_status.chemmod.needs_catalyst": "requires the rule’s catalyst",
-  "reactor_status.chemmod.needs_pressure": "requires pressure beyond this open reactor"
+  "reactor_status.chemmod.needs_pressure": "requires pressure beyond this open reactor",
+  "container.chemmod.chemical_reactor.title": "Chemical Reactor",
+  "gui.chemmod.reactor.progress_value": "Progress: %s%%"
 }

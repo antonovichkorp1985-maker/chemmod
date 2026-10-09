@@ -156,6 +156,33 @@ creative-tab rendering or full process restart. There is still no player-facing
 registry viewer, so the discovery parts of manual acceptance remain distinct
 from what can currently be observed in the reactor GUI.
 
+## Post-test.4 source: stable result display and readable labels
+
+After a successful commit the UI keeps the completed status, selected rule and
+100% bar while the exact resulting inventory stays in place. The internal
+reaction progress is zero: this is a display of the committed result, not an
+operation waiting to execute again. A persisted `completed_operation` snapshot
+allows the same display after an NBT reload, verified on the next server tick.
+Taking/replacing any slot clears the result display immediately; changes made
+to saved items are detected on the next evaluation. An empty source vial then
+shows idle/waiting rather than the incorrect "pure vials only" refusal.
+Older saves without this completion snapshot retain their products, but do not
+infer a success display from the historical rule ID alone.
+
+The reactor screen now has a stable title and bounded status/rule labels.
+Hover either label for its full wrapped text; click `?` to toggle the wrapped
+rule explanation. The explanation is a tooltip rather than a paragraph painted
+across the inventory. Progress text and the progress bar have separate rows,
+slot labels are width-limited, and normal item tooltips are rendered explicitly.
+Both English and Russian strings are supplied.
+
+Automated coverage extends the real partial-batch/completed-reload test to
+assert the synchronized display, removal reset, and idle empty vial. Another
+GameTest checks that changed saved products cannot retain a false success label.
+These tests do not render the client. **Manual checks still required:** RU/EN,
+small and large GUI scales, hover text, `?` toggle, item tooltips, a completed
+batch left for several seconds, and collecting its products after reopening.
+
 ## M3 test-release and completion gates
 
 `v0.9.0-test.4` is the player-test artifact for this checklist, not proof that

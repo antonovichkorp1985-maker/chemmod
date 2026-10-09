@@ -60,6 +60,7 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
     public static final int SLOT_COUNT = 6;
     private static final double ATMOSPHERIC_PRESSURE_KILOPASCALS = 101.325;
 
+    private static final String COMPLETED_OPERATION_KEY = "completed_operation";
     private static final String OPERATION_KEY = "processing_operation";
     private static final String PROGRESS_KEY = "reaction_progress";
     private static final String OPERATOR_KEY = "last_operator";
@@ -90,6 +91,7 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
     private final NonNullList<ItemStack> items = NonNullList.withSize(SLOT_COUNT, ItemStack.EMPTY);
     private double reactionProgress;
     private OperationSignature progressingOperation;
+    private OperationSignature completedOperation;
     private String lastOperator = "";
     private String progressingOperator = "";
     private String lastCompletedRule = "";
@@ -101,7 +103,7 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
         @Override
         public int get(int index) {
             return switch (index) {
-                case 0 -> (int) Math.round(reactionProgress * 1_000.0);
+                case 0 -> status == ReactorStatus.COMPLETE ? 1_000 : (int) Math.round(reactionProgress * 1_000.0);
                 case 1 -> status.ordinal();
                 case 2 -> displayRuleIndex(status == ReactorStatus.COMPLETE ? lastCompletedRule : displayedRuleId);
                 default -> 0;
@@ -129,18 +131,9 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
         reactor.tickOneSecond();
     }
 
-    /** The standard inventory GUI uses this title and the current server-side status. */
+    /** A stable title; live status belongs to synchronized menu data, not the opening packet. */
     public Component menuTitle() {
-        if (status == ReactorStatus.COMPLETE && !lastCompletedRuleName.isBlank()) {
-            return Component.translatable(
-                "container.chemmod.chemical_reactor.complete",
-                Component.translatable(lastCompletedRuleName)
-            );
-        }
-        return Component.translatable(
-            "container.chemmod.chemical_reactor",
-            Component.translatable(status.translationKey)
-        );
+        return Component.translatable("container.chemmod.chemical_reactor.title");
     }
 
     /** Records the most recent human operator; only a committed process can create discovery facts. */
@@ -190,6 +183,18 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
     private void tickOneSecond() {
         if (level == null || level.isClientSide()) return;
 
+        // Keep the successful result visible while its exact physical inventory
+        // remains in place. An empty source vial is the result, not an impure input.
+        if (completedOperation != null) {
+            if (!lastCompletedRule.isBlank()
+                && completedOperation.equals(OperationSignature.from(lastCompletedRule, this))) {
+                resetProgress(ReactorStatus.COMPLETE);
+                return;
+            }
+            completedOperation = null;
+            setChanged();
+        }
+
         Candidate candidate = findCandidate();
         if (candidate == null) {
             resetProgress(statusWithoutCandidate());
@@ -201,7 +206,7 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
             return;
         }
 
-        OperationSignature signature = OperationSignature.from(candidate, this);
+        OperationSignature signature = OperationSignature.from(candidate.rule().getId().getValue(), this);
         // Saved progress belongs to the saved rule and exact physical slots,
         // not merely to whichever valid reaction happens to match after loading.
         if (!signature.equals(progressingOperation)) {
@@ -239,6 +244,7 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
             recordDiscoveries(candidate);
             lastCompletedRule = candidate.rule().getId().getValue();
             lastCompletedRuleName = candidate.rule().getDisplayNameKey();
+            completedOperation = OperationSignature.from(lastCompletedRule, this);
             reactionProgress = 0.0;
             progressingOperation = null;
             progressingOperator = "";
@@ -386,7 +392,7 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
     }
 
     private ReactorStatus statusWithoutCandidate() {
-        if (items.get(TARGET_SLOT).isEmpty()) {
+        if (items.get(TARGET_SLOT).isEmpty() || isEmptyVial(items.get(TARGET_SLOT))) {
             clearDisplayedRule();
             return ReactorStatus.IDLE;
         }
@@ -513,6 +519,11 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
 
     /** Any player or automation slot mutation invalidates a batch before it can commit. */
     private void invalidateActiveOperation() {
+        if (completedOperation != null) {
+            completedOperation = null;
+            clearDisplayedRule();
+            resetProgress(ReactorStatus.IDLE);
+        }
         if (reactionProgress != 0.0 || progressingOperation != null || !progressingOperator.isBlank()) {
             resetProgress(ReactorStatus.INPUT_CHANGED);
         }
@@ -632,6 +643,8 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
         if (progressingOperation != null && reactionProgress > 0.0) {
             tag.put(OPERATION_KEY, progressingOperation.state().copy());
         }
+        tag.remove(COMPLETED_OPERATION_KEY);
+        if (completedOperation != null) tag.put(COMPLETED_OPERATION_KEY, completedOperation.state().copy());
         tag.putString(OPERATOR_KEY, lastOperator);
         tag.putString(PROCESSING_OPERATOR_KEY, progressingOperator);
         tag.putString(LAST_RULE_KEY, lastCompletedRule);
@@ -652,6 +665,8 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
             && tag.contains(OPERATION_KEY, Tag.TAG_COMPOUND);
         reactionProgress = resumable ? savedProgress : 0.0;
         progressingOperation = resumable ? new OperationSignature(tag.getCompound(OPERATION_KEY).copy()) : null;
+        completedOperation = !resumable && tag.contains(COMPLETED_OPERATION_KEY, Tag.TAG_COMPOUND)
+            ? new OperationSignature(tag.getCompound(COMPLETED_OPERATION_KEY).copy()) : null;
         lastOperator = tag.getString(OPERATOR_KEY);
         progressingOperator = resumable ? tag.getString(PROCESSING_OPERATOR_KEY) : "";
         status = ReactorStatus.IDLE; // Re-evaluate conditions on the next server tick.
@@ -705,9 +720,9 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
 
     /** Frozen NBT witness: includes exact amounts, slot positions and all item components. */
     private record OperationSignature(CompoundTag state) {
-        private static OperationSignature from(Candidate candidate, ChemicalReactorBlockEntity reactor) {
+        private static OperationSignature from(String ruleId, ChemicalReactorBlockEntity reactor) {
             CompoundTag state = new CompoundTag();
-            state.putString("rule", candidate.rule().getId().getValue());
+            state.putString("rule", ruleId);
             ContainerHelper.saveAllItems(state, reactor.items, reactor.level.registryAccess());
             return new OperationSignature(state);
         }

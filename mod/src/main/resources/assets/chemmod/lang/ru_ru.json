@@ -141,7 +141,7 @@
   "reaction.chemmod.alcohol_dehydrogenation": "Дегидрирование спирта",
   "gui.chemmod.reactor.target": "Цель",
   "gui.chemmod.reactor.co_reactants": "Со",
-  "gui.chemmod.reactor.products": "Продукты",
+  "gui.chemmod.reactor.products": "Выход",
   "gui.chemmod.reactor.catalyst": "Кат.",
   "gui.chemmod.reactor.progress": "Ход",
   "reaction.chemmod.unnamed": "Правило реакции без названия",
@@ -158,5 +158,7 @@
   "reaction.chemmod.none.description": "Поместите чистую целевую колбу и все необходимые чистые co-reactant колбы. Реактор называет правило только после точного совпадения реальных входов.",
   "reactor_status.chemmod.needs_temperature_control": "нужна более низкая рабочая температура",
   "reactor_status.chemmod.needs_catalyst": "нужен катализатор этого правила",
-  "reactor_status.chemmod.needs_pressure": "нужно давление выше, чем у открытого реактора"
+  "reactor_status.chemmod.needs_pressure": "нужно давление выше, чем у открытого реактора",
+  "container.chemmod.chemical_reactor.title": "Химический реактор",
+  "gui.chemmod.reactor.progress_value": "Ход: %s%%"
 }

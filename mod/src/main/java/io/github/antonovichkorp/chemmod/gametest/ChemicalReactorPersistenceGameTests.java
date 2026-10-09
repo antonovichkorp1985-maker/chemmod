@@ -13,6 +13,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.item.ItemStack;
@@ -35,7 +36,7 @@ public final class ChemicalReactorPersistenceGameTests {
 
     private ChemicalReactorPersistenceGameTests() {}
 
-    @GameTest(template = "chemical_reactor_batch", timeoutTicks = 140)
+    @GameTest(template = "chemical_reactor_batch", timeoutTicks = 180)
     public static void partialBatchResumesAndCompletedProductsSurviveReload(GameTestHelper helper) {
         ChemicalReactorBlockEntity original = setupSlowBatch(helper);
         CompoundTag[] completedInventory = new CompoundTag[1];
@@ -63,6 +64,7 @@ public final class ChemicalReactorPersistenceGameTests {
         helper.runAfterDelay(70, () -> {
             ChemicalReactorBlockEntity finished = reactor(helper);
             assertProducts(helper, finished);
+            assertCompletedDisplay(helper, finished);
             String rule = finished.lastCompletedRule();
             helper.assertTrue(!rule.isBlank(), "completed batch has no rule record");
             completedInventory[0] = inventory(helper, finished);
@@ -74,6 +76,38 @@ public final class ChemicalReactorPersistenceGameTests {
         helper.runAfterDelay(115, () -> {
             assertInventory(helper, reactor(helper), completedInventory[0]);
             assertProducts(helper, reactor(helper));
+            assertCompletedDisplay(helper, reactor(helper));
+            ItemStack taken = reactor(helper).removeItem(ChemicalReactorBlockEntity.OUTPUT_FIRST_SLOT, 1);
+            helper.assertTrue(!taken.isEmpty() && reactor(helper).menuData().get(0) == 0,
+                "taking a product did not immediately clear the completed display");
+            helper.assertTrue(reactor(helper).menuData().get(2) == 0, "stale rule still displayed after taking output");
+        });
+        helper.runAfterDelay(155, () -> {
+            helper.assertTrue(ChemicalReactorBlockEntity.statusComponent(reactor(helper).menuData().get(1))
+                .equals(Component.translatable("reactor_status.chemmod.idle")),
+                "the empty source vial should wait for input, not report an impure vial");
+            helper.succeed();
+        });
+    }
+
+    @GameTest(template = "chemical_reactor_batch", timeoutTicks = 80)
+    public static void completedDisplayRejectsChangedSavedProducts(GameTestHelper helper) {
+        ChemicalReactorBlockEntity original = setupSlowBatch(helper);
+        helper.getLevel().setBlock(helper.absolutePos(HEAT_SOURCE),
+            Blocks.BLAST_FURNACE.defaultBlockState().setValue(AbstractFurnaceBlock.LIT, true), 3);
+        CompoundTag[] expected = new CompoundTag[1];
+        helper.runAfterDelay(25, () -> {
+            assertCompletedDisplay(helper, original);
+            CompoundTag saved = save(helper, original);
+            replaceSavedSlot(helper, saved, ChemicalReactorBlockEntity.OUTPUT_FIRST_SLOT, vial("O", AMOUNT));
+            ChemicalReactorBlockEntity restored = reload(helper, saved);
+            expected[0] = inventory(helper, restored);
+        });
+        helper.runAfterDelay(50, () -> {
+            ChemicalReactorBlockEntity restored = reactor(helper);
+            helper.assertTrue(restored.menuData().get(0) == 0 && restored.menuData().get(2) == 0,
+                "changed saved products retained an unrelated success display");
+            assertInventory(helper, restored, expected[0]);
             helper.succeed();
         });
     }
@@ -252,6 +286,14 @@ public final class ChemicalReactorPersistenceGameTests {
         ItemStack stack = new ItemStack(ChemItems.SUBSTANCE_VIAL.get());
         stack.set(ChemComponents.SUBSTANCE.get(), new SubstanceContents(structure, amount, 1_000_000));
         return stack;
+    }
+
+    private static void assertCompletedDisplay(GameTestHelper helper, ChemicalReactorBlockEntity reactor) {
+        helper.assertTrue(reactor.reactionProgress() == 0.0 && reactor.menuData().get(0) == 1_000,
+            "completed UI should show 100 percent without keeping an active operation");
+        helper.assertTrue(ChemicalReactorBlockEntity.statusComponent(reactor.menuData().get(1))
+            .equals(Component.translatable("reactor_status.chemmod.complete")), "completed status was lost");
+        helper.assertTrue(reactor.menuData().get(2) > 0, "completed reaction rule is no longer displayed");
     }
 
     private static void assertPartial(GameTestHelper helper, ChemicalReactorBlockEntity reactor) {
