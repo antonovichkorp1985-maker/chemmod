@@ -103,9 +103,16 @@ public final class ChemicalReactorMenuGameTests {
         ChemicalReactorMenu menu = new ChemicalReactorMenu(25, editor.getInventory(), reactor);
         // Menu slots 6..32 map to inventory 9..35; reactor slots have capacity one.
         editor.getInventory().setItem(9, new ItemStack(ChemItems.SUBSTANCE_VIAL.get(), 16));
-        menu.quickMoveStack(editor, 6);
+        // Vanilla's click handler repeats quickMoveStack while the source is
+        // transferable. A single direct call fills only the first empty slot;
+        // test the actual Shift-click path, including any personal-inventory routing.
+        menu.clicked(6, 0, ClickType.QUICK_MOVE, editor);
+        int remainingVials = java.util.stream.IntStream.range(0, 36).map(index -> {
+            ItemStack stack = editor.getInventory().getItem(index);
+            return stack.is(ChemItems.SUBSTANCE_VIAL.get()) ? stack.getCount() : 0;
+        }).sum();
         helper.assertTrue(reactor.getItem(3).getCount() == 1 && reactor.getItem(4).getCount() == 1
-            && editor.getInventory().getItem(9).getCount() == 14,
+            && remainingVials == 14,
             "shift-click failed to split empty vials into two single-capacity outputs");
         editor.getInventory().setItem(10, copper(64));
         menu.quickMoveStack(editor, 7);
