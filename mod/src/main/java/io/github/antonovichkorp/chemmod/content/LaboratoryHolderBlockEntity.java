@@ -41,6 +41,37 @@ public final class LaboratoryHolderBlockEntity extends BlockEntity {
         if (!result.isEmpty()) changed();
         return result;
     }
+    /** Remove only an empty selected holder; never spill the neighbouring holder's contents. */
+    public ItemStack takeEmptyHolder(boolean rack) {
+        if (level == null || level.isClientSide() || dropped
+            || level.getBlockEntity(worldPosition) != this) return ItemStack.EMPTY;
+        var part = rack ? LaboratoryHolderBlock.RACK : LaboratoryHolderBlock.TRAY;
+        var other = rack ? LaboratoryHolderBlock.TRAY : LaboratoryHolderBlock.RACK;
+        var state = getBlockState();
+        if (!state.getValue(part)) return ItemStack.EMPTY;
+        int start = rack ? 0 : 6;
+        int end = rack ? 6 : 10;
+        for (int slot = start; slot < end; slot++) {
+            if (!contents.get(slot).isEmpty()) return ItemStack.EMPTY;
+        }
+        if (state.getValue(other)) {
+            if (!level.setBlock(worldPosition, state.setValue(part, false), 3)) return ItemStack.EMPTY;
+            // The removed holder is now an ordinary empty item. A future installation
+            // gets a fresh ID; the still-installed neighbour retains its identity.
+            if (rack) rackId = UUID.randomUUID(); else trayId = UUID.randomUUID();
+            changed();
+        } else {
+            // Refuse even malformed saves with orphan contents: do not delete matter.
+            if (contents.stream().anyMatch(stack -> !stack.isEmpty())) return ItemStack.EMPTY;
+            dropped = true; // onRemove must not also drop the item being returned.
+            if (!level.removeBlock(worldPosition, false)) {
+                dropped = false;
+                return ItemStack.EMPTY;
+            }
+        }
+        return new ItemStack(rack ? ChemItems.TEST_TUBE_RACK.get() : ChemItems.LABORATORY_TRAY.get());
+    }
+
     private void changed() {
         setChanged();
         if (level != null) level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);

@@ -28,6 +28,72 @@ public final class LaboratoryHolderGameTests {
         return (LaboratoryHolderBlockEntity) helper.getLevel().getBlockEntity(helper.absolutePos(POS));
     }
     @GameTest(template = "chemical_reactor_batch", timeoutTicks = 20)
+    public static void emptyRackCanBeRemovedWithoutDisturbingLoadedTray(GameTestHelper helper) {
+        var holder = setup(helper, true);
+        var vial = ChemItems.mixtureVial("вода", "этанол");
+        var expected = vial.copy();
+        holder.insert(9, vial);
+        var trayId = holder.holderId(false);
+        var rackId = holder.holderId(true);
+        var result = holder.takeEmptyHolder(true);
+        helper.assertTrue(result.is(ChemItems.TEST_TUBE_RACK.get()) && result.getCount() == 1, "empty rack not returned");
+        helper.assertTrue(helper.getLevel().getBlockEntity(helper.absolutePos(POS)) == holder, "neighbour host replaced");
+        helper.assertTrue(!holder.getBlockState().getValue(LaboratoryHolderBlock.RACK)
+            && holder.getBlockState().getValue(LaboratoryHolderBlock.TRAY), "wrong part removed");
+        helper.assertTrue(holder.holderId(false).equals(trayId), "neighbour identity changed");
+        helper.assertTrue(!holder.holderId(true).equals(rackId), "removed identity reused for next installation");
+        helper.assertTrue(ItemStack.isSameItemSameComponents(expected, holder.contents(9)), "neighbour contents changed");
+        helper.assertTrue(holder.takeEmptyHolder(true).isEmpty(), "repeated pickup duplicated rack");
+        helper.succeed();
+    }
+
+    @GameTest(template = "chemical_reactor_batch", timeoutTicks = 20)
+    public static void occupiedHolderPickupRefusesWithoutChangingEitherPart(GameTestHelper helper) {
+        var holder = setup(helper, true);
+        holder.insert(5, ChemItems.vial("этанол"));
+        holder.insert(9, ChemItems.mixtureVial("вода", "этанол"));
+        var before = holder.saveWithoutMetadata(helper.getLevel().registryAccess());
+        helper.assertTrue(holder.takeEmptyHolder(true).isEmpty() && holder.takeEmptyHolder(false).isEmpty(), "loaded holder removed");
+        helper.assertTrue(before.equals(holder.saveWithoutMetadata(helper.getLevel().registryAccess())), "refusal mutated inventory or identity");
+        helper.succeed();
+    }
+
+    @GameTest(template = "chemical_reactor_batch", timeoutTicks = 20)
+    public static void removingLastEmptyHolderDoesNotLeaveGhostOrDuplicateDrop(GameTestHelper helper) {
+        var holder = setup(helper, true);
+        var tray = holder.takeEmptyHolder(false);
+        helper.assertTrue(tray.is(ChemItems.LABORATORY_TRAY.get()) && tray.getCount() == 1, "tray not returned");
+        var rack = holder.takeEmptyHolder(true);
+        helper.assertTrue(rack.is(ChemItems.TEST_TUBE_RACK.get()) && rack.getCount() == 1, "last rack not returned");
+        var pos = helper.absolutePos(POS);
+        helper.assertTrue(helper.getLevel().getBlockState(pos).isAir()
+            && helper.getLevel().getBlockEntity(pos) == null, "empty host remains");
+        helper.assertTrue(holder.takeEmptyHolder(true).isEmpty(), "detached host duplicated holder");
+        holder.dropAll();
+        helper.assertTrue(helper.getLevel().getEntitiesOfClass(ItemEntity.class, new AABB(pos).inflate(1)).isEmpty(),
+            "pickup also produced world drops");
+        helper.succeed();
+    }
+
+    @GameTest(template = "chemical_reactor_batch", timeoutTicks = 20)
+    public static void sneakEmptyHandInteractionRemovesOnlySelectedTray(GameTestHelper helper) {
+        var holder = setup(helper, true);
+        holder.insert(0, ChemItems.vial("вода"));
+        var level = helper.getLevel(); var pos = helper.absolutePos(POS);
+        var player = net.neoforged.neoforge.common.util.FakePlayerFactory.get(level,
+            new com.mojang.authlib.GameProfile(java.util.UUID.randomUUID(), "lab_pickup"));
+        player.setPos(pos.getX() + 3, pos.getY(), pos.getZ() + 3);
+        player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, ItemStack.EMPTY);
+        player.setShiftKeyDown(true);
+        var hit = new BlockHitResult(new Vec3(pos.getX() + 12.0 / 16, pos.getY() + 0.25, pos.getZ() + 3.0 / 16), Direction.UP, pos, false);
+        holder.getBlockState().useWithoutItem(level, player, hit);
+        helper.assertTrue(!holder.getBlockState().getValue(LaboratoryHolderBlock.TRAY)
+            && !holder.contents(0).isEmpty(), "interaction removed wrong part or contents");
+        helper.assertTrue(player.getInventory().countItem(ChemItems.LABORATORY_TRAY.get()) == 1, "pickup did not give one tray");
+        helper.succeed();
+    }
+
+    @GameTest(template = "chemical_reactor_batch", timeoutTicks = 20)
     public static void firstHolderPlacesThroughSurvivalItemPathWithoutReplacingTable(GameTestHelper helper) {
         helper.setBlock(POS.below(), Blocks.STONE);
         var level = helper.getLevel(); var pos = helper.absolutePos(POS);

@@ -181,5 +181,7 @@
   "tooltip.chemmod.reactor.target": "Input vial: the pure substance to react.",
   "tooltip.chemmod.reactor.co_reactants": "Additional reactants, such as oxygen. These are not output slots.",
   "tooltip.chemmod.reactor.products": "Insert empty vials to receive reaction products.",
-  "tooltip.chemmod.reactor.catalyst": "Catalyst: a solid item required by the reaction rule. For example, a copper ingot for ethanol conversion."
+  "tooltip.chemmod.reactor.catalyst": "Catalyst: a solid item required by the reaction rule. For example, a copper ingot for ethanol conversion.",
+  "tooltip.chemmod.holder.remove": "Sneak + right-click with an empty hand to remove the selected empty holder.",
+  "message.chemmod.holder.empty_first": "Remove all vessels from the selected holder first."
 }

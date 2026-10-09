@@ -47,6 +47,7 @@ public final class LaboratoryHolderItem extends BlockItem {
         tooltip.add(Component.translatable(part == LaboratoryHolderBlock.RACK ? "tooltip.chemmod.rack" : "tooltip.chemmod.tray"));
         tooltip.add(Component.translatable("tooltip.chemmod.holder.use"));
         tooltip.add(Component.translatable("tooltip.chemmod.holder.combine"));
+        tooltip.add(Component.translatable("tooltip.chemmod.holder.remove"));
     }
     @Override public String getDescriptionId() {
         return part == LaboratoryHolderBlock.RACK ? "item.chemmod.test_tube_rack" : "item.chemmod.laboratory_tray";

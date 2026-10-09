@@ -99,7 +99,10 @@ public final class LaboratoryHolderBlock extends BaseEntityBlock {
         if (!player.mayBuild() || !player.getMainHandItem().isEmpty() || slot < 0) return InteractionResult.PASS;
         if (level.isClientSide()) return InteractionResult.SUCCESS;
         if (level.getBlockEntity(pos) instanceof LaboratoryHolderBlockEntity holder) {
-            ItemStack taken = holder.extract(slot);
+            ItemStack taken = player.isShiftKeyDown() ? holder.takeEmptyHolder(slot < 6) : holder.extract(slot);
+            if (player.isShiftKeyDown() && taken.isEmpty()) {
+                player.displayClientMessage(net.minecraft.network.chat.Component.translatable("message.chemmod.holder.empty_first"), true);
+            }
             if (!taken.isEmpty()) {
                 if (!player.getInventory().add(taken)) player.drop(taken, false);
             }
