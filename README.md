@@ -121,6 +121,11 @@
 ./gradlew :core-cli:run --args="react C=CC chemmod:alkene_hydrogenation 350 '[H][H]' --catalyst chemmod:palladium"
 ```
 
+После Gradle-сборки `smoke-test.sh` проверяет XML-отчёты JUnit через
+`scripts/junit_summary.py`: сборка падает, если тесты `core` не выполнялись или
+есть проваленные тесты. Порядок проверок описан в
+`docs/testing/ci-test-verification.md`.
+
 `smoke-test.sh` запускает dedicated server дважды: сначала **без** Create, затем с
 Create 6.0.10 на runtime classpath. Это одновременно проверяет, что адаптер
 действительно включается с Create и что обычный ChemMod не получает обязательной

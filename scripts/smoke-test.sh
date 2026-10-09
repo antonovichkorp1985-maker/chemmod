@@ -4,10 +4,16 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 echo "==> Checking laboratory resource contracts"
-python3 -m unittest discover -s scripts -p 'test_lab_assets.py'
+python3 -m unittest discover -s scripts -p 'test_*.py'
 
 echo "==> Compiling and running unit tests"
 ./gradlew --no-daemon check installDist :mod:build
+
+# Gradle's `check` lifecycle task is assumed to run :core:test; assert that from
+# the XML reports instead of trusting the task graph, so a silently unexecuted
+# module fails the smoke test rather than the release.
+echo "==> Checking JUnit results of every unit-test module"
+python3 scripts/junit_summary.py
 
 chem="core-cli/build/install/chem/bin/chem"
 

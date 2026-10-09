@@ -8,5 +8,6 @@ out/
 .DS_Store
 
 # Python prerelease validation helpers
+.venv/
 __pycache__/
 *.pyc
