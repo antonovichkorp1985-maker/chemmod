@@ -1,5 +1,6 @@
 package io.github.antonovichkorp.chemmod.content;
 
+import io.github.antonovichkorp.chemmod.core.catalysis.CatalystModel;
 import io.github.antonovichkorp.chemmod.core.reaction.ReactionEnvironment;
 import io.github.antonovichkorp.chemmod.core.reaction.ReactionKinetics;
 import io.github.antonovichkorp.chemmod.core.reaction.ReactionRule;
@@ -376,7 +377,8 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
                 ? ATMOSPHERIC_PRESSURE_KILOPASCALS
                 : conditions.getMinimumPressureKilopascals(),
             conditions.getCatalystTags(),
-            java.util.Set.of()
+            java.util.Set.of(),
+            conditions.getCatalystCapabilities()
         );
     }
 
@@ -385,7 +387,8 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
             temperatureKelvin(),
             ATMOSPHERIC_PRESSURE_KILOPASCALS,
             catalystTags(),
-            java.util.Set.of()
+            java.util.Set.of(),
+            catalystCapabilities()
         );
     }
 
@@ -434,6 +437,19 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
         return null;
     }
 
+    /**
+     * Capabilities the catalyst earns from its own composition. A bulk material form derives
+     * them from its elements, so a new catalyst is content, not a new branch in this class.
+     */
+    private java.util.Set<String> catalystCapabilities() {
+        ItemStack catalyst = items.get(CATALYST_SLOT);
+        if (catalyst.isEmpty()) return java.util.Set.of();
+        if (catalyst.getItem() instanceof MaterialFormItem form) {
+            return CatalystModel.capabilitiesOfMaterial(form.materialId());
+        }
+        return java.util.Set.of();
+    }
+
     private java.util.Set<String> catalystTags() {
         ItemStack catalyst = items.get(CATALYST_SLOT);
         if (catalyst.isEmpty()) return java.util.Set.of();
@@ -469,6 +485,9 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
             return ReactorStatus.NEEDS_TEMPERATURE_CONTROL;
         }
         if (!catalystTags().containsAll(conditions.getCatalystTags())) {
+            return ReactorStatus.NEEDS_CATALYST;
+        }
+        if (!catalystCapabilities().containsAll(conditions.getCatalystCapabilities())) {
             return ReactorStatus.NEEDS_CATALYST;
         }
         if (conditions.getMinimumPressureKilopascals() != null
@@ -552,8 +571,14 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
 
     private static boolean isCatalyst(ItemStack stack) {
         if (stack == null || stack.isEmpty() || stack.getCount() != 1) return false;
-        return CATALYST_TAG_IDS.stream()
-            .anyMatch(tag -> stack.is(TagKey.create(Registries.ITEM, ResourceLocation.parse(tag))));
+        if (CATALYST_TAG_IDS.stream()
+            .anyMatch(tag -> stack.is(TagKey.create(Registries.ITEM, ResourceLocation.parse(tag))))) {
+            return true;
+        }
+        // A bulk material that earns any catalytic capability from its composition is also
+        // accepted, so a new catalyst metal does not need an item tag to enter the slot.
+        return stack.getItem() instanceof MaterialFormItem form
+            && !CatalystModel.capabilitiesOfMaterial(form.materialId()).isEmpty();
     }
 
     private void setDisplayedRule(ReactionRule rule) {

@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "capabilities": [
+    {
+      "id": "chemmod:hydrogenation_metal",
+      "anyElements": ["Ni", "Pd", "Pt", "Rh", "Ru", "Cu", "Fe"]
+    },
+    {
+      "id": "chemmod:dehydrogenation_metal",
+      "anyElements": ["Cu", "Cr", "Zn", "Fe"]
+    },
+    {
+      "id": "chemmod:oxidation_metal",
+      "anyElements": ["V", "Mo", "W", "Mn", "Cr"]
+    }
+  ]
+}

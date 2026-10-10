@@ -96,6 +96,12 @@ data class ReactionConditions(
     val maximumTemperatureKelvin: Double? = null,
     val minimumPressureKilopascals: Double? = null,
     val catalystTags: Set<String> = emptySet(),
+    /**
+     * Capabilities the catalyst must earn from its own composition, derived by
+     * [io.github.antonovichkorp.chemmod.core.catalysis.CatalystModel]. Unlike [catalystTags]
+     * this never enumerates acceptable items.
+     */
+    val catalystCapabilities: Set<String> = emptySet(),
 ) {
     init {
         listOfNotNull(minimumTemperatureKelvin, maximumTemperatureKelvin, minimumPressureKilopascals).forEach {
@@ -106,6 +112,9 @@ data class ReactionConditions(
         ) { "Minimum reaction temperature cannot exceed maximum reaction temperature" }
         require(catalystTags.all { REACTION_RULE_ID_PATTERN.matches(it) }) {
             "Catalyst tags must use namespace:path"
+        }
+        require(catalystCapabilities.all { REACTION_RULE_ID_PATTERN.matches(it) }) {
+            "Catalyst capabilities must use namespace:path"
         }
     }
 }
@@ -313,12 +322,14 @@ private data class ReactionConditionsDocument(
     val maximumTemperatureKelvin: Double? = null,
     val minimumPressureKilopascals: Double? = null,
     val catalystTags: Set<String> = emptySet(),
+    val catalystCapabilities: Set<String> = emptySet(),
 ) {
     fun toDomain() = ReactionConditions(
         minimumTemperatureKelvin,
         maximumTemperatureKelvin,
         minimumPressureKilopascals,
         catalystTags,
+        catalystCapabilities,
     )
 }
 

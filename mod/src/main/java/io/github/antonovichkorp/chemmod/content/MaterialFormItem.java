@@ -9,13 +9,20 @@ import java.util.List;
 import java.util.Locale;
 
 public final class MaterialFormItem extends Item {
+    private final String materialId;
     private final String materialPath;
     private final String formName;
 
     public MaterialFormItem(Properties properties, String materialId, String formName) {
         super(properties);
+        this.materialId = materialId;
         this.materialPath = materialId.substring(materialId.indexOf(':') + 1);
         this.formName = formName.toLowerCase(Locale.ROOT);
+    }
+
+    /** Content ID of the bulk material this form represents, e.g. {@code chemmod:copper}. */
+    public String materialId() {
+        return materialId;
     }
 
     @Override

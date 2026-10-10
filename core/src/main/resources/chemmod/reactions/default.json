@@ -361,6 +361,83 @@
         "activationEnergyJoulesPerMole": 55000.0
       },
       "displayDescriptionKey": "reaction.chemmod.alkyne_hydration.description"
+    },
+    {
+      "id": "chemmod:nitrile_hydrogenation",
+      "matcher": {
+        "kind": "bond_order",
+        "firstElement": "C",
+        "secondElement": "N",
+        "bondOrder": "TRIPLE"
+      },
+      "targetProductBondOrder": "DOUBLE",
+      "coReactantStructures": [
+        "[H][H]"
+      ],
+      "conditions": {
+        "minimumTemperatureKelvin": 400.0,
+        "catalystCapabilities": [
+          "chemmod:hydrogenation_metal"
+        ]
+      },
+      "displayNameKey": "reaction.chemmod.nitrile_hydrogenation",
+      "kinetics": {
+        "preExponentialFactorPerSecond": 120.0,
+        "activationEnergyJoulesPerMole": 45000.0
+      },
+      "displayDescriptionKey": "reaction.chemmod.nitrile_hydrogenation.description"
+    },
+    {
+      "id": "chemmod:imine_hydrogenation",
+      "matcher": {
+        "kind": "bond_order",
+        "firstElement": "C",
+        "secondElement": "N",
+        "bondOrder": "DOUBLE"
+      },
+      "targetProductBondOrder": "SINGLE",
+      "coReactantStructures": [
+        "[H][H]"
+      ],
+      "conditions": {
+        "minimumTemperatureKelvin": 350.0,
+        "catalystCapabilities": [
+          "chemmod:hydrogenation_metal"
+        ]
+      },
+      "displayNameKey": "reaction.chemmod.imine_hydrogenation",
+      "kinetics": {
+        "preExponentialFactorPerSecond": 150.0,
+        "activationEnergyJoulesPerMole": 40000.0
+      },
+      "displayDescriptionKey": "reaction.chemmod.imine_hydrogenation.description"
+    },
+    {
+      "id": "chemmod:amine_dehydrogenation",
+      "matcher": {
+        "kind": "bond_order",
+        "firstElement": "C",
+        "secondElement": "N",
+        "bondOrder": "SINGLE",
+        "firstMinimumHydrogens": 1,
+        "secondMinimumHydrogens": 1
+      },
+      "targetProductBondOrder": "DOUBLE",
+      "productStructures": [
+        "[H][H]"
+      ],
+      "conditions": {
+        "minimumTemperatureKelvin": 550.0,
+        "catalystCapabilities": [
+          "chemmod:dehydrogenation_metal"
+        ]
+      },
+      "displayNameKey": "reaction.chemmod.amine_dehydrogenation",
+      "kinetics": {
+        "preExponentialFactorPerSecond": 900.0,
+        "activationEnergyJoulesPerMole": 45000.0
+      },
+      "displayDescriptionKey": "reaction.chemmod.amine_dehydrogenation.description"
     }
   ]
 }

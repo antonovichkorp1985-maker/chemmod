@@ -9,12 +9,14 @@ import io.github.antonovichkorp.chemmod.core.model.MoleculeGraph
 import java.math.BigInteger
 
 /** Runtime conditions supplied by a container, reactor or later gas field. */
-data class ReactionEnvironment(
+data class ReactionEnvironment @JvmOverloads constructor(
     val temperatureKelvin: Double,
     val pressureKilopascals: Double,
     val catalystTags: Set<String> = emptySet(),
     /** Canonical identities of co-reactants that are actually present in the environment. */
     val availableCanonicalKeys: Set<String> = emptySet(),
+    /** Capabilities the present catalyst earns from its composition, see `CatalystModel`. */
+    val catalystCapabilities: Set<String> = emptySet(),
 ) {
     init {
         require(temperatureKelvin > 0.0 && temperatureKelvin.isFinite()) { "Temperature must be finite and positive" }
@@ -236,7 +238,8 @@ class ReactionEngine(private val ruleSet: ReactionRuleSet) {
         (conditions.minimumTemperatureKelvin == null || environment.temperatureKelvin >= conditions.minimumTemperatureKelvin) &&
             (conditions.maximumTemperatureKelvin == null || environment.temperatureKelvin <= conditions.maximumTemperatureKelvin) &&
             (conditions.minimumPressureKilopascals == null || environment.pressureKilopascals >= conditions.minimumPressureKilopascals) &&
-            environment.catalystTags.containsAll(conditions.catalystTags)
+            environment.catalystTags.containsAll(conditions.catalystTags) &&
+            environment.catalystCapabilities.containsAll(conditions.catalystCapabilities)
 
     companion object {
         @JvmStatic
