@@ -68,7 +68,14 @@
     "aromaticRingCelsius": 8.93,
     "hydroxylBaseCelsius": -84.66,
     "hydroxylDispersionCelsius": 7.02,
-    "hydrogenBondCelsiusPerKilojoulePerMole": 3.72
+    "hydrogenBondCelsiusPerKilojoulePerMole": 3.72,
+    "amineBaseCelsius": -167.22,
+    "amineDispersionCelsius": 11.73,
+    "amineHydrogenBondDonorCelsius": 20.44,
+    "carbonylBaseCelsius": -79.77,
+    "carbonylDispersionCelsius": 9.11,
+    "etherBaseCelsius": -190.63,
+    "etherDispersionCelsius": 12.85
   },
   "interactions": {
     "hydrogenBondDonorElements": [

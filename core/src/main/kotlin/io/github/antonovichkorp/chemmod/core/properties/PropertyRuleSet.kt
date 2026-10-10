@@ -105,6 +105,19 @@ data class BoilingRuleSet(
     val hydroxylBaseCelsius: Double,
     val hydroxylDispersionCelsius: Double,
     val hydrogenBondCelsiusPerKilojoulePerMole: Double,
+    /**
+     * Amines: dispersion plus one term per hydrogen the nitrogen can donate, which is what
+     * separates a primary amine from a secondary one and both from a tertiary one that has none.
+     */
+    val amineBaseCelsius: Double,
+    val amineDispersionCelsius: Double,
+    val amineHydrogenBondDonorCelsius: Double,
+    /** Ketones and aldehydes: dipolar, but with no hydrogen to donate. */
+    val carbonylBaseCelsius: Double,
+    val carbonylDispersionCelsius: Double,
+    /** Ethers: an oxygen that accepts but never donates. */
+    val etherBaseCelsius: Double,
+    val etherDispersionCelsius: Double,
 )
 
 @Serializable
@@ -135,6 +148,13 @@ private data class BoilingRuleSetDocument(
     val hydroxylBaseCelsius: Double,
     val hydroxylDispersionCelsius: Double,
     val hydrogenBondCelsiusPerKilojoulePerMole: Double,
+    val amineBaseCelsius: Double,
+    val amineDispersionCelsius: Double,
+    val amineHydrogenBondDonorCelsius: Double,
+    val carbonylBaseCelsius: Double,
+    val carbonylDispersionCelsius: Double,
+    val etherBaseCelsius: Double,
+    val etherDispersionCelsius: Double,
 ) {
     fun toDomain(): BoilingRuleSet {
         val values = listOf(
@@ -145,11 +165,22 @@ private data class BoilingRuleSetDocument(
             hydroxylBaseCelsius,
             hydroxylDispersionCelsius,
             hydrogenBondCelsiusPerKilojoulePerMole,
+            amineDispersionCelsius,
+            amineHydrogenBondDonorCelsius,
+            carbonylDispersionCelsius,
+            etherDispersionCelsius,
         ) + exactFormulaCelsius.values
         require(values.all { it.isFinite() }) { "Boiling rule coefficients must be finite" }
         require(hydrogenBondCelsiusPerKilojoulePerMole >= 0.0) {
             "A hydrogen bond cannot lower the boiling point"
         }
+        require(amineHydrogenBondDonorCelsius >= 0.0) {
+            "An N-H donor cannot lower the boiling point"
+        }
+        require(
+            amineDispersionCelsius > 0.0 && carbonylDispersionCelsius > 0.0 &&
+                etherDispersionCelsius > 0.0
+        ) { "A heavier molecule of the same class cannot boil lower" }
         return BoilingRuleSet(
             exactFormulaCelsius = exactFormulaCelsius.toMap(),
             hydrocarbonBaseCelsius = hydrocarbonBaseCelsius,
@@ -159,6 +190,13 @@ private data class BoilingRuleSetDocument(
             hydroxylBaseCelsius = hydroxylBaseCelsius,
             hydroxylDispersionCelsius = hydroxylDispersionCelsius,
             hydrogenBondCelsiusPerKilojoulePerMole = hydrogenBondCelsiusPerKilojoulePerMole,
+            amineBaseCelsius = amineBaseCelsius,
+            amineDispersionCelsius = amineDispersionCelsius,
+            amineHydrogenBondDonorCelsius = amineHydrogenBondDonorCelsius,
+            carbonylBaseCelsius = carbonylBaseCelsius,
+            carbonylDispersionCelsius = carbonylDispersionCelsius,
+            etherBaseCelsius = etherBaseCelsius,
+            etherDispersionCelsius = etherDispersionCelsius,
         )
     }
 }

@@ -152,9 +152,50 @@ class PropertyEngine(private val rules: PropertyRuleSet) {
                 "hydroxyl-family+hydrogen-bond-network",
             )
         }
+        val rings = FunctionalGroups.cycleRank(graph)
+        val aromatic = AromaticityModel.aromaticRings(graph).size
+        val donors = hydrogenBonds.donorSites(graph)
+        val polarClasses = setOf(
+            FunctionalGroups.ALCOHOL,
+            FunctionalGroups.ALDEHYDE,
+            FunctionalGroups.KETONE,
+            FunctionalGroups.CARBOXYLIC_ACID,
+            FunctionalGroups.ESTER_CLASS,
+            FunctionalGroups.AMINE_CLASS,
+            FunctionalGroups.NITRILE_CLASS,
+        )
+        if (FunctionalGroups.AMINE_CLASS in classes &&
+            classes.none { it in polarClasses - FunctionalGroups.AMINE_CLASS }
+        ) {
+            return BoilingEstimate(
+                rules.boiling.amineBaseCelsius +
+                    rules.boiling.amineDispersionCelsius * dispersion +
+                    rules.boiling.amineHydrogenBondDonorCelsius * donors +
+                    rules.boiling.ringCelsius * rings +
+                    rules.boiling.aromaticRingCelsius * aromatic,
+                "amine+hydrogen-bond-donors",
+            )
+        }
+        val carbonylClasses = setOf(FunctionalGroups.ALDEHYDE, FunctionalGroups.KETONE)
+        if (classes.any { it in carbonylClasses } && classes.none { it in polarClasses - carbonylClasses }) {
+            return BoilingEstimate(
+                rules.boiling.carbonylBaseCelsius +
+                    rules.boiling.carbonylDispersionCelsius * dispersion +
+                    rules.boiling.ringCelsius * rings +
+                    rules.boiling.aromaticRingCelsius * aromatic,
+                "carbonyl+dispersion",
+            )
+        }
+        if (FunctionalGroups.ETHER_CLASS in classes && classes.none { it in polarClasses }) {
+            return BoilingEstimate(
+                rules.boiling.etherBaseCelsius +
+                    rules.boiling.etherDispersionCelsius * dispersion +
+                    rules.boiling.ringCelsius * rings +
+                    rules.boiling.aromaticRingCelsius * aromatic,
+                "ether+dispersion",
+            )
+        }
         if (FunctionalGroups.HYDROCARBON in classes) {
-            val rings = ringCount(graph)
-            val aromatic = AromaticityModel.aromaticRings(graph).size
             return BoilingEstimate(
                 rules.boiling.hydrocarbonBaseCelsius +
                     rules.boiling.hydrocarbonDispersionCelsius * dispersion +
@@ -169,8 +210,6 @@ class PropertyEngine(private val rules: PropertyRuleSet) {
         return BoilingEstimate(null, "no-model")
     }
 
-    /** Ring count in the cycle-basis sense: bonds - atoms + components, so naphthalene has two. */
-    private fun ringCount(graph: MoleculeGraph): Int = FunctionalGroups.cycleRank(graph)
 
     /** Mean-bond-energy ΔH estimate for neutral C/H/O complete combustion only. */
     private fun estimateCombustionEnthalpy(graph: MoleculeGraph, formula: Map<String, Int>): Double? {

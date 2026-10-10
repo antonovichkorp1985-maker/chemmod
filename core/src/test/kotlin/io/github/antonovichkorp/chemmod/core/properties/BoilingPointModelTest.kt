@@ -8,8 +8,9 @@ import kotlin.test.assertTrue
 
 /**
  * The boiling point has to come from the graph: dispersion over molar mass, plus ring and
- * aromaticity corrections, plus the hydrogen-bond network for alcohols and polyols. Both fits
- * cover a stated domain, and outside it the model refuses instead of extrapolating.
+ * aromaticity corrections, plus the hydrogen-bond network for alcohols and polyols, plus a branch
+ * per compound class for amines, carbonyls and ethers. Every fit covers a stated domain, and
+ * outside it the model refuses instead of extrapolating.
  * Anything that is still a substance row must say so through `boilingPointBasis`.
  */
 class BoilingPointModelTest {
@@ -75,10 +76,13 @@ class BoilingPointModelTest {
         // Measured this way against experiment the old mass-only branch gave dimethyl ether
         // -41.0 instead of -24.8, acetone -7.3 instead of 56.1, acetonitrile -55.9 instead of
         // 81.6 and tetrachloromethane 208.1 instead of 76.7. Refusing is the smaller lie.
-        assertNull(boiling("COC"))
+        // Ethers, ketones and amines have their own branches now; what is still refused is a
+        // nitrile, a halide, an ester and a carboxylic acid - measured, they were off by 137 K,
+        // 131 K and more, so no number is better than a wrong one.
         assertNull(boiling("CN"))
-        assertNull(boiling("CC(C)=O"))
         assertNull(boiling("C(Cl)(Cl)(Cl)Cl"))
+        assertNull(boiling("CCOC(C)=O"))
+        assertNull(boiling("CC(=O)O"))
         assertEquals("no-model:fit-covers-hydrocarbons-only", basis("C(Cl)(Cl)(Cl)Cl"))
         // Hydrocarbons stay inside the fit and keep their numbers.
         assertEquals("dispersion+ring+aromatic", basis("CCCCCC"))
@@ -96,6 +100,40 @@ class BoilingPointModelTest {
             .polarizibilityCubicAngstroms!!, 0.01)
         // Iron has no measured atomic value in the table, and a gap must stay a gap.
         assertNull(engine.predict(Molecule.fromSMILESlike("[Fe]").graph).polarizibilityCubicAngstroms)
+    }
+
+    @Test
+    fun `amines boil by dispersion plus the hydrogens their nitrogen can donate`() {
+        // Fit on ten amines, RMS 4.4 K, worst trimethylamine at -7.3 K.
+        assertNear(-6.3, boiling("CN")!!, 8.0)
+        assertNear(16.6, boiling("CCN")!!, 8.0)
+        assertNear(78.0, boiling("CCCCN")!!, 8.0)
+        assertNear(3.5, boiling("CN(C)C")!!, 8.0)
+        assertNear(89.5, boiling("CCN(CC)CC")!!, 8.0)
+        assertEquals("amine+hydrogen-bond-donors", basis("CN"))
+    }
+
+    @Test
+    fun `three isomeric butylamines separate by donor count, not by mass`() {
+        // Same formula C4H11N, same molar mass: a primary amine donates two hydrogens, a
+        // secondary one, a tertiary none - and that is exactly the order they boil in.
+        val primary = boiling("CCCCN")!!
+        val secondary = boiling("CCNCC")!!
+        val tertiary = boiling("CCN(C)C")!!
+        assertTrue(primary > secondary, "primary must outboil secondary: $primary vs $secondary")
+        assertTrue(secondary > tertiary, "secondary must outboil tertiary: $secondary vs $tertiary")
+    }
+
+    @Test
+    fun `ketones and ethers get their own branches`() {
+        assertNear(56.1, boiling("CC(C)=O")!!, 4.0)
+        assertNear(79.6, boiling("CCC(C)=O")!!, 4.0)
+        assertEquals("carbonyl+dispersion", basis("CC(C)=O"))
+        assertNear(-24.8, boiling("COC")!!, 2.0)
+        assertNear(34.6, boiling("CCOCC")!!, 2.0)
+        assertEquals("ether+dispersion", basis("COC"))
+        // Isomers again: the alcohol keeps its hydrogen-bond network, the ether does not.
+        assertTrue(boiling("CCO")!! - boiling("COC")!! > 100.0)
     }
 
     @Test
