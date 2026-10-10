@@ -8,7 +8,8 @@ import kotlin.test.assertTrue
 
 /**
  * The boiling point has to come from the graph: dispersion over molar mass, plus ring and
- * aromaticity corrections, plus the hydrogen-bond network for alcohols and polyols.
+ * aromaticity corrections, plus the hydrogen-bond network for alcohols and polyols. Both fits
+ * cover a stated domain, and outside it the model refuses instead of extrapolating.
  * Anything that is still a substance row must say so through `boilingPointBasis`.
  */
 class BoilingPointModelTest {
@@ -70,9 +71,31 @@ class BoilingPointModelTest {
     }
 
     @Test
-    fun `an ether keeps its mass but loses the hydrogen-bond term`() {
-        assertNear(-41.0, boiling("COC")!!)
-        assertTrue(boiling("CCO")!! - boiling("COC")!! > 100.0, "isomers must differ by the network")
+    fun `families outside the fitted domain are refused, not extrapolated`() {
+        // Measured this way against experiment the old mass-only branch gave dimethyl ether
+        // -41.0 instead of -24.8, acetone -7.3 instead of 56.1, acetonitrile -55.9 instead of
+        // 81.6 and tetrachloromethane 208.1 instead of 76.7. Refusing is the smaller lie.
+        assertNull(boiling("COC"))
+        assertNull(boiling("CN"))
+        assertNull(boiling("CC(C)=O"))
+        assertNull(boiling("C(Cl)(Cl)(Cl)Cl"))
+        assertEquals("no-model:fit-covers-hydrocarbons-only", basis("C(Cl)(Cl)(Cl)Cl"))
+        // Hydrocarbons stay inside the fit and keep their numbers.
+        assertEquals("dispersion+ring+aromatic", basis("CCCCCC"))
+    }
+
+    @Test
+    fun `polarizibility comes from element data, so halogens count for what they are`() {
+        // Additive atomic values give 10.48 A^3 for CCl4 against 10.002 A^3 measured for the
+        // molecule: the element table is good enough to replace molar mass in the dispersion
+        // term, which is the point of carrying it.
+        assertNear(10.48, engine.predict(Molecule.fromSMILESlike("C(Cl)(Cl)(Cl)Cl").graph)
+            .polarizibilityCubicAngstroms!!, 0.01)
+        // Methane counts its four implicit hydrogens: 1.76 + 4 * 0.667.
+        assertNear(4.43, engine.predict(Molecule.fromSMILESlike("C").graph)
+            .polarizibilityCubicAngstroms!!, 0.01)
+        // Iron has no measured atomic value in the table, and a gap must stay a gap.
+        assertNull(engine.predict(Molecule.fromSMILESlike("[Fe]").graph).polarizibilityCubicAngstroms)
     }
 
     @Test

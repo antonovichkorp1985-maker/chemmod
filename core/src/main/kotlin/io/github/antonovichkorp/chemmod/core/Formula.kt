@@ -33,4 +33,21 @@ object FormulaCalculator {
             (elements[symbol] ?: if (symbol == "H") hydrogen else error("Missing element $symbol")).atomicMass * count
         }
     }
+
+    /**
+     * Sum of atomic polarizibilities in cubic angstroms, counting implicit hydrogens the way
+     * [molarMass] does. Returns null as soon as one element has no measured value, because a gap
+     * in the data must not be read as a small polarizibility.
+     */
+    fun polarizibilityCubicAngstroms(graph: MoleculeGraph): Double? {
+        val elements = graph.atoms.associate { it.element.symbol to it.element }
+        val hydrogen = graph.atoms.firstOrNull { it.element.symbol == "H" }?.element
+            ?: io.github.antonovichkorp.chemmod.core.model.ElementTable.default().require("H")
+        var total = 0.0
+        for ((symbol, count) in counts(graph)) {
+            val element = elements[symbol] ?: if (symbol == "H") hydrogen else return null
+            total += (element.polarizibilityCubicAngstroms ?: return null) * count
+        }
+        return total
+    }
 }

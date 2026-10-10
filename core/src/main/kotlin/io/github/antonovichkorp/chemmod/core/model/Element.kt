@@ -11,6 +11,13 @@ data class Element(
      * position in the table, so lone-pair chemistry never needs a per-substance record.
      */
     val valenceElectrons: Int,
+    /**
+     * Atomic polarizibility volume in cubic angstroms, or null where no measured value is held.
+     * Dispersion between molecules follows how easily electron clouds deform, not mass: chlorine
+     * is barely heavier than a methyl group yet far more polarizable. Sources: the CCCBDB atomic
+     * list (Miller & Bederson 1977) for H through Kr, Miller 1990 for iodine.
+     */
+    val polarizibilityCubicAngstroms: Double? = null,
 ) {
     init {
         require(symbol.matches(Regex("[A-Z][a-z]?"))) { "Invalid element symbol: $symbol" }
@@ -23,5 +30,8 @@ data class Element(
             "At least one non-negative valence is required"
         }
         require(valenceElectrons > 0) { "An element needs at least one valence electron" }
+        require(polarizibilityCubicAngstroms == null || polarizibilityCubicAngstroms > 0.0) {
+            "Polarizibility must be positive where it is known"
+        }
     }
 }

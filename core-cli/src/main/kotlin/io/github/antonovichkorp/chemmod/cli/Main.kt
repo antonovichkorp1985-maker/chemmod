@@ -52,6 +52,9 @@ private fun lookup(input: String) {
                 (properties.boilingPointC?.let { "${"%.1f".format(it)} °C (${properties.boilingPointBasis})" }
                     ?: "not available (${properties.boilingPointBasis})"),
         )
+        properties.polarizibilityCubicAngstroms?.let {
+            println("Polarizibility:    ${"%.2f".format(it)} A^3 (sum of atomic values)")
+        }
         println("Property model:    ${properties.model}")
         println("Structural flags:  ${properties.flags.ifEmpty { setOf("none") }.joinToString()}")
         println(

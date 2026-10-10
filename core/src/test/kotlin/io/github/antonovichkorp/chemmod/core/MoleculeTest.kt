@@ -6,6 +6,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotEquals
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class MoleculeTest {
@@ -35,8 +36,14 @@ class MoleculeTest {
 
         assertEquals("C2H6O", dimethylEther.formula())
         assertNotEquals(ethanol.canonicalKey(), dimethylEther.canonicalKey())
-        assertNear(-41.0, dimethylEther.properties().boilingPointC!!, 0.1)
-        assertNotEquals(ethanol.properties().boilingPointC, dimethylEther.properties().boilingPointC)
+        assertNear(83.7, ethanol.properties().boilingPointC!!, 0.1)
+        // The ether is refused a boiling point: the dispersion fit covers hydrocarbons, and on
+        // mass alone it missed dimethyl ether by 16 K and acetonitrile by 137 K.
+        assertNull(dimethylEther.properties().boilingPointC)
+        assertNotEquals(
+            ethanol.properties().boilingPointBasis,
+            dimethylEther.properties().boilingPointBasis,
+        )
     }
 
     @Test

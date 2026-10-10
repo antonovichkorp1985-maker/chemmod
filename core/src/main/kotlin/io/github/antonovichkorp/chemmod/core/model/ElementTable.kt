@@ -59,6 +59,15 @@ private data class ElementDocument(
     val atomicMass: Double,
     val valences: List<Int>,
     val valenceElectrons: Int,
+    val polarizibilityCubicAngstroms: Double? = null,
 ) {
-    fun toDomain() = Element(symbol, name, atomicNumber, atomicMass, valences, valenceElectrons)
+    fun toDomain() = Element(
+        symbol,
+        name,
+        atomicNumber,
+        atomicMass,
+        valences,
+        valenceElectrons,
+        polarizibilityCubicAngstroms,
+    )
 }

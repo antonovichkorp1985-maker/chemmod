@@ -37,6 +37,12 @@ data class PredictedProperties(
     val molecularShape: String? = null,
     /** Ideal bond angle at that atom in degrees, when the shape has an angle at all. */
     val bondAngleDegrees: Double? = null,
+    /**
+     * Sum of atomic polarizibilities in cubic angstroms, or null if the table has no value for
+     * some element present. Tetrachloromethane reaches 10.5 A^3 where methane reaches 4.4, which
+     * molar mass cannot express: 154 g/mol of CCl4 is mostly chlorine's electron cloud.
+     */
+    val polarizibilityCubicAngstroms: Double? = null,
 )
 
 /**
@@ -97,6 +103,7 @@ class PropertyEngine(private val rules: PropertyRuleSet) {
             coordinateBondAcceptors = coordinateBonds.acceptorAtoms(graph).size,
             molecularShape = geometry?.shape,
             bondAngleDegrees = geometry?.idealBondAngleDegrees,
+            polarizibilityCubicAngstroms = FormulaCalculator.polarizibilityCubicAngstroms(graph),
         )
     }
 
@@ -109,9 +116,12 @@ class PropertyEngine(private val rules: PropertyRuleSet) {
      *  * a calibration anchor, reported as such, for substances the model cannot derive yet;
      *  * alcohols and polyols: dispersion plus the hydrogen-bond network, so ethylene glycol and
      *    glycerol boil higher because of the donor and acceptor sites they carry;
-     *  * everything else with carbon: dispersion `a + b * M^(2/3)` plus ring and aromaticity
-     *    corrections, fitted on alkanes, alkenes, cycloalkanes and arenes (RMS 6.3 K);
-     *  * carbon-free substances outside the anchor list: no value at all, never a guess.
+     *  * hydrocarbons: dispersion `a + b * M^(2/3)` plus ring and aromaticity corrections,
+     *    fitted on alkanes, alkenes, cycloalkanes and arenes (RMS 6.3 K);
+     *  * anything else: no value at all. Molar mass is a stand-in for polarizibility and it
+     *    collapses outside carbon and hydrogen - measured against experiment the old branch gave
+     *    tetrachloromethane +131 K, tetrafluoromethane +196 K, acetonitrile -137 K, methylamine
+     *    -81 K. A refused number is honest; a wrong one is not.
      */
     private fun predictBoilingPoint(graph: MoleculeGraph, formula: Map<String, Int>): BoilingEstimate {
         val formulaText = FormulaCalculator.hillFormula(graph)
@@ -129,7 +139,7 @@ class PropertyEngine(private val rules: PropertyRuleSet) {
                 "hydroxyl-family+hydrogen-bond-network",
             )
         }
-        if ((formula["C"] ?: 0) > 0) {
+        if ((formula["C"] ?: 0) > 0 && formula.keys.all { it == "C" || it == "H" }) {
             val rings = ringCount(graph)
             val aromatic = AromaticityModel.aromaticRings(graph).size
             return BoilingEstimate(
@@ -139,6 +149,9 @@ class PropertyEngine(private val rules: PropertyRuleSet) {
                     rules.boiling.aromaticRingCelsius * aromatic,
                 "dispersion+ring+aromatic",
             )
+        }
+        if ((formula["C"] ?: 0) > 0) {
+            return BoilingEstimate(null, "no-model:fit-covers-hydrocarbons-only")
         }
         return BoilingEstimate(null, "no-model")
     }
