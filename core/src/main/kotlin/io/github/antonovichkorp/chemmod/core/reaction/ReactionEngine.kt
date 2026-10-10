@@ -2,6 +2,7 @@ package io.github.antonovichkorp.chemmod.core.reaction
 
 import io.github.antonovichkorp.chemmod.core.FormulaCalculator
 import io.github.antonovichkorp.chemmod.core.Molecule
+import io.github.antonovichkorp.chemmod.core.model.Atom
 import io.github.antonovichkorp.chemmod.core.model.Bond
 import io.github.antonovichkorp.chemmod.core.model.BondOrder
 import io.github.antonovichkorp.chemmod.core.model.MoleculeGraph
@@ -101,7 +102,73 @@ class ReactionEngine(private val ruleSet: ReactionRuleSet) {
     private fun targetProducts(target: Molecule, rule: ReactionRule): List<Molecule?> = when (val matcher = rule.matcher) {
         is FormulaPattern -> if (matchesFormula(target, matcher)) listOf(null) else emptyList()
         is BondOrderPattern -> matchingBondProducts(target, matcher, requireNotNull(rule.targetProductBondOrder))
+        is BondAdditionPattern -> additionProducts(target, rule, matcher)
     }
+
+    /**
+     * Adds a co-reactant across a matched bond. Each endpoint and each attachable co-reactant
+     * atom is a separate candidate, so regioisomers are enumerated; the balance engine then
+     * keeps only the candidates that conserve atoms.
+     */
+    private fun additionProducts(
+        target: Molecule,
+        rule: ReactionRule,
+        pattern: BondAdditionPattern,
+    ): List<Molecule> {
+        val graph = target.graph
+        if (pattern.requireNeutral && graph.atoms.any { it.formalCharge != 0 }) return emptyList()
+        val coReactant = Molecule.fromSMILESlike(rule.coReactantStructures.single()).graph
+        val attachable = coReactant.atoms.filter { it.element.symbol == pattern.attachElement }
+        return graph.bonds.asSequence()
+            .filter { it.order == pattern.bondOrder }
+            .flatMap { bond ->
+                val endpoints = attachmentEndpoints(graph, bond, pattern)
+                attachable.asSequence().flatMap { atom ->
+                    endpoints.asSequence().map { endpoint -> mergedGraph(graph, bond, pattern, coReactant, endpoint, atom) }
+                }
+            }
+            .filter { candidate -> candidate.validate().isEmpty() }
+            .distinctBy(Molecule::canonicalKey)
+            .toList()
+    }
+
+    private fun mergedGraph(
+        graph: MoleculeGraph,
+        matchedBond: Bond,
+        pattern: BondAdditionPattern,
+        coReactant: MoleculeGraph,
+        endpoint: Int,
+        attachAtom: Atom,
+    ): Molecule {
+        val offset = graph.atoms.size
+        val atoms = graph.atoms + coReactant.atoms.map { atom ->
+            Atom(atom.id + offset, atom.element, atom.formalCharge, atom.explicitHydrogens)
+        }
+        val bonds = graph.bonds.map { bond ->
+            if (bond == matchedBond) bond.copy(order = pattern.productBondOrder) else bond
+        } + coReactant.bonds.map { bond ->
+            Bond(bond.first + offset, bond.second + offset, bond.order)
+        } + Bond(endpoint, attachAtom.id + offset, BondOrder.SINGLE)
+        return Molecule.fromGraph(MoleculeGraph(atoms, bonds))
+    }
+
+    /**
+     * Endpoints that may receive the added group: those playing the role of the pattern's
+     * first element in a valid orientation. Matching stays orientation-independent, while the
+     * rule author still controls which side of an unsymmetric bond is attacked.
+     */
+    private fun attachmentEndpoints(
+        graph: MoleculeGraph,
+        bond: Bond,
+        pattern: BondAdditionPattern,
+    ): List<Int> = buildList {
+        val direct = endpointMatches(graph, bond.first, pattern.firstElement, 0) &&
+            endpointMatches(graph, bond.second, pattern.secondElement, 0)
+        if (direct) add(bond.first)
+        val reversed = endpointMatches(graph, bond.first, pattern.secondElement, 0) &&
+            endpointMatches(graph, bond.second, pattern.firstElement, 0)
+        if (reversed) add(bond.second)
+    }.distinct()
 
     private fun matchingBondProducts(
         target: Molecule,

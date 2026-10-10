@@ -241,6 +241,126 @@
         "activationEnergyJoulesPerMole": 40000.0
       },
       "displayDescriptionKey": "reaction.chemmod.complete_combustion_with_chlorine.description"
+    },
+    {
+      "id": "chemmod:alkene_hydration",
+      "matcher": {
+        "kind": "bond_addition",
+        "firstElement": "C",
+        "secondElement": "C",
+        "bondOrder": "DOUBLE",
+        "productBondOrder": "SINGLE",
+        "attachElement": "O",
+        "requireNeutral": true
+      },
+      "coReactantStructures": [
+        "O"
+      ],
+      "conditions": {
+        "minimumTemperatureKelvin": 400.0
+      },
+      "displayNameKey": "reaction.chemmod.alkene_hydration",
+      "kinetics": {
+        "preExponentialFactorPerSecond": 100.0,
+        "activationEnergyJoulesPerMole": 55000.0
+      },
+      "displayDescriptionKey": "reaction.chemmod.alkene_hydration.description"
+    },
+    {
+      "id": "chemmod:alkene_hydrochlorination",
+      "matcher": {
+        "kind": "bond_addition",
+        "firstElement": "C",
+        "secondElement": "C",
+        "bondOrder": "DOUBLE",
+        "productBondOrder": "SINGLE",
+        "attachElement": "Cl",
+        "requireNeutral": true
+      },
+      "coReactantStructures": [
+        "Cl"
+      ],
+      "conditions": {
+        "minimumTemperatureKelvin": 300.0
+      },
+      "displayNameKey": "reaction.chemmod.alkene_hydrochlorination",
+      "kinetics": {
+        "preExponentialFactorPerSecond": 300.0,
+        "activationEnergyJoulesPerMole": 35000.0
+      },
+      "displayDescriptionKey": "reaction.chemmod.alkene_hydrochlorination.description"
+    },
+    {
+      "id": "chemmod:alkene_hydroamination",
+      "matcher": {
+        "kind": "bond_addition",
+        "firstElement": "C",
+        "secondElement": "C",
+        "bondOrder": "DOUBLE",
+        "productBondOrder": "SINGLE",
+        "attachElement": "N",
+        "requireNeutral": true
+      },
+      "coReactantStructures": [
+        "N"
+      ],
+      "conditions": {
+        "minimumTemperatureKelvin": 450.0
+      },
+      "displayNameKey": "reaction.chemmod.alkene_hydroamination",
+      "kinetics": {
+        "preExponentialFactorPerSecond": 60.0,
+        "activationEnergyJoulesPerMole": 60000.0
+      },
+      "displayDescriptionKey": "reaction.chemmod.alkene_hydroamination.description"
+    },
+    {
+      "id": "chemmod:carbonyl_hydration",
+      "matcher": {
+        "kind": "bond_addition",
+        "firstElement": "C",
+        "secondElement": "O",
+        "bondOrder": "DOUBLE",
+        "productBondOrder": "SINGLE",
+        "attachElement": "O",
+        "requireNeutral": true
+      },
+      "coReactantStructures": [
+        "O"
+      ],
+      "conditions": {
+        "minimumTemperatureKelvin": 300.0
+      },
+      "displayNameKey": "reaction.chemmod.carbonyl_hydration",
+      "kinetics": {
+        "preExponentialFactorPerSecond": 200.0,
+        "activationEnergyJoulesPerMole": 40000.0
+      },
+      "displayDescriptionKey": "reaction.chemmod.carbonyl_hydration.description"
+    },
+    {
+      "id": "chemmod:alkyne_hydration",
+      "matcher": {
+        "kind": "bond_addition",
+        "firstElement": "C",
+        "secondElement": "C",
+        "bondOrder": "TRIPLE",
+        "productBondOrder": "DOUBLE",
+        "attachElement": "O",
+        "requireNeutral": true
+      },
+      "coReactantStructures": [
+        "O"
+      ],
+      "conditions": {
+        "minimumTemperatureKelvin": 400.0
+      },
+      "displayNameKey": "reaction.chemmod.alkyne_hydration",
+      "kinetics": {
+        "preExponentialFactorPerSecond": 80.0,
+        "activationEnergyJoulesPerMole": 55000.0
+      },
+      "displayDescriptionKey": "reaction.chemmod.alkyne_hydration.description"
     }
   ]
 }

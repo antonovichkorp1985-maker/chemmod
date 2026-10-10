@@ -27,13 +27,26 @@ class ContentCoherenceTest {
     }
 
     @Test
-    fun `element table keeps symbols and atomic numbers unique`() {
+    fun `element table covers the whole periodic table exactly once`() {
         val all = elements.all().toList()
+        assertEquals(118, all.size, "the bundled table must stay a complete periodic table")
+        assertEquals((1..118).toList(), all.map { it.atomicNumber }.sorted())
         assertEquals(all.size, all.map { it.symbol }.distinct().size)
-        assertEquals(all.size, all.map { it.atomicNumber }.distinct().size)
-        assertTrue(all.isNotEmpty())
         assertTrue(all.all { it.valences.isNotEmpty() }, "An element needs at least one valence")
-        assertTrue(all.all { element -> element.valences.all { it > 0 } }, "Element valences must be positive")
+        assertTrue(all.all { element -> element.valences.all { it >= 0 } }, "Valences cannot be negative")
+    }
+
+    @Test
+    fun `inert elements exist as monatomic substances and refuse bonds`() {
+        val helium = Molecule.fromSMILESlike("He")
+        assertEquals(emptyList(), helium.validate())
+        assertEquals("He", helium.formula())
+
+        val bonded = Molecule.fromSMILESlike("HeC")
+        assertTrue(
+            bonded.validate().any { it.code == "VALENCE_EXCEEDED" },
+            "a zero-valence element must not accept a bond",
+        )
     }
 
     @Test

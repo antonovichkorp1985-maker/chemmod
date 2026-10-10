@@ -66,6 +66,31 @@ data class BondOrderPattern(
     }
 }
 
+/**
+ * Addition across a matched multiple bond. The bond order drops and one atom of the
+ * co-reactant attaches to a matched endpoint; every remaining valence is refilled by the
+ * graph's implicit-hydrogen rule, so the co-reactant splits without a radical model and
+ * without naming any product substance. Attaching to either endpoint is a separate
+ * structural outcome, so regioisomers are enumerated rather than selected by a catalogue.
+ */
+data class BondAdditionPattern(
+    val firstElement: String,
+    val secondElement: String,
+    val bondOrder: BondOrder,
+    val productBondOrder: BondOrder,
+    val attachElement: String,
+    val requireNeutral: Boolean = true,
+) : ReactionMatcher {
+    init {
+        require(
+            listOf(firstElement, secondElement, attachElement).all { ELEMENT_SYMBOL_PATTERN.matches(it) },
+        ) { "Addition-pattern elements must be symbols" }
+        require(productBondOrder.value < bondOrder.value) {
+            "Addition must lower the target bond order, $bondOrder -> $productBondOrder is not an addition"
+        }
+    }
+}
+
 data class ReactionConditions(
     val minimumTemperatureKelvin: Double? = null,
     val maximumTemperatureKelvin: Double? = null,
@@ -140,6 +165,7 @@ data class ReactionRule(
 ) {
     init {
         val bondMatcher = matcher as? BondOrderPattern
+        val additionMatcher = matcher as? BondAdditionPattern
         require((bondMatcher != null) == (targetProductBondOrder != null)) {
             "Rule $id must define a target bond transformation exactly when it uses a bond matcher"
         }
@@ -148,7 +174,16 @@ data class ReactionRule(
                 "Rule $id must change the target bond order"
             }
         }
-        require(productStructures.isNotEmpty() || bondMatcher != null) {
+        if (additionMatcher != null) {
+            require(coReactantStructures.size == 1) {
+                "Rule $id adds across a bond using exactly one co-reactant"
+            }
+            val coReactant = Molecule.fromSMILESlike(coReactantStructures.single())
+            require(coReactant.graph.atoms.any { it.element.symbol == additionMatcher.attachElement }) {
+                "Rule $id attaches '${additionMatcher.attachElement}', absent from its co-reactant"
+            }
+        }
+        require(productStructures.isNotEmpty() || bondMatcher != null || additionMatcher != null) {
             "Rule $id needs a static product or a transformed target"
         }
         require(displayNameKey.matches(Regex("[a-z][a-z0-9_.-]*(\\.[a-z0-9_.-]+)+"))) {
@@ -237,6 +272,8 @@ private data class ReactionMatcherDocument(
     val firstElement: String? = null,
     val secondElement: String? = null,
     val bondOrder: String? = null,
+    val productBondOrder: String? = null,
+    val attachElement: String? = null,
     val firstMinimumHydrogens: Int = 0,
     val secondMinimumHydrogens: Int = 0,
     val requireNeutral: Boolean = true,
@@ -254,6 +291,16 @@ private data class ReactionMatcherDocument(
             bondOrder = parseBondOrder(requireNotNull(bondOrder) { "Bond matcher needs bondOrder" }),
             firstMinimumHydrogens = firstMinimumHydrogens,
             secondMinimumHydrogens = secondMinimumHydrogens,
+            requireNeutral = requireNeutral,
+        )
+        "bond_addition" -> BondAdditionPattern(
+            firstElement = requireNotNull(firstElement) { "Addition matcher needs firstElement" },
+            secondElement = requireNotNull(secondElement) { "Addition matcher needs secondElement" },
+            bondOrder = parseBondOrder(requireNotNull(bondOrder) { "Addition matcher needs bondOrder" }),
+            productBondOrder = parseBondOrder(
+                requireNotNull(productBondOrder) { "Addition matcher needs productBondOrder" },
+            ),
+            attachElement = requireNotNull(attachElement) { "Addition matcher needs attachElement" },
             requireNeutral = requireNeutral,
         )
         else -> throw IllegalArgumentException("Unknown reaction matcher kind '$kind'")
