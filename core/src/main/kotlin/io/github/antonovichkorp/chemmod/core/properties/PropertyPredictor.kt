@@ -4,6 +4,7 @@ import io.github.antonovichkorp.chemmod.core.FormulaCalculator
 import io.github.antonovichkorp.chemmod.core.bond.AromaticityModel
 import io.github.antonovichkorp.chemmod.core.bond.CoordinateBondModel
 import io.github.antonovichkorp.chemmod.core.bond.HydrogenBondModel
+import io.github.antonovichkorp.chemmod.core.geometry.MolecularGeometry
 import io.github.antonovichkorp.chemmod.core.model.BondOrder
 import io.github.antonovichkorp.chemmod.core.model.MoleculeGraph
 import kotlin.math.pow
@@ -32,6 +33,10 @@ data class PredictedProperties(
      * substance. An anchor is a debt, so it is reported instead of hiding behind a number.
      */
     val boilingPointBasis: String = "no-model",
+    /** VSEPR shape at the atom with the most electron domains; water is bent, methane tetrahedral. */
+    val molecularShape: String? = null,
+    /** Ideal bond angle at that atom in degrees, when the shape has an angle at all. */
+    val bondAngleDegrees: Double? = null,
 )
 
 /**
@@ -49,6 +54,7 @@ class PropertyEngine(private val rules: PropertyRuleSet) {
         val hydrogenBondDonors = hydrogenBonds.donorSites(graph)
         val hydrogenBondAcceptors = hydrogenBonds.acceptorSites(graph)
         val aromaticRingCount = AromaticityModel.aromaticRings(graph).size
+        val geometry = MolecularGeometry.centralAtom(graph)
         val flags = buildSet {
             if (graph.bonds.any { bond ->
                     bond.order == BondOrder.SINGLE &&
@@ -73,6 +79,7 @@ class PropertyEngine(private val rules: PropertyRuleSet) {
             if (hydrogenBondAcceptors > 0) add("HYDROGEN_BOND_ACCEPTOR")
             if (aromaticRingCount > 0) add("AROMATIC_RING")
             if (coordinateBonds.acceptorAtoms(graph).isNotEmpty()) add("COORDINATE_BOND_ACCEPTOR")
+            if (geometry?.shape == "bent") add("BENT_GEOMETRY")
         }
         return PredictedProperties(
             boilingPointC = boilingPoint.celsius,
@@ -88,6 +95,8 @@ class PropertyEngine(private val rules: PropertyRuleSet) {
             aromaticResonanceKilojoulesPerMole =
                 aromaticRingCount * rules.interactions.aromaticResonanceKilojoulesPerMolePerRing,
             coordinateBondAcceptors = coordinateBonds.acceptorAtoms(graph).size,
+            molecularShape = geometry?.shape,
+            bondAngleDegrees = geometry?.idealBondAngleDegrees,
         )
     }
 

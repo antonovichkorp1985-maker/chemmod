@@ -64,6 +64,11 @@ private fun lookup(input: String) {
                 "${"%.1f".format(properties.aromaticResonanceKilojoulesPerMole)} kJ/mol",
         )
         println("Lewis-acid sites:  ${properties.coordinateBondAcceptors}")
+        println(
+            "Molecular shape:   " +
+                (properties.molecularShape ?: "terminal atoms only") +
+                (properties.bondAngleDegrees?.let { ", ${"%.1f".format(it)}°" } ?: ""),
+        )
     } catch (exception: MoleculeParseException) {
         fail(exception.message ?: "Could not parse molecule")
     }
