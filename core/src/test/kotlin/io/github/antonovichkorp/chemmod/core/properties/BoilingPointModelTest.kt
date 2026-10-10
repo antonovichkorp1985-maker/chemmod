@@ -79,7 +79,7 @@ class BoilingPointModelTest {
         // Ethers, ketones and amines have their own branches now; what is still refused is a
         // nitrile, a halide, an ester and a carboxylic acid - measured, they were off by 137 K,
         // 131 K and more, so no number is better than a wrong one.
-        assertNull(boiling("CN"))
+        assertNull(boiling("CC#N"))
         assertNull(boiling("C(Cl)(Cl)(Cl)Cl"))
         assertNull(boiling("CCOC(C)=O"))
         assertNull(boiling("CC(=O)O"))
