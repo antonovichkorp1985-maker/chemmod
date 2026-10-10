@@ -123,11 +123,6 @@ public final class ChemItems {
     public static final DeferredHolder<Item, LaboratoryHolderItem> LABORATORY_TRAY = ITEMS.register(
         "laboratory_tray", () -> new LaboratoryHolderItem(new Item.Properties().stacksTo(16), false));
 
-    private static final List<String> TEST_SUBSTANCES = List.of(
-        "вода", "водород", "кислород", "углекислый_газ", "метан", "метанол",
-        "этанол", "диметиловый_эфир", "пропан", "уксусная_кислота", "хлор"
-    );
-
     private static final List<MaterialItemRegistration> MATERIAL_ITEMS = registerMaterialItems();
     private static final List<MoltenItemRegistration> MOLTEN_ITEMS = registerMoltenItems();
 
@@ -138,7 +133,7 @@ public final class ChemItems {
             .icon(() -> vial("вода"))
             .displayItems((parameters, output) -> {
                 output.accept(new ItemStack(SUBSTANCE_VIAL.get()));
-                TEST_SUBSTANCES.forEach(alias -> output.accept(vial(alias)));
+                CommonSubstances.INSTANCE.all().forEach(substance -> output.accept(vial(substance.getCanonicalName())));
                 output.accept(mixtureVial("вода", "этанол"));
                 output.accept(new ItemStack(NATIVE_COPPER_ORE.get()));
                 output.accept(copperStorageBlockStack(CopperStorageBlockEntity.defaultBatch()));

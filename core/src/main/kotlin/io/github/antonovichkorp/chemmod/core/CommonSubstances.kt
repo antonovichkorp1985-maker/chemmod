@@ -26,4 +26,9 @@ object CommonSubstances {
     }
 
     fun resolve(input: String): String = find(input)?.structure ?: input
+
+    /** Every labelled substance, in directory order. Used for calibration lists, never for identity. */
+    fun all(): List<CommonSubstance> = directory.all().map {
+        CommonSubstance(it.canonicalName, it.structure)
+    }
 }

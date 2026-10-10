@@ -13,6 +13,7 @@ import kotlinx.serialization.json.Json
 class TrivialNameDirectory private constructor(entries: List<NamedMolecule>) {
     private val aliases: Map<String, NamedMolecule>
     private val canonicalKeys: Map<String, NamedMolecule>
+    private val declared: List<NamedMolecule> = entries.toList()
 
     init {
         val index = linkedMapOf<String, NamedMolecule>()
@@ -34,6 +35,9 @@ class TrivialNameDirectory private constructor(entries: List<NamedMolecule>) {
     fun find(input: String): NamedMolecule? = aliases[normalize(input)]
 
     fun findByCanonicalKey(canonicalKey: String): NamedMolecule? = canonicalKeys[canonicalKey]
+
+    /** Every labelled identity, in declaration order. Labels never define existence. */
+    fun all(): List<NamedMolecule> = declared
 
     companion object {
         fun fromJson(input: InputStream): TrivialNameDirectory {
