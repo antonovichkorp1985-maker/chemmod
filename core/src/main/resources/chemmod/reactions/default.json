@@ -136,6 +136,111 @@
         "activationEnergyJoulesPerMole": 45000.0
       },
       "displayDescriptionKey": "reaction.chemmod.alcohol_dehydrogenation.description"
+    },
+    {
+      "id": "chemmod:complete_combustion_with_nitrogen",
+      "matcher": {
+        "kind": "formula",
+        "allowedElements": [
+          "C",
+          "H",
+          "O",
+          "N"
+        ],
+        "requiredElements": [
+          "C",
+          "N"
+        ],
+        "requireNeutral": true,
+        "requirePositiveOxygenDemand": true
+      },
+      "coReactantStructures": [
+        "O=O"
+      ],
+      "productStructures": [
+        "O=C=O",
+        "O",
+        "N#N"
+      ],
+      "conditions": {
+        "minimumTemperatureKelvin": 600.0
+      },
+      "displayNameKey": "reaction.chemmod.complete_combustion_with_nitrogen",
+      "kinetics": {
+        "preExponentialFactorPerSecond": 800.0,
+        "activationEnergyJoulesPerMole": 40000.0
+      },
+      "displayDescriptionKey": "reaction.chemmod.complete_combustion_with_nitrogen.description"
+    },
+    {
+      "id": "chemmod:complete_combustion_with_sulfur",
+      "matcher": {
+        "kind": "formula",
+        "allowedElements": [
+          "C",
+          "H",
+          "O",
+          "S"
+        ],
+        "requiredElements": [
+          "C",
+          "S"
+        ],
+        "requireNeutral": true,
+        "requirePositiveOxygenDemand": true
+      },
+      "coReactantStructures": [
+        "O=O"
+      ],
+      "productStructures": [
+        "O=C=O",
+        "O",
+        "O=S=O"
+      ],
+      "conditions": {
+        "minimumTemperatureKelvin": 600.0
+      },
+      "displayNameKey": "reaction.chemmod.complete_combustion_with_sulfur",
+      "kinetics": {
+        "preExponentialFactorPerSecond": 800.0,
+        "activationEnergyJoulesPerMole": 40000.0
+      },
+      "displayDescriptionKey": "reaction.chemmod.complete_combustion_with_sulfur.description"
+    },
+    {
+      "id": "chemmod:complete_combustion_with_chlorine",
+      "matcher": {
+        "kind": "formula",
+        "allowedElements": [
+          "C",
+          "H",
+          "O",
+          "Cl"
+        ],
+        "requiredElements": [
+          "C",
+          "Cl"
+        ],
+        "requireNeutral": true,
+        "requirePositiveOxygenDemand": true
+      },
+      "coReactantStructures": [
+        "O=O"
+      ],
+      "productStructures": [
+        "O=C=O",
+        "O",
+        "Cl"
+      ],
+      "conditions": {
+        "minimumTemperatureKelvin": 600.0
+      },
+      "displayNameKey": "reaction.chemmod.complete_combustion_with_chlorine",
+      "kinetics": {
+        "preExponentialFactorPerSecond": 800.0,
+        "activationEnergyJoulesPerMole": 40000.0
+      },
+      "displayDescriptionKey": "reaction.chemmod.complete_combustion_with_chlorine.description"
     }
   ]
 }

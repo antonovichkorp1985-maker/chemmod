@@ -32,6 +32,15 @@ class PropertyEngine(private val rules: PropertyRuleSet) {
             if (graph.atoms.any { it.formalCharge != 0 }) add("FORMAL_CHARGE")
             if (graph.bonds.any { it.order == BondOrder.TRIPLE }) add("TRIPLE_BOND")
             if (hasCycle(graph)) add("CYCLIC_STRUCTURE")
+            if (graph.bonds.any { bond ->
+                    setOf(
+                        graph.atom(bond.first).element.symbol,
+                        graph.atom(bond.second).element.symbol,
+                    ) == NITROGEN_OXYGEN_PAIR
+                }
+            ) add("NITROGEN_OXYGEN_BOND")
+            if (graph.atoms.any { it.element.symbol in HALOGEN_SYMBOLS }) add("HALOGENATED")
+            if (hasThreeMemberedRing(graph)) add("SMALL_RING_STRAIN")
             if (combustion != null && combustion < 0.0) add("COMBUSTIBLE_ESTIMATE")
         }
         return PredictedProperties(
@@ -119,6 +128,23 @@ class PropertyEngine(private val rules: PropertyRuleSet) {
             }
         }
         return graph.bonds.size > graph.atoms.size - components
+    }
+
+    /**
+     * Three mutually bonded atoms: the smallest strained cycle. Detected locally because
+     * ring strain is a structural fact of the graph, not a property of a named substance.
+     */
+    private fun hasThreeMemberedRing(graph: MoleculeGraph): Boolean = graph.atoms.any { atom ->
+        val neighbors = graph.neighbors(atom.id).map { (neighbor, _) -> neighbor.id }
+        neighbors.any { first ->
+            val firstNeighbors = graph.neighbors(first).map { (neighbor, _) -> neighbor.id }
+            neighbors.any { second -> second != first && second in firstNeighbors }
+        }
+    }
+
+    private companion object {
+        val NITROGEN_OXYGEN_PAIR = setOf("N", "O")
+        val HALOGEN_SYMBOLS = setOf("F", "Cl", "Br", "I")
     }
 }
 
