@@ -4,6 +4,7 @@ import io.github.antonovichkorp.chemmod.core.FormulaCalculator
 import io.github.antonovichkorp.chemmod.core.bond.AromaticityModel
 import io.github.antonovichkorp.chemmod.core.bond.CoordinateBondModel
 import io.github.antonovichkorp.chemmod.core.bond.HydrogenBondModel
+import io.github.antonovichkorp.chemmod.core.chemistry.FunctionalGroups
 import io.github.antonovichkorp.chemmod.core.geometry.MolecularGeometry
 import io.github.antonovichkorp.chemmod.core.model.BondOrder
 import io.github.antonovichkorp.chemmod.core.model.MoleculeGraph
@@ -43,6 +44,14 @@ data class PredictedProperties(
      * molar mass cannot express: 154 g/mol of CCl4 is mostly chlorine's electron cloud.
      */
     val polarizibilityCubicAngstroms: Double? = null,
+    /**
+     * Compound classes derived from the graph: `alkane`, `alkene`, `diene`, `arene`, `alcohol`,
+     * `ether`, `ketone`, `amine` and the rest. A class is a statement about bonds, so no substance
+     * is ever listed to get one.
+     */
+    val compoundClasses: Set<String> = emptySet(),
+    /** Functional groups found, one entry per kind. */
+    val functionalGroups: Set<String> = emptySet(),
 )
 
 /**
@@ -104,6 +113,8 @@ class PropertyEngine(private val rules: PropertyRuleSet) {
             molecularShape = geometry?.shape,
             bondAngleDegrees = geometry?.idealBondAngleDegrees,
             polarizibilityCubicAngstroms = FormulaCalculator.polarizibilityCubicAngstroms(graph),
+            compoundClasses = FunctionalGroups.classes(graph),
+            functionalGroups = FunctionalGroups.groups(graph).map { it.kind }.toSet(),
         )
     }
 
@@ -129,8 +140,10 @@ class PropertyEngine(private val rules: PropertyRuleSet) {
             return BoilingEstimate(it, "calibration-anchor:$formulaText")
         }
         val dispersion = FormulaCalculator.molarMass(graph).pow(DISPERSION_MASS_EXPONENT)
-        val oxygenAtoms = graph.atoms.filter { it.element.symbol == "O" }
-        if (oxygenAtoms.isNotEmpty() && oxygenAtoms.all { isHydroxyl(graph, it.id) }) {
+        val classes = FunctionalGroups.classes(graph)
+        val hydroxylFamily = FunctionalGroups.ALCOHOL in classes &&
+            classes.none { it in FunctionalGroups.OXYGEN_CLASSES_BEYOND_HYDROXYL }
+        if (hydroxylFamily) {
             val network = hydrogenBonds.networkKilojoulesPerMole(graph)
             return BoilingEstimate(
                 rules.boiling.hydroxylBaseCelsius +
@@ -139,7 +152,7 @@ class PropertyEngine(private val rules: PropertyRuleSet) {
                 "hydroxyl-family+hydrogen-bond-network",
             )
         }
-        if ((formula["C"] ?: 0) > 0 && formula.keys.all { it == "C" || it == "H" }) {
+        if (FunctionalGroups.HYDROCARBON in classes) {
             val rings = ringCount(graph)
             val aromatic = AromaticityModel.aromaticRings(graph).size
             return BoilingEstimate(
@@ -157,23 +170,7 @@ class PropertyEngine(private val rules: PropertyRuleSet) {
     }
 
     /** Ring count in the cycle-basis sense: bonds - atoms + components, so naphthalene has two. */
-    private fun ringCount(graph: MoleculeGraph): Int {
-        val unseen = graph.atoms.map { it.id }.toMutableSet()
-        var components = 0
-        while (unseen.isNotEmpty()) {
-            components++
-            val pending = ArrayDeque<Int>()
-            pending.add(unseen.first())
-            while (pending.isNotEmpty()) {
-                val atom = pending.removeFirst()
-                if (!unseen.remove(atom)) continue
-                graph.neighbors(atom).forEach { (neighbor, _) ->
-                    if (neighbor.id in unseen) pending.add(neighbor.id)
-                }
-            }
-        }
-        return (graph.bonds.size - graph.atoms.size + components).coerceAtLeast(0)
-    }
+    private fun ringCount(graph: MoleculeGraph): Int = FunctionalGroups.cycleRank(graph)
 
     /** Mean-bond-energy ΔH estimate for neutral C/H/O complete combustion only. */
     private fun estimateCombustionEnthalpy(graph: MoleculeGraph, formula: Map<String, Int>): Double? {
@@ -208,9 +205,6 @@ class PropertyEngine(private val rules: PropertyRuleSet) {
         }
         return total
     }
-
-    private fun isHydroxyl(graph: MoleculeGraph, oxygenId: Int): Boolean =
-        graph.bondsOf(oxygenId).size == 1 && graph.implicitHydrogens(oxygenId) + graph.atom(oxygenId).explicitHydrogens > 0
 
     private fun hasCycle(graph: MoleculeGraph): Boolean {
         val unseen = graph.atoms.map { it.id }.toMutableSet()

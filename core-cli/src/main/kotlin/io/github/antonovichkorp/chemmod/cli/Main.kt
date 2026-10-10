@@ -60,6 +60,10 @@ private fun lookup(input: String) {
         properties.polarizibilityCubicAngstroms?.let {
             println("Polarizibility:    ${"%.2f".format(it)} A^3 (sum of atomic values)")
         }
+        println("Compound classes:  ${properties.compoundClasses.joinToString(", ").ifEmpty { "none" }}")
+        properties.functionalGroups.takeIf { it.isNotEmpty() }?.let {
+            println("Functional groups: ${it.sorted().joinToString(", ")}")
+        }
         println("Property model:    ${properties.model}")
         println("Structural flags:  ${properties.flags.ifEmpty { setOf("none") }.joinToString()}")
         println(
