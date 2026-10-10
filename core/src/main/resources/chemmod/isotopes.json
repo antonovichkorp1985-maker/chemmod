@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "isotopes": [
+    {"symbol":"Th","massNumber":232,"halfLifeSeconds":4.4338428e+17,"branches":[{"mode":"alpha","daughterSymbol":"Ra","daughterMassNumber":228,"fraction":1.0,"energyMeV":4.082}]},
+    {"symbol":"Ra","massNumber":228,"halfLifeSeconds":181456200.0,"branches":[{"mode":"beta-","daughterSymbol":"Ac","daughterMassNumber":228,"fraction":1.0,"energyMeV":0.046}]},
+    {"symbol":"Ac","massNumber":228,"halfLifeSeconds":22140.0,"branches":[{"mode":"beta-","daughterSymbol":"Th","daughterMassNumber":228,"fraction":1.0,"energyMeV":2.127}]},
+    {"symbol":"Th","massNumber":228,"halfLifeSeconds":60325508.16,"branches":[{"mode":"alpha","daughterSymbol":"Ra","daughterMassNumber":224,"fraction":1.0,"energyMeV":5.52}]},
+    {"symbol":"Ra","massNumber":224,"halfLifeSeconds":313796.16,"branches":[{"mode":"alpha","daughterSymbol":"Rn","daughterMassNumber":220,"fraction":1.0,"energyMeV":5.789}]},
+    {"symbol":"Rn","massNumber":220,"halfLifeSeconds":55.6,"branches":[{"mode":"alpha","daughterSymbol":"Po","daughterMassNumber":216,"fraction":1.0,"energyMeV":6.405}]},
+    {"symbol":"Po","massNumber":216,"halfLifeSeconds":0.145,"branches":[{"mode":"alpha","daughterSymbol":"Pb","daughterMassNumber":212,"fraction":1.0,"energyMeV":6.906}]},
+    {"symbol":"Pb","massNumber":212,"halfLifeSeconds":38304.0,"branches":[{"mode":"beta-","daughterSymbol":"Bi","daughterMassNumber":212,"fraction":1.0,"energyMeV":0.574}]},
+    {"symbol":"Bi","massNumber":212,"halfLifeSeconds":3633.0,"branches":[{"mode":"beta-","daughterSymbol":"Po","daughterMassNumber":212,"fraction":0.6406,"energyMeV":2.254},{"mode":"alpha","daughterSymbol":"Tl","daughterMassNumber":208,"fraction":0.3594,"energyMeV":6.207}]},
+    {"symbol":"Po","massNumber":212,"halfLifeSeconds":2.99e-07,"branches":[{"mode":"alpha","daughterSymbol":"Pb","daughterMassNumber":208,"fraction":1.0,"energyMeV":8.954}]},
+    {"symbol":"Tl","massNumber":208,"halfLifeSeconds":183.18,"branches":[{"mode":"beta-","daughterSymbol":"Pb","daughterMassNumber":208,"fraction":1.0,"energyMeV":5.001}]},
+    {"symbol":"Pb","massNumber":208},
+    {"symbol":"H","massNumber":1},
+    {"symbol":"H","massNumber":2},
+    {"symbol":"He","massNumber":3},
+    {"symbol":"He","massNumber":4},
+    {"symbol":"C","massNumber":12},
+    {"symbol":"C","massNumber":13},
+    {"symbol":"C","massNumber":14,"halfLifeSeconds":179878320000.0,"branches":[{"mode":"beta-","daughterSymbol":"N","daughterMassNumber":14,"fraction":1.0,"energyMeV":0.1565}]},
+    {"symbol":"N","massNumber":14},
+    {"symbol":"K","massNumber":38,"halfLifeSeconds":459.06,"branches":[{"mode":"beta+","daughterSymbol":"Ar","daughterMassNumber":38,"fraction":1.0,"energyMeV":5.22}]},
+    {"symbol":"K","massNumber":39},
+    {"symbol":"K","massNumber":40,"halfLifeSeconds":3.93838848e+16,"branches":[{"mode":"beta-","daughterSymbol":"Ca","daughterMassNumber":40,"fraction":0.89,"energyMeV":1.311},{"mode":"electron-capture","daughterSymbol":"Ar","daughterMassNumber":40,"fraction":0.11,"energyMeV":1.505}]},
+    {"symbol":"K","massNumber":41},
+    {"symbol":"Ar","massNumber":38},
+    {"symbol":"Ar","massNumber":40},
+    {"symbol":"Ca","massNumber":40}
+  ]
+}

@@ -2,6 +2,7 @@ package io.github.antonovichkorp.chemmod.cli
 
 import io.github.antonovichkorp.chemmod.core.Molecule
 import io.github.antonovichkorp.chemmod.core.parse.MoleculeParseException
+import io.github.antonovichkorp.chemmod.core.radiation.IsotopeData
 import io.github.antonovichkorp.chemmod.core.reaction.ReactionBalanceException
 import io.github.antonovichkorp.chemmod.core.reaction.ReactionEngine
 import io.github.antonovichkorp.chemmod.core.reaction.ReactionEnvironment
@@ -25,6 +26,10 @@ fun main(args: Array<String>) {
         "balance" -> {
             if (args.size < 2) fail("Usage: chem balance '<reactants> -> <products>'")
             balance(args.drop(1).joinToString(" "))
+        }
+        "isotopes" -> {
+            if (args.size != 2) fail("Usage: chem isotopes <element symbol>")
+            isotopes(args[1])
         }
         "react" -> react(args.drop(1))
         else -> fail("Unknown command '${args[0]}'. Run 'chem help'.")
@@ -140,6 +145,7 @@ private fun printHelp() {
           chem lookup <SMILES-like-or-name>  Parse a molecule and print identity and properties
           chem balance '<equation>'          Balance atoms and formal charge with integer coefficients
           chem react <target> <rule> <K> [co-reactant ...] [--catalyst tag ...]
+          chem isotopes <element symbol>     List known isotopes, half-lives and decay branches
           chem help                          Show this help
 
         M0 syntax supports B, C, N, O, F, P, S, Cl, Br and I; -, =, # bonds;
@@ -151,8 +157,44 @@ private fun printHelp() {
           chem balance 'CCO + O=O -> O=C=O + O'
           chem react C=CC chemmod:alkene_hydrogenation 350 '[H][H]' --catalyst chemmod:palladium
           chem react CCO chemmod:complete_combustion 600 O=O
+          chem isotopes K
         """.trimIndent(),
     )
+}
+
+private fun isotopes(symbol: String) {
+    val data = IsotopeData.default()
+    val found = data.of(symbol)
+    if (found.isEmpty()) {
+        val known = data.all().map { it.nuclide.symbol }.distinct().sorted().joinToString(", ")
+        fail("No isotope data for '$symbol'. Data covers: $known")
+    }
+    println("Isotopes of $symbol:")
+    found.forEach { isotope ->
+        val halfLife = isotope.halfLifeSeconds
+            ?.let { "${"%.6g".format(it)} s (${humanHalfLife(it)})" }
+            ?: "stable"
+        val branches = isotope.scheme.branches.joinToString(", ") { branch ->
+            "${modeText(branch.mode)} -> ${branch.daughter.displayName} " +
+                "(${"%.4g".format(branch.branchingFraction * 100)}%, ${"%.4g".format(branch.releasedEnergyMeV)} MeV)"
+        }
+        println("  ${isotope.nuclide.displayName.padEnd(7)} ${halfLife.padEnd(28)} $branches".trimEnd())
+    }
+}
+
+private fun modeText(mode: io.github.antonovichkorp.chemmod.core.radiation.DecayMode): String = when (mode) {
+    io.github.antonovichkorp.chemmod.core.radiation.DecayMode.ALPHA -> "alpha"
+    io.github.antonovichkorp.chemmod.core.radiation.DecayMode.BETA_MINUS -> "beta-"
+    io.github.antonovichkorp.chemmod.core.radiation.DecayMode.BETA_PLUS -> "beta+"
+    io.github.antonovichkorp.chemmod.core.radiation.DecayMode.ELECTRON_CAPTURE -> "electron-capture"
+}
+
+private fun humanHalfLife(seconds: Double): String = when {
+    seconds >= 31_557_600.0 -> "${"%.4g".format(seconds / 31_557_600.0)} years"
+    seconds >= 86_400.0 -> "${"%.4g".format(seconds / 86_400.0)} days"
+    seconds >= 3_600.0 -> "${"%.4g".format(seconds / 3_600.0)} hours"
+    seconds >= 60.0 -> "${"%.4g".format(seconds / 60.0)} minutes"
+    else -> "${"%.4g".format(seconds)} seconds"
 }
 
 private fun fail(message: String): Nothing {
