@@ -94,9 +94,58 @@ class IsotopeDataTest {
     }
 
     @Test
+    fun `the uranium series runs from uranium-238 to lead-206`() {
+        val uranium238 = network.scheme(Nuclide(92, 238, "U"))
+        assertEquals(4.468e9 * JULIAN_YEAR_SECONDS, uranium238.halfLifeSeconds)
+        assertEquals("Th-234", uranium238.branches.single().daughter.displayName)
+        // Radium-226 is the radon source in ore: Ra-226 -> Rn-222 -> Po-218.
+        assertEquals("Rn-222", network.scheme(Nuclide(88, 226, "Ra")).branches.single().daughter.displayName)
+        assertEquals("Po-218", network.scheme(Nuclide(86, 222, "Rn")).branches.single().daughter.displayName)
+        assertEquals("Pb-206", network.scheme(Nuclide(84, 210, "Po")).branches.single().daughter.displayName)
+        assertEquals(1.0, network.branchFractionsFrom(Nuclide(92, 238, "U")).getValue(Nuclide(82, 206, "Pb")), 1.0e-12)
+    }
+
+    @Test
+    fun `the neptunium series carries americium-241 and plutonium-241 and ends at thallium-205`() {
+        val americium = network.scheme(Nuclide(95, 241, "Am"))
+        assertEquals(432.6 * JULIAN_YEAR_SECONDS, americium.halfLifeSeconds)
+        assertEquals("Np-237", americium.branches.single().daughter.displayName)
+        val plutonium = network.scheme(Nuclide(94, 241, "Pu")).branches.associate { it.mode to it.daughter.displayName }
+        assertEquals("Am-241", plutonium[DecayMode.BETA_MINUS])
+        assertEquals("U-237", plutonium[DecayMode.ALPHA])
+        assertEquals(1.0, network.branchFractionsFrom(Nuclide(98, 249, "Cf")).getValue(Nuclide(81, 205, "Tl")), 1.0e-12)
+    }
+
+    @Test
+    fun `plutonium-240 and uranium-236 feed the thorium series from above`() {
+        assertEquals("U-236", network.scheme(Nuclide(94, 240, "Pu")).branches.single().daughter.displayName)
+        assertEquals("Th-232", network.scheme(Nuclide(92, 236, "U")).branches.single().daughter.displayName)
+    }
+
+    @Test
+    fun `every radioactive nuclide spends exactly one decay per parent`() {
+        data.all().filter { !it.isStable }.forEach { isotope ->
+            assertEquals(1.0, isotope.scheme.branches.sumOf { it.branchingFraction }, 1.0e-12, isotope.nuclide.displayName)
+        }
+    }
+
+    @Test
+    fun `branches whose release energy is not sourced are listed, not silently zero`() {
+        // Half-lives for these five come from the decay-chain tables; their Q values did not, and
+        // the data carries 0.0 rather than an invented number.
+        val unsourced = data.all()
+            .filter { isotope -> isotope.scheme.branches.any { it.releasedEnergyMeV == 0.0 } }
+            .map { it.nuclide.displayName }
+            .toSet()
+        assertEquals(setOf("Pb-214", "Bi-214", "Po-214", "Pb-210", "Bi-210"), unsourced)
+    }
+
+    @Test
     fun `elements without nuclear data are reported as absent, not as stable`() {
-        assertNull(data.find("U", 238))
-        assertTrue(data.of("U").isEmpty())
+        assertNull(data.find("H", 3))
+        assertNull(data.find("U", 235))
+        assertTrue(data.of("Tc").isEmpty())
+        assertTrue(data.of("Cs").isEmpty())
     }
 
     private object ElementTableStub {
