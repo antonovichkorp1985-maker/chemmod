@@ -6,6 +6,11 @@ data class Element(
     val atomicNumber: Int,
     val atomicMass: Double,
     val valences: List<Int>,
+    /**
+     * Outer-shell electrons available for bonding and lone pairs. Derived from the element's
+     * position in the table, so lone-pair chemistry never needs a per-substance record.
+     */
+    val valenceElectrons: Int,
 ) {
     init {
         require(symbol.matches(Regex("[A-Z][a-z]?"))) { "Invalid element symbol: $symbol" }
@@ -17,5 +22,6 @@ data class Element(
         require(valences.isNotEmpty() && valences.all { it >= 0 }) {
             "At least one non-negative valence is required"
         }
+        require(valenceElectrons > 0) { "An element needs at least one valence electron" }
     }
 }

@@ -1,6 +1,9 @@
 package io.github.antonovichkorp.chemmod.core.properties
 
 import io.github.antonovichkorp.chemmod.core.FormulaCalculator
+import io.github.antonovichkorp.chemmod.core.bond.AromaticityModel
+import io.github.antonovichkorp.chemmod.core.bond.CoordinateBondModel
+import io.github.antonovichkorp.chemmod.core.bond.HydrogenBondModel
 import io.github.antonovichkorp.chemmod.core.model.BondOrder
 import io.github.antonovichkorp.chemmod.core.model.MoleculeGraph
 
@@ -11,6 +14,18 @@ data class PredictedProperties(
     val flags: Set<String>,
     val combustionEnthalpyKilojoulesPerMole: Double?,
     val model: String,
+    /** Hydrogen-bond donor sites: hydrogens carried by N, O or F. */
+    val hydrogenBondDonors: Int = 0,
+    /** Hydrogen-bond acceptor sites: lone pairs on N, O or F. */
+    val hydrogenBondAcceptors: Int = 0,
+    /** Energy of the hydrogen-bond network a pure liquid of this substance can close. */
+    val hydrogenBondNetworkKilojoulesPerMole: Double = 0.0,
+    /** Number of Hückel-aromatic rings found in the Kekulé graph. */
+    val aromaticRings: Int = 0,
+    /** Resonance stabilization carried by those aromatic rings. */
+    val aromaticResonanceKilojoulesPerMole: Double = 0.0,
+    /** Lewis-acid sites: atoms with an incomplete octet or duet. */
+    val coordinateBondAcceptors: Int = 0,
 )
 
 /**
@@ -18,10 +33,16 @@ data class PredictedProperties(
  * [PropertyRuleSet], not in named substance records or gameplay code.
  */
 class PropertyEngine(private val rules: PropertyRuleSet) {
+    private val hydrogenBonds = HydrogenBondModel(rules.interactions)
+    private val coordinateBonds = CoordinateBondModel(rules.interactions)
+
     fun predict(graph: MoleculeGraph): PredictedProperties {
         val formula = FormulaCalculator.counts(graph)
         val boilingPoint = predictBoilingPoint(graph, formula)
         val combustion = estimateCombustionEnthalpy(graph, formula)
+        val hydrogenBondDonors = hydrogenBonds.donorSites(graph)
+        val hydrogenBondAcceptors = hydrogenBonds.acceptorSites(graph)
+        val aromaticRingCount = AromaticityModel.aromaticRings(graph).size
         val flags = buildSet {
             if (graph.bonds.any { bond ->
                     bond.order == BondOrder.SINGLE &&
@@ -42,6 +63,10 @@ class PropertyEngine(private val rules: PropertyRuleSet) {
             if (graph.atoms.any { it.element.symbol in HALOGEN_SYMBOLS }) add("HALOGENATED")
             if (hasThreeMemberedRing(graph)) add("SMALL_RING_STRAIN")
             if (combustion != null && combustion < 0.0) add("COMBUSTIBLE_ESTIMATE")
+            if (hydrogenBondDonors > 0) add("HYDROGEN_BOND_DONOR")
+            if (hydrogenBondAcceptors > 0) add("HYDROGEN_BOND_ACCEPTOR")
+            if (aromaticRingCount > 0) add("AROMATIC_RING")
+            if (coordinateBonds.acceptorAtoms(graph).isNotEmpty()) add("COORDINATE_BOND_ACCEPTOR")
         }
         return PredictedProperties(
             boilingPointC = boilingPoint,
@@ -49,6 +74,13 @@ class PropertyEngine(private val rules: PropertyRuleSet) {
             flags = flags,
             combustionEnthalpyKilojoulesPerMole = combustion,
             model = rules.modelId,
+            hydrogenBondDonors = hydrogenBondDonors,
+            hydrogenBondAcceptors = hydrogenBondAcceptors,
+            hydrogenBondNetworkKilojoulesPerMole = hydrogenBonds.networkKilojoulesPerMole(graph),
+            aromaticRings = aromaticRingCount,
+            aromaticResonanceKilojoulesPerMole =
+                aromaticRingCount * rules.interactions.aromaticResonanceKilojoulesPerMolePerRing,
+            coordinateBondAcceptors = coordinateBonds.acceptorAtoms(graph).size,
         )
     }
 

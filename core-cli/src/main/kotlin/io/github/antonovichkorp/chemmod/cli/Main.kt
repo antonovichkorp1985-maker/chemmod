@@ -53,6 +53,16 @@ private fun lookup(input: String) {
         )
         println("Property model:    ${properties.model}")
         println("Structural flags:  ${properties.flags.ifEmpty { setOf("none") }.joinToString()}")
+        println(
+            "Hydrogen bonds:    ${properties.hydrogenBondDonors} donor / " +
+                "${properties.hydrogenBondAcceptors} acceptor sites, network " +
+                "${"%.1f".format(properties.hydrogenBondNetworkKilojoulesPerMole)} kJ/mol",
+        )
+        println(
+            "Aromatic rings:    ${properties.aromaticRings}, resonance " +
+                "${"%.1f".format(properties.aromaticResonanceKilojoulesPerMole)} kJ/mol",
+        )
+        println("Lewis-acid sites:  ${properties.coordinateBondAcceptors}")
     } catch (exception: MoleculeParseException) {
         fail(exception.message ?: "Could not parse molecule")
     }

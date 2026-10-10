@@ -1,5 +1,6 @@
 package io.github.antonovichkorp.chemmod.core.properties
 
+import io.github.antonovichkorp.chemmod.core.bond.InteractionRuleSet
 import io.github.antonovichkorp.chemmod.core.model.BondOrder
 import java.io.InputStream
 import kotlinx.serialization.Serializable
@@ -16,6 +17,7 @@ class PropertyRuleSet private constructor(
     val bondEnergiesKilojoulesPerMole: Map<BondDescriptor, Double>,
     val carbonDioxideCarbonOxygenDoubleBondKilojoulesPerMole: Double,
     val boiling: BoilingRuleSet,
+    val interactions: InteractionRuleSet,
 ) {
     init {
         require(schemaVersion == CURRENT_SCHEMA) { "Unsupported property rule schema: $schemaVersion" }
@@ -49,6 +51,7 @@ class PropertyRuleSet private constructor(
                 carbonDioxideCarbonOxygenDoubleBondKilojoulesPerMole =
                     document.carbonDioxideCarbonOxygenDoubleBondKilojoulesPerMole,
                 boiling = document.boiling.toDomain(),
+                interactions = document.interactions.toDomain(),
             )
         }
 
@@ -100,6 +103,7 @@ private data class PropertyRuleSetDocument(
     val bondEnergies: List<BondEnergyDocument>,
     val carbonDioxideCarbonOxygenDoubleBondKilojoulesPerMole: Double,
     val boiling: BoilingRuleSetDocument,
+    val interactions: InteractionRuleSetDocument = InteractionRuleSetDocument(),
 )
 
 @Serializable
@@ -143,4 +147,21 @@ private data class BoilingRuleSetDocument(
             hydrocarbonQuadraticCarbonCelsius = hydrocarbonQuadraticCarbonCelsius,
         )
     }
+}
+
+@Serializable
+private data class InteractionRuleSetDocument(
+    val hydrogenBondDonorElements: Set<String> = setOf("N", "O", "F"),
+    val hydrogenBondAcceptorElements: Set<String> = setOf("N", "O", "F"),
+    val hydrogenBondKilojoulesPerMole: Double = 21.0,
+    val coordinateBondKilojoulesPerMole: Double = 100.0,
+    val aromaticResonanceKilojoulesPerMolePerRing: Double = 150.0,
+) {
+    fun toDomain() = InteractionRuleSet(
+        hydrogenBondDonorElements = hydrogenBondDonorElements,
+        hydrogenBondAcceptorElements = hydrogenBondAcceptorElements,
+        hydrogenBondKilojoulesPerMole = hydrogenBondKilojoulesPerMole,
+        coordinateBondKilojoulesPerMole = coordinateBondKilojoulesPerMole,
+        aromaticResonanceKilojoulesPerMolePerRing = aromaticResonanceKilojoulesPerMolePerRing,
+    )
 }
