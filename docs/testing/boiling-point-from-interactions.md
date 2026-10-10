@@ -123,10 +123,13 @@ Boiling point:     100.0 °C (calibration-anchor:H2O)
 
 ## 6. Проверка
 
-- `core/properties/BoilingPointModelTest.kt` — 8 тестов: якорь воды помечен и не может расти,
+- `core/properties/BoilingPointModelTest.kt` — 9 тестов: якорь воды помечен и не может расти,
   алканы/циклы/арены по дисперсии, спирты растут с сетью, диол тяжелее гексана по кипению,
   глицерин вне подгонки, эфир теряет водородный член, бессетевые вещества без числа,
   коэффициенты положительны.
 - Обновлены `MoleculeTest` (этанол 83.7, диметиловый эфир −41.0, метанол 64.3, циклопропан −29.9
   вместо `null`) и `scripts/smoke-test.sh` (строка `chem lookup CCO`).
-- Исполняет CI: локально JDK нет.
+- Исполняет CI (прогон 38085966837, `classes=28 tests=178 failures=0 errors=0`); локально JDK нет.
+  Шаг «Build and test» прогоняет и `scripts/smoke-test.sh`, который проверяет точную строку
+  `Boiling point:     83.7 °C (hydroxyl-family+hydrogen-bond-network)` — то есть путь
+  данные → модель → CLI проверен целиком, а не только юнитами.
