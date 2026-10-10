@@ -137,13 +137,55 @@ class IsotopeDataTest {
             .filter { isotope -> isotope.scheme.branches.any { it.releasedEnergyMeV == 0.0 } }
             .map { it.nuclide.displayName }
             .toSet()
-        assertEquals(setOf("Pb-214", "Bi-214", "Po-214", "Pb-210", "Bi-210"), unsourced)
+        assertEquals(
+            setOf("Pb-214", "Bi-214", "Po-214", "Pb-210", "Bi-210", "Co-60", "I-131", "Pu-238"),
+            unsourced,
+        )
+    }
+
+    @Test
+    fun `the actinium series runs from uranium-235 to lead-207`() {
+        val uranium235 = network.scheme(Nuclide(92, 235, "U"))
+        assertEquals(7.04e8 * JULIAN_YEAR_SECONDS, uranium235.halfLifeSeconds)
+        assertEquals("Th-231", uranium235.branches.single().daughter.displayName)
+        // Actinium-227 is the fork: 98.62 % beta minus, 1.38 % alpha.
+        val actinium = network.scheme(Nuclide(89, 227, "Ac")).branches.associate { it.mode to it.daughter.displayName }
+        assertEquals("Th-227", actinium[DecayMode.BETA_MINUS])
+        assertEquals("Fr-223", actinium[DecayMode.ALPHA])
+        assertEquals(1.0, network.branchFractionsFrom(Nuclide(92, 235, "U")).getValue(Nuclide(82, 207, "Pb")), 1.0e-12)
+    }
+
+    @Test
+    fun `plutonium-239 and plutonium-238 are alpha emitters into uranium`() {
+        val plutonium239 = network.scheme(Nuclide(94, 239, "Pu")).branches.single()
+        assertEquals(2.411e4 * JULIAN_YEAR_SECONDS, network.scheme(Nuclide(94, 239, "Pu")).halfLifeSeconds)
+        assertEquals("U-235", plutonium239.daughter.displayName)
+        assertEquals(5.244, plutonium239.releasedEnergyMeV)
+        assertEquals("U-234", network.scheme(Nuclide(94, 238, "Pu")).branches.single().daughter.displayName)
+    }
+
+    @Test
+    fun `the isotopes a fuel cycle and a laboratory actually meet are present`() {
+        // Tritium for fusion: H-3 -> He-3, endpoint energy 18.6 keV (NRC E-35).
+        val tritium = network.scheme(Nuclide(1, 3, "H")).branches.single()
+        assertEquals(12.32 * JULIAN_YEAR_SECONDS, network.scheme(Nuclide(1, 3, "H")).halfLifeSeconds)
+        assertEquals(DecayMode.BETA_MINUS, tritium.mode)
+        assertEquals("He-3", tritium.daughter.displayName)
+        // Sr-90 -> Y-90 -> stable Zr-90, the fallout pair.
+        assertEquals("Y-90", network.scheme(Nuclide(38, 90, "Sr")).branches.single().daughter.displayName)
+        assertEquals("Zr-90", network.scheme(Nuclide(39, 90, "Y")).branches.single().daughter.displayName)
+        assertTrue(network.isStable(Nuclide(40, 90, "Zr")))
+        // Co-60 -> Ni-60 and I-131 -> Xe-131.
+        assertEquals("Ni-60", network.scheme(Nuclide(27, 60, "Co")).branches.single().daughter.displayName)
+        assertEquals(8.02 * DAY_SECONDS, network.scheme(Nuclide(53, 131, "I")).halfLifeSeconds)
+        assertEquals("Xe-131", network.scheme(Nuclide(53, 131, "I")).branches.single().daughter.displayName)
     }
 
     @Test
     fun `elements without nuclear data are reported as absent, not as stable`() {
-        assertNull(data.find("H", 3))
-        assertNull(data.find("U", 235))
+        // Caesium-137 decays through the Ba-137m isomer; Nuclide has no isomer label, so the pair
+        // is absent rather than misrepresented as a direct decay to stable barium.
+        assertNull(data.find("Cs", 137))
         assertTrue(data.of("Tc").isEmpty())
         assertTrue(data.of("Cs").isEmpty())
     }
@@ -158,5 +200,6 @@ class IsotopeDataTest {
 
     private companion object {
         const val JULIAN_YEAR_SECONDS = 31_557_600.0
+        const val DAY_SECONDS = 86_400.0
     }
 }
