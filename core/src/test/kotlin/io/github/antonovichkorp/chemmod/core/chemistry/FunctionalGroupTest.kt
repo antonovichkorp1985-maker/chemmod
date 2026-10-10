@@ -45,7 +45,8 @@ class FunctionalGroupTest {
 
     @Test
     fun `alcohols and polyols are counted by hydroxyls`() {
-        assertEquals(setOf("hydrocarbon", "alcohol"), classes("CCCCO"))
+        // An alcohol is not a hydrocarbon: the oxygen takes it out of that class.
+        assertEquals(setOf("alcohol"), classes("CCCCO"))
         val glycol = classes("OCCO")
         assertTrue("alcohol" in glycol && "polyol" in glycol)
         assertEquals(setOf("hydroxyl"), groups("CCCCO"))
@@ -53,7 +54,7 @@ class FunctionalGroupTest {
 
     @Test
     fun `an ether oxygen is not a hydroxyl`() {
-        assertEquals(setOf("hydrocarbon", "ether"), classes("COC"))
+        assertEquals(setOf("ether"), classes("COC"))
         assertEquals(setOf("ether"), groups("COC"))
         assertFalse("alcohol" in classes("COC"))
     }
