@@ -11,8 +11,19 @@ class ReactionEngineTest {
     private val engine = ReactionEngine.bundled()
 
     @Test
-    fun `bundled content supplies five data-defined M1 reaction rules`() {
-        assertEquals(5, ReactionRuleSet.bundled().rules.size)
+    fun `bundled content supplies data-defined reaction rules for every covered element class`() {
+        val rules = ReactionRuleSet.bundled().rules
+        assertTrue(rules.size >= 8, "expected the bundled rule set to keep growing, got ${rules.size}")
+        assertTrue(rules.values.any { it.matcher is FormulaPattern }, "formula-level rule types disappeared")
+        assertTrue(rules.values.any { it.matcher is BondOrderPattern }, "bond-level rule types disappeared")
+
+        // Combustion is one rule per heteroatom class: the matcher is keyed by elements,
+        // never by a list of combustible substances.
+        val covered = rules.values
+            .filter { it.coReactantStructures == listOf("O=O") }
+            .mapNotNull { rule -> (rule.matcher as? FormulaPattern)?.requiredElements?.sorted()?.joinToString("+") }
+            .toSet()
+        assertEquals(setOf("C", "C+Cl", "C+N", "C+S"), covered)
     }
 
     @Test
