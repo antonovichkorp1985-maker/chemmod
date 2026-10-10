@@ -86,14 +86,25 @@ data class BondDescriptor private constructor(
 
 /** Formula and functional-group contribution constants, supplied as content rather than species records. */
 data class BoilingRuleSet(
+    /**
+     * Explicit calibration anchors. Every entry is a substance row, i.e. exactly what this
+     * model is trying to avoid; [io.github.antonovichkorp.chemmod.core.properties.PredictedProperties.boilingPointBasis]
+     * names them so no anchor can pass for a prediction.
+     */
     val exactFormulaCelsius: Map<String, Double>,
-    val hydroxylFirstCarbonCelsius: Double,
-    val hydroxylAdditionalCarbonCelsius: Double,
-    val etherBaseCelsius: Double,
-    val etherAdditionalCarbonCelsius: Double,
-    val hydrocarbonFirstCarbonCelsius: Double,
-    val hydrocarbonLinearCarbonCelsius: Double,
-    val hydrocarbonQuadraticCarbonCelsius: Double,
+    /** Dispersion term: a + b * molarMass^(2/3), fitted on alkanes, alkenes, cycloalkanes, arenes. */
+    val hydrocarbonBaseCelsius: Double,
+    val hydrocarbonDispersionCelsius: Double,
+    /** Cyclization and aromaticity corrections on top of the dispersion term. */
+    val ringCelsius: Double,
+    val aromaticRingCelsius: Double,
+    /**
+     * Alcohols and polyols: the same dispersion term plus the hydrogen-bond network, so a
+     * diol or a triol boils higher because of the sites it actually has.
+     */
+    val hydroxylBaseCelsius: Double,
+    val hydroxylDispersionCelsius: Double,
+    val hydrogenBondCelsiusPerKilojoulePerMole: Double,
 )
 
 @Serializable
@@ -117,34 +128,37 @@ private data class BondEnergyDocument(
 @Serializable
 private data class BoilingRuleSetDocument(
     val exactFormulaCelsius: Map<String, Double> = emptyMap(),
-    val hydroxylFirstCarbonCelsius: Double,
-    val hydroxylAdditionalCarbonCelsius: Double,
-    val etherBaseCelsius: Double,
-    val etherAdditionalCarbonCelsius: Double,
-    val hydrocarbonFirstCarbonCelsius: Double,
-    val hydrocarbonLinearCarbonCelsius: Double,
-    val hydrocarbonQuadraticCarbonCelsius: Double,
+    val hydrocarbonBaseCelsius: Double,
+    val hydrocarbonDispersionCelsius: Double,
+    val ringCelsius: Double,
+    val aromaticRingCelsius: Double,
+    val hydroxylBaseCelsius: Double,
+    val hydroxylDispersionCelsius: Double,
+    val hydrogenBondCelsiusPerKilojoulePerMole: Double,
 ) {
     fun toDomain(): BoilingRuleSet {
         val values = listOf(
-            hydroxylFirstCarbonCelsius,
-            hydroxylAdditionalCarbonCelsius,
-            etherBaseCelsius,
-            etherAdditionalCarbonCelsius,
-            hydrocarbonFirstCarbonCelsius,
-            hydrocarbonLinearCarbonCelsius,
-            hydrocarbonQuadraticCarbonCelsius,
+            hydrocarbonBaseCelsius,
+            hydrocarbonDispersionCelsius,
+            ringCelsius,
+            aromaticRingCelsius,
+            hydroxylBaseCelsius,
+            hydroxylDispersionCelsius,
+            hydrogenBondCelsiusPerKilojoulePerMole,
         ) + exactFormulaCelsius.values
         require(values.all { it.isFinite() }) { "Boiling rule coefficients must be finite" }
+        require(hydrogenBondCelsiusPerKilojoulePerMole >= 0.0) {
+            "A hydrogen bond cannot lower the boiling point"
+        }
         return BoilingRuleSet(
             exactFormulaCelsius = exactFormulaCelsius.toMap(),
-            hydroxylFirstCarbonCelsius = hydroxylFirstCarbonCelsius,
-            hydroxylAdditionalCarbonCelsius = hydroxylAdditionalCarbonCelsius,
-            etherBaseCelsius = etherBaseCelsius,
-            etherAdditionalCarbonCelsius = etherAdditionalCarbonCelsius,
-            hydrocarbonFirstCarbonCelsius = hydrocarbonFirstCarbonCelsius,
-            hydrocarbonLinearCarbonCelsius = hydrocarbonLinearCarbonCelsius,
-            hydrocarbonQuadraticCarbonCelsius = hydrocarbonQuadraticCarbonCelsius,
+            hydrocarbonBaseCelsius = hydrocarbonBaseCelsius,
+            hydrocarbonDispersionCelsius = hydrocarbonDispersionCelsius,
+            ringCelsius = ringCelsius,
+            aromaticRingCelsius = aromaticRingCelsius,
+            hydroxylBaseCelsius = hydroxylBaseCelsius,
+            hydroxylDispersionCelsius = hydroxylDispersionCelsius,
+            hydrogenBondCelsiusPerKilojoulePerMole = hydrogenBondCelsiusPerKilojoulePerMole,
         )
     }
 }

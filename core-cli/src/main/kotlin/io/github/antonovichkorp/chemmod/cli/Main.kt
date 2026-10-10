@@ -49,7 +49,8 @@ private fun lookup(input: String) {
         println("Canonical key:     ${molecule.canonicalKey()}")
         println(
             "Boiling point:     " +
-                (properties.boilingPointC?.let { "${"%.1f".format(it)} °C (predicted)" } ?: "not available"),
+                (properties.boilingPointC?.let { "${"%.1f".format(it)} °C (${properties.boilingPointBasis})" }
+                    ?: "not available (${properties.boilingPointBasis})"),
         )
         println("Property model:    ${properties.model}")
         println("Structural flags:  ${properties.flags.ifEmpty { setOf("none") }.joinToString()}")

@@ -62,13 +62,13 @@
     "exactFormulaCelsius": {
       "H2O": 100.0
     },
-    "hydroxylFirstCarbonCelsius": 65.0,
-    "hydroxylAdditionalCarbonCelsius": -1.0,
-    "etherBaseCelsius": -2.0,
-    "etherAdditionalCarbonCelsius": 20.0,
-    "hydrocarbonFirstCarbonCelsius": -161.5,
-    "hydrocarbonLinearCarbonCelsius": 48.0,
-    "hydrocarbonQuadraticCarbonCelsius": 3.5
+    "hydrocarbonBaseCelsius": -242.88,
+    "hydrocarbonDispersionCelsius": 15.71,
+    "ringCelsius": 22.89,
+    "aromaticRingCelsius": 8.93,
+    "hydroxylBaseCelsius": -84.66,
+    "hydroxylDispersionCelsius": 7.02,
+    "hydrogenBondCelsiusPerKilojoulePerMole": 3.72
   },
   "interactions": {
     "hydrogenBondDonorElements": [

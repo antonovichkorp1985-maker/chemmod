@@ -33,7 +33,7 @@ lookup_output=$("$chem" lookup CCO)
 echo "$lookup_output"
 assert_contains "$lookup_output" "Formula:           C2H6O"
 assert_contains "$lookup_output" "Molar mass:        46.069 g/mol"
-assert_contains "$lookup_output" "Boiling point:     64.0 °C (predicted)"
+assert_contains "$lookup_output" "Boiling point:     83.7 °C (hydroxyl-family+hydrogen-bond-network)"
 
 echo "==> Checking isomer identity"
 ethanol_id=$("$chem" lookup CCO | awk -F': *' '/Canonical ID/ {print $2}')

@@ -16,7 +16,7 @@ class MoleculeTest {
         assertTrue(ethanol.validate().isEmpty())
         assertEquals("C2H6O", ethanol.formula())
         assertNear(46.069, ethanol.molarMass(), 0.01)
-        assertNear(64.0, ethanol.properties().boilingPointC!!, 0.1)
+        assertNear(83.7, ethanol.properties().boilingPointC!!, 0.1)
     }
 
     @Test
@@ -35,7 +35,7 @@ class MoleculeTest {
 
         assertEquals("C2H6O", dimethylEther.formula())
         assertNotEquals(ethanol.canonicalKey(), dimethylEther.canonicalKey())
-        assertNear(-2.0, dimethylEther.properties().boilingPointC!!, 0.1)
+        assertNear(-41.0, dimethylEther.properties().boilingPointC!!, 0.1)
         assertNotEquals(ethanol.properties().boilingPointC, dimethylEther.properties().boilingPointC)
     }
 
@@ -79,8 +79,10 @@ class MoleculeTest {
     }
 
     @Test
-    fun `cyclic substances do not receive an uncalibrated boiling prediction`() {
-        assertEquals(null, Molecule.fromInput("циклопропан").properties().boilingPointC)
+    fun `cyclic substances are predicted by dispersion instead of being refused`() {
+        val cyclopropane = Molecule.fromInput("циклопропан").properties()
+        assertNear(-29.9, cyclopropane.boilingPointC!!, 0.5)
+        assertEquals("dispersion+ring+aromatic", cyclopropane.boilingPointBasis)
     }
 
     @Test
@@ -90,7 +92,7 @@ class MoleculeTest {
 
         assertEquals("H2O", water.formula())
         assertNear(100.0, water.properties().boilingPointC!!, 0.1)
-        assertNear(65.0, methanol.properties().boilingPointC!!, 0.1)
+        assertNear(64.3, methanol.properties().boilingPointC!!, 0.1)
     }
 
     private fun assertNear(expected: Double, actual: Double, tolerance: Double) {

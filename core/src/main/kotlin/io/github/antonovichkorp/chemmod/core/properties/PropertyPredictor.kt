@@ -6,6 +6,7 @@ import io.github.antonovichkorp.chemmod.core.bond.CoordinateBondModel
 import io.github.antonovichkorp.chemmod.core.bond.HydrogenBondModel
 import io.github.antonovichkorp.chemmod.core.model.BondOrder
 import io.github.antonovichkorp.chemmod.core.model.MoleculeGraph
+import kotlin.math.pow
 
 /** A derived view; it is never stored in, or allowed to define, a substance. */
 data class PredictedProperties(
@@ -26,6 +27,11 @@ data class PredictedProperties(
     val aromaticResonanceKilojoulesPerMole: Double = 0.0,
     /** Lewis-acid sites: atoms with an incomplete octet or duet. */
     val coordinateBondAcceptors: Int = 0,
+    /**
+     * Where the boiling point came from: a fitted family, or a calibration anchor naming one
+     * substance. An anchor is a debt, so it is reported instead of hiding behind a number.
+     */
+    val boilingPointBasis: String = "no-model",
 )
 
 /**
@@ -69,7 +75,8 @@ class PropertyEngine(private val rules: PropertyRuleSet) {
             if (coordinateBonds.acceptorAtoms(graph).isNotEmpty()) add("COORDINATE_BOND_ACCEPTOR")
         }
         return PredictedProperties(
-            boilingPointC = boilingPoint,
+            boilingPointC = boilingPoint.celsius,
+            boilingPointBasis = boilingPoint.basis,
             molarMass = FormulaCalculator.molarMass(graph),
             flags = flags,
             combustionEnthalpyKilojoulesPerMole = combustion,
@@ -84,27 +91,66 @@ class PropertyEngine(private val rules: PropertyRuleSet) {
         )
     }
 
-    private fun predictBoilingPoint(graph: MoleculeGraph, formula: Map<String, Int>): Double? {
+    /** One boiling point value plus the branch that produced it. */
+    private data class BoilingEstimate(val celsius: Double?, val basis: String)
+
+    /**
+     * Dispersion plus the interactions the graph actually has:
+     *
+     *  * a calibration anchor, reported as such, for substances the model cannot derive yet;
+     *  * alcohols and polyols: dispersion plus the hydrogen-bond network, so ethylene glycol and
+     *    glycerol boil higher because of the donor and acceptor sites they carry;
+     *  * everything else with carbon: dispersion `a + b * M^(2/3)` plus ring and aromaticity
+     *    corrections, fitted on alkanes, alkenes, cycloalkanes and arenes (RMS 6.3 K);
+     *  * carbon-free substances outside the anchor list: no value at all, never a guess.
+     */
+    private fun predictBoilingPoint(graph: MoleculeGraph, formula: Map<String, Int>): BoilingEstimate {
         val formulaText = FormulaCalculator.hillFormula(graph)
-        rules.boiling.exactFormulaCelsius[formulaText]?.let { return it }
-        if (hasCycle(graph)) return null
-        val carbon = formula["C"] ?: 0
-        val oxygenAtoms = graph.atoms.filter { it.element.symbol == "O" }
-        return when {
-            oxygenAtoms.size == 1 && isHydroxyl(graph, oxygenAtoms.single().id) ->
-                rules.boiling.hydroxylFirstCarbonCelsius +
-                    rules.boiling.hydroxylAdditionalCarbonCelsius * (carbon - 1).coerceAtLeast(0)
-            oxygenAtoms.size == 1 && graph.bondsOf(oxygenAtoms.single().id).size == 2 ->
-                rules.boiling.etherBaseCelsius +
-                    rules.boiling.etherAdditionalCarbonCelsius * (carbon - 2).coerceAtLeast(0)
-            carbon > 0 && oxygenAtoms.isEmpty() -> {
-                val additionalCarbon = carbon - 1
-                rules.boiling.hydrocarbonFirstCarbonCelsius +
-                    rules.boiling.hydrocarbonLinearCarbonCelsius * additionalCarbon -
-                    rules.boiling.hydrocarbonQuadraticCarbonCelsius * additionalCarbon * (carbon - 2)
-            }
-            else -> null
+        rules.boiling.exactFormulaCelsius[formulaText]?.let {
+            return BoilingEstimate(it, "calibration-anchor:$formulaText")
         }
+        val dispersion = FormulaCalculator.molarMass(graph).pow(DISPERSION_MASS_EXPONENT)
+        val oxygenAtoms = graph.atoms.filter { it.element.symbol == "O" }
+        if (oxygenAtoms.isNotEmpty() && oxygenAtoms.all { isHydroxyl(graph, it.id) }) {
+            val network = hydrogenBonds.networkKilojoulesPerMole(graph)
+            return BoilingEstimate(
+                rules.boiling.hydroxylBaseCelsius +
+                    rules.boiling.hydroxylDispersionCelsius * dispersion +
+                    rules.boiling.hydrogenBondCelsiusPerKilojoulePerMole * network,
+                "hydroxyl-family+hydrogen-bond-network",
+            )
+        }
+        if ((formula["C"] ?: 0) > 0) {
+            val rings = ringCount(graph)
+            val aromatic = AromaticityModel.aromaticRings(graph).size
+            return BoilingEstimate(
+                rules.boiling.hydrocarbonBaseCelsius +
+                    rules.boiling.hydrocarbonDispersionCelsius * dispersion +
+                    rules.boiling.ringCelsius * rings +
+                    rules.boiling.aromaticRingCelsius * aromatic,
+                "dispersion+ring+aromatic",
+            )
+        }
+        return BoilingEstimate(null, "no-model")
+    }
+
+    /** Ring count in the cycle-basis sense: bonds - atoms + components, so naphthalene has two. */
+    private fun ringCount(graph: MoleculeGraph): Int {
+        val unseen = graph.atoms.map { it.id }.toMutableSet()
+        var components = 0
+        while (unseen.isNotEmpty()) {
+            components++
+            val pending = ArrayDeque<Int>()
+            pending.add(unseen.first())
+            while (pending.isNotEmpty()) {
+                val atom = pending.removeFirst()
+                if (!unseen.remove(atom)) continue
+                graph.neighbors(atom).forEach { (neighbor, _) ->
+                    if (neighbor.id in unseen) pending.add(neighbor.id)
+                }
+            }
+        }
+        return (graph.bonds.size - graph.atoms.size + components).coerceAtLeast(0)
     }
 
     /** Mean-bond-energy ΔH estimate for neutral C/H/O complete combustion only. */
@@ -177,6 +223,7 @@ class PropertyEngine(private val rules: PropertyRuleSet) {
     private companion object {
         val NITROGEN_OXYGEN_PAIR = setOf("N", "O")
         val HALOGEN_SYMBOLS = setOf("F", "Cl", "Br", "I")
+        const val DISPERSION_MASS_EXPONENT = 2.0 / 3.0
     }
 }
 
