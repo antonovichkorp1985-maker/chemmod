@@ -122,25 +122,32 @@ object FunctionalGroups {
         }
 
     /**
-     * True when a nitrile carbon sits beside a carbon that carries a double bond: an
-     * α,β-unsaturated nitrile, where the C=C is conjugated with the C≡N. That conjugation is worth
-     * some 20 K against a saturated nitrile of the same mass — acrylonitrile boils at 77 °C at
-     * 53 g/mol while propionitrile boils at 97 °C at 55 — and the mass-only dispersion term has
-     * nothing to say about it, so such molecules are refused rather than mispredicted.
+     * True when a nitrile carbon sits beside a carbon of an isolated C=C: an α,β-unsaturated
+     * nitrile, where the double bond is conjugated with the C≡N. That conjugation is worth some
+     * 20 K against a saturated nitrile of the same mass — acrylonitrile boils at 77 °C at 53 g/mol
+     * while propionitrile boils at 97 °C at 55 — and the mass-only dispersion term has nothing to
+     * say about it, so such molecules are refused rather than mispredicted.
+     *
+     * Aromatic double bonds do not count. Benzonitrile is conjugated too, but its ring is a
+     * different electronic situation and it fits the saturated-and-aryl branch to within 0.6 K, so
+     * treating it as an alkenenitrile would refuse a molecule the model actually predicts well.
      */
-    fun hasConjugatedNitrile(graph: MoleculeGraph): Boolean =
-        graph.atoms.any { atom ->
+    fun hasConjugatedNitrile(graph: MoleculeGraph): Boolean {
+        val aromatic = AromaticityModel.aromaticRings(graph).flatten().toSet()
+        return graph.atoms.any { atom ->
             atom.element.symbol == "C" &&
                 graph.neighbors(atom.id).any { (neighbor, order) ->
                     neighbor.element.symbol == "N" && order == BondOrder.TRIPLE
                 } &&
                 graph.neighbors(atom.id).any { (neighbor, order) ->
                     order == BondOrder.SINGLE && neighbor.element.symbol == "C" &&
+                        neighbor.id !in aromatic &&
                         graph.neighbors(neighbor.id).any { (next, nextOrder) ->
-                            next.id != atom.id && nextOrder == BondOrder.DOUBLE
+                            next.id != atom.id && nextOrder == BondOrder.DOUBLE && next.id !in aromatic
                         }
                 }
         }
+    }
 
     /** The compound classes a graph belongs to; a molecule usually carries several. */
     fun classes(graph: MoleculeGraph): Set<String> {

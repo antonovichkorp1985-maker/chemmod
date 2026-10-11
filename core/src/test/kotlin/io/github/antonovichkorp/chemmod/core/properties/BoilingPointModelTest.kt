@@ -121,6 +121,10 @@ class BoilingPointModelTest {
         assertEquals("no-model:nitrile-fit-excludes-conjugated-alkenenitriles", basis("C=CC#N"))
         assertTrue(FunctionalGroups.hasConjugatedNitrile(Molecule.fromSMILESlike("C=CC#N").graph))
         assertTrue(!FunctionalGroups.hasConjugatedNitrile(Molecule.fromSMILESlike("CCCC#N").graph))
+        // Benzonitrile is conjugated with its ring, but the ring is a different electronic
+        // situation and the branch predicts it to within 0.6 K. Counting an aromatic double bond
+        // here would refuse a molecule the model actually gets right.
+        assertTrue(!FunctionalGroups.hasConjugatedNitrile(Molecule.fromSMILESlike("N#CC1=CC=CC=C1").graph))
     }
 
     @Test
