@@ -30,6 +30,11 @@ public class GasTankBlockEntity extends BlockEntity {
         return vessel;
     }
 
+    /** Whether the gas is currently pressing harder than the tank wall can take. */
+    public boolean isOverPressure() {
+        return vessel.bursts(WALL_STRENGTH_PASCALS);
+    }
+
     public double pressurePascals() {
         return vessel.pressurePascals();
     }
