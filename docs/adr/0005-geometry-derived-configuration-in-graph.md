@@ -1,6 +1,6 @@
 # ADR-0005: geometry stays derived, configuration becomes part of the graph
 
-- Status: Proposed
+- Status: Accepted (detection); Proposed (parity fields)
 - Date: 2026-10-11
 - Updated: 2026-10-11
 
@@ -25,20 +25,51 @@ model. It answers 'is water bent and at what angle', not 'where are its atoms in
 space'." Water is bent there because oxygen has two bonds and two lone pairs —
 derived, never told.
 
-So the question "where does isomerism go" splits into three things that are not
-the same kind of thing:
+So the question "where does isomerism go" turns out to be three questions, and
+they do not have the same answer:
 
-| | Can it be derived from connectivity? | Belongs in identity? |
-| --- | --- | --- |
-| Conformation (rotamers, chair/boat) | no, but it is not a different substance | no |
-| Local shape (VSEPR angles) | yes — already implemented | no |
-| Configuration (E/Z, R/S) | **no** | **yes** |
+| Question | Derived from the graph? |
+| --- | --- |
+| Is there a choice at all — do two arrangements exist here? | **yes** |
+| Which arrangement is this one? | **no** |
+| Does the choice survive, or do the arrangements flow into each other? | **largely yes** |
 
-Conformation and shape are computed. Configuration cannot be computed, which is
-precisely why it has to be recorded: two graphs with identical connectivity and
-different configuration are different substances with different properties —
-*cis*- and *trans*-dichloroethene have different dipole moments and therefore
-different boiling points.
+The first is a graph algorithm: an sp³ atom with four different substituents has
+two arrangements whether or not anyone says so, and a double bond with two
+different substituents at each end has *cis* and *trans*. Symmetry decides it for
+free — the two methyls of isopropanol carry the same fragment label, and so do
+the two ring paths of cyclohexanol, so neither carbon is a centre.
+
+Only the second question is genuinely unanswerable from connectivity, because the
+graph records who is bonded to whom and has no left or right in it. That is the
+one datum that has to be told.
+
+The third is where the earlier framing of this ADR was wrong. It said
+configuration "cannot be derived" as though the whole of it were outside the
+model, and leaned on "a double bond does not rotate". The real criterion is a
+**barrier**, not a bond type:
+
+- Around 1–10 kcal/mol the arrangements interconvert and are conformers of one
+  substance. Butane eclipses at 3.5–5 kcal/mol; a cyclohexane ring flips over
+  about 10 kcal/mol some 10⁵ times a second.
+- Pyramidal inversion is a property of the element. Nitrogen crosses a ~25
+  kJ/mol barrier — ammonia does it 4·10¹⁰ times a second — so an amine with three
+  different groups is chiral and still cannot be resolved. Phosphorus needs about
+  130 kJ/mol, and its enantiomers stand.
+- A π bond costs tens of kcal/mol to break, which is why *cis*/*trans* survive.
+- **Rotation about a single bond can be blocked too.** IUPAC defines
+  atropisomers as the conformers that can be isolated as separate chemical
+  species because rotation about a single bond is hindered; Oki's line is a
+  half-life above 1000 s, and measured barriers sit near 24 kcal/mol
+  (101 kJ/mol). BINAP and 1,1'-bi-2-naphthol are single-bond molecules that are
+  two different substances.
+
+So the dividing line between "one substance, many shapes" and "two substances" is
+whether the barrier outruns the conditions — and that is mostly computable, from
+the bond type, the ring, the element, and the size of the substituents crowding a
+bond. Two arrangements that differ matter physically: *cis*- and
+*trans*-dichloroethene have different dipole moments and therefore different
+boiling points.
 
 ## Decision
 
@@ -57,27 +88,37 @@ different boiling points.
    datum is only the parity relative to that ranking. Storing the ranking itself
    would be a per-substance table wearing a laboratory coat.
 
-4. **The digest gains the configuration only where one exists.** A molecule with
+4. **Detection is derived, so parity is only ever asked for where a choice
+   exists.** The model reports its own stereogenic centres and stereogenic double
+   bonds from the graph, and separately reports which pyramidal centres invert
+   too fast to matter. A centre the model did not detect needs no parity, and a
+   centre that inverts away must not become a second substance. Detection lives in
+   `stereo/Stereochemistry.kt` and reads the same converged Morgan labels the
+   canonical key is built from, so "same substituent" means one thing everywhere.
+
+5. **The digest gains the configuration only where one exists.** A molecule with
    no stereogenic element hashes exactly as it does today, so every persisted
    achiral identity survives unchanged and there is no migration for the
    overwhelming majority of substances. The hashed input is versioned regardless,
    so the day this changes again the old digests can be recognised and upgraded
    on read instead of silently mismatching.
 
-5. **Unspecified is a state, not an absence.** A stereogenic centre with no
+6. **Unspecified is a state, not an absence.** A stereogenic centre with no
    parity recorded means "this substance can exist in two forms and this sample
    is not resolved" — which is what an ordinary synthesis actually produces. It
    must stay distinguishable from "this atom is not stereogenic", or a racemate
    and a pure enantiomer become the same thing.
 
-6. **Notation follows the graph.** `SmilesLikeParser` accepts `@`/`@@` and
+7. **Notation follows the graph.** `SmilesLikeParser` accepts `@`/`@@` and
    `/`/`\`; `StructureNotationWriter` writes them back. A structure that cannot
    be written down is a structure a player cannot trade or record.
 
-Where the pieces live: the fields in `model/MoleculeGraph.kt`, a new
-`stereo/Stereochemistry.kt` holding CIP ranking and the detection of
-stereogenic centres and double bonds, the digest change in `Canonicalizer.kt`,
-notation in the parser and the writer.
+Where the pieces live: detection in `stereo/Stereochemistry.kt` (implemented —
+stereogenic centres, stereogenic double bonds, pyramidal chirality centres and
+the rapidly inverting subset), the parity fields in `model/MoleculeGraph.kt`, CIP
+ranking alongside detection, the digest change in `Canonicalizer.kt`, notation in
+the parser and the writer. Steric hindrance at a crowded single bond — the
+atropisomer case — needs a substituent size estimate and is not decided yet.
 
 ## Consequences
 
