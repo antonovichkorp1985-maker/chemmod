@@ -25,11 +25,18 @@ object FormulaCalculator {
         }
     }
 
-    fun molarMass(graph: MoleculeGraph): Double {
+    fun molarMass(graph: MoleculeGraph): Double = elementMolarMasses(graph).values.sum()
+
+    /**
+     * Mass contribution of each element in g/mol, keyed by symbol, counting implicit hydrogens the
+     * way [molarMass] does. [molarMass] is the sum of this, so a per-element mass and the molar
+     * mass can never disagree: they are the same numbers.
+     */
+    fun elementMolarMasses(graph: MoleculeGraph): Map<String, Double> {
         val elements = graph.atoms.associate { it.element.symbol to it.element }
         val hydrogen = graph.atoms.firstOrNull { it.element.symbol == "H" }?.element
             ?: io.github.antonovichkorp.chemmod.core.model.ElementTable.default().require("H")
-        return counts(graph).entries.sumOf { (symbol, count) ->
+        return counts(graph).mapValues { (symbol, count) ->
             (elements[symbol] ?: if (symbol == "H") hydrogen else error("Missing element $symbol")).atomicMass * count
         }
     }
