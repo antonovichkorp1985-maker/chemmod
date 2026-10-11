@@ -36,7 +36,7 @@ public class GasTankGameTests {
         helper.assertTrue(released > 0.0, "a stoichiometric H2/O2 charge did not burn");
         helper.assertTrue(tank.vessel().molesOf("H2") < 1e-9, "hydrogen was not consumed");
         helper.assertTrue(Math.abs(tank.vessel().molesOf("H2O") - 0.5) < 1e-9, "water was not produced");
-        helper.assertTrue(tank.vessel().temperatureKelvin() > AMBIENT + 100.0, "combustion did not heat the gas");
+        helper.assertTrue(tank.vessel().getTemperatureKelvin() > AMBIENT + 100.0, "combustion did not heat the gas");
         helper.succeed();
     }
 

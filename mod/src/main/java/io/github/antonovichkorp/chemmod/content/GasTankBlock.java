@@ -39,7 +39,7 @@ public class GasTankBlock extends Block {
             player.displayClientMessage(Component.translatable(
                 "message.chemmod.gas_tank.readout",
                 String.format("%.0f", tank.pressurePascals() / 1000.0),
-                String.format("%.0f", tank.vessel().temperatureKelvin())), true);
+                String.format("%.0f", tank.vessel().getTemperatureKelvin())), true);
         }
         return InteractionResult.SUCCESS;
     }
