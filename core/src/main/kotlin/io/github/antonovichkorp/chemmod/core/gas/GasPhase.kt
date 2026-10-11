@@ -64,6 +64,31 @@ object GasPhase {
             upperVolumePercent = 3.5 * stoichiometric,
         )
     }
+    /**
+     * Le Chatelier mixing rule for the lower limit of a fuel blend, volume percent.
+     * `fractions` are the fuel components' volume fractions (summing to 1) and `lowerLimits`
+     * their individual LFLs; `1/LFL_mix = Σ x_i / LFL_i`. The blend is more flammable than its
+     * least flammable member, which is exactly why a mixture rule must not be a minimum.
+     */
+    fun mixtureLowerVolumePercent(fractions: List<Double>, lowerLimits: List<Double>): Double {
+        require(fractions.size == lowerLimits.size) { "fractions and limits must align" }
+        require(lowerLimits.all { it > 0.0 }) { "A component LFL must be positive" }
+        val total = fractions.sum()
+        require(total > 0.0) { "A mixture needs at least one fuel" }
+        return 1.0 / fractions.zip(lowerLimits).sumOf { (x, lfl) -> x / lfl / total }
+    }
+
+    /**
+     * Limiting oxygen concentration, volume percent: below this O2 fraction no mixture of the
+     * fuel with air burns. Jones' estimate LFL × n_O2, where n_O2 is the stoichiometric oxygen
+     * demand per mole fuel. Indicative — it inherits the LFL correlation's error.
+     */
+    fun limitingOxygenConcentration(formula: Map<String, Int>): Double? {
+        val limits = flammabilityLimits(formula) ?: return null
+        val demand = (formula["C"] ?: 0) + (formula["H"] ?: 0) / 4.0 +
+            (formula["S"] ?: 0) / 2.0 - (formula["O"] ?: 0) / 2.0
+        return limits.lowerVolumePercent * demand
+    }
 }
 
 data class FlammabilityLimits(
