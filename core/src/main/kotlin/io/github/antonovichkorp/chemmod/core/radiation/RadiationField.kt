@@ -1,5 +1,6 @@
 package io.github.antonovichkorp.chemmod.core.radiation
 
+import kotlin.math.floor
 import kotlin.math.sqrt
 
 /**
@@ -64,10 +65,13 @@ class RadiationField(val cellSizeMetres: Double = DEFAULT_CELL_SIZE_METRES) {
     fun cellOf(position: FieldPosition, level: Int = 0): FieldCell {
         require(level >= 0) { "LOD level must not be negative" }
         val size = cellSize(level)
+        // floor() and not Math.floorDiv: the latter has an (Int, Int) overload that Kotlin picks
+        // over the (Double, Double) one, and floor has the same semantics for negative
+        // coordinates - -0.1 in a 4 m cell belongs to cell -1, not cell 0.
         return FieldCell(
-            Math.floorDiv(position.x, size).toInt(),
-            Math.floorDiv(position.y, size).toInt(),
-            Math.floorDiv(position.z, size).toInt(),
+            floor(position.x / size).toInt(),
+            floor(position.y / size).toInt(),
+            floor(position.z / size).toInt(),
         )
     }
 
