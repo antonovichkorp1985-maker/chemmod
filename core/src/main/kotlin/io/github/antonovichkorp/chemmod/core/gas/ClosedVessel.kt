@@ -1,5 +1,7 @@
 package io.github.antonovichkorp.chemmod.core.gas
 
+import kotlin.math.roundToInt
+
 /**
  * A rigid, sealed gas volume — a tank, a vial headspace, a closed room. The state is the mole
  * count of each species plus a single uniform temperature; everything else is thermodynamics.
@@ -89,7 +91,48 @@ class ClosedVessel(val volumeCubicMeters: Double) {
     }
 
     /** Tint for rendering, or null for a colourless gas. */
-    fun tintArgb(): Int? = species().firstNotNullOfOrNull { SPECIES[it]?.tintArgb }
+    fun tintArgb(): Int? = GasAppearance.tintArgb(species().associateWith { molesOf(it) })
+}
+
+/**
+ * How a gas looks, derived from the same per-species table the vessel's physics uses, so the
+ * colour a player sees and the substance that is actually there cannot drift apart.
+ *
+ * The tint of a mixture is weighted by mole fraction, and the alpha carries how much of the volume
+ * is coloured at all: a trace of chlorine in air is a faint green, not the same green at full
+ * strength. A gas with no recorded tint contributes nothing, and if nothing in the volume is
+ * coloured the answer is null rather than a placeholder hue - colourless is a real answer.
+ */
+object GasAppearance {
+    /** Tint of a single species, or null when that gas is colourless. */
+    fun tintArgb(species: String): Int? = SPECIES[species]?.tintArgb
+
+    /** Tint of a volume given its contents in moles, or null when nothing in it is coloured. */
+    fun tintArgb(molesBySpecies: Map<String, Double>): Int? {
+        val total = molesBySpecies.values.sum()
+        if (total <= 0.0) return null
+        var red = 0.0
+        var green = 0.0
+        var blue = 0.0
+        var colouredFraction = 0.0
+        for ((species, amount) in molesBySpecies) {
+            val tint = SPECIES[species]?.tintArgb ?: continue
+            val weight = amount / total
+            colouredFraction += weight
+            red += ((tint shr 16) and 0xFF) * weight
+            green += ((tint shr 8) and 0xFF) * weight
+            blue += (tint and 0xFF) * weight
+        }
+        if (colouredFraction <= 0.0) return null
+        // The hue is the average over the coloured part only, so diluting chlorine with air keeps it
+        // green and makes it faint; dividing by the whole volume instead would darken it, which is
+        // not what a dilute gas looks like.
+        val alpha = (255.0 * colouredFraction.coerceAtMost(1.0)).toInt().coerceIn(1, 255)
+        return (alpha shl 24) or
+            ((red / colouredFraction).roundToInt().coerceIn(0, 255) shl 16) or
+            ((green / colouredFraction).roundToInt().coerceIn(0, 255) shl 8) or
+            (blue / colouredFraction).roundToInt().coerceIn(0, 255)
+    }
 }
 
 /** Fixed physical data per species: formula for the flammability rule, heat capacity, combustion. */

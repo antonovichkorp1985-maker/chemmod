@@ -62,6 +62,13 @@ public final class WorldGasField {
         return field.speciesIn(cellOf(pos));
     }
 
+    /** Contents of one cell by species, in moles - what the renderer and the toxicology read. */
+    public Map<String, Double> contentsIn(GasCell cell) {
+        Map<String, Double> contents = new LinkedHashMap<>();
+        for (String species : field.speciesIn(cell)) contents.put(species, field.molesOf(cell, species));
+        return contents;
+    }
+
     /** Total moles of every species at a position, for readouts and rendering. */
     public double totalMolesAt(BlockPos pos) {
         GasCell cell = cellOf(pos);
