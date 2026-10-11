@@ -49,7 +49,9 @@ jobs:
             # Emit short individual diagnostics, available through the Checks API too.
             # The JUnit summary itself contains "failures=0"; keep those lines
             # out of the failure diagnostics or they crowd out the real cause.
-            grep -Ei 'error|failed|failure|exception|assert' build.log \
+            # Kotlin compiler diagnostics start with "e: file:///..." and contain none of the
+            # words below, so a Kotlin compile failure used to be reported with no cause at all.
+            grep -Ei 'error|failed|failure|exception|assert|^e: ' build.log \
               | grep -vE '^(core|core-cli|mod) |^JUnit totals:' \
               | tail -n 20 | cut -c 1-300 > failure-lines.txt || true
             while IFS= read -r line; do
