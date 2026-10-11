@@ -90,16 +90,19 @@ class BoilingPointModelTest {
 
     @Test
     fun `polarizibility comes from element data, so halogens count for what they are`() {
-        // Additive atomic values give 10.48 A^3 for CCl4 against 10.002 A^3 measured for the
-        // molecule: the element table is good enough to replace molar mass in the dispersion
-        // term, which is the point of carrying it.
-        assertNear(10.48, engine.predict(Molecule.fromSMILESlike("C(Cl)(Cl)(Cl)Cl").graph)
+        // Additive free-atom sums give 10.33 A^3 for CCl4 against 10.002 A^3 measured for the
+        // molecule (+3 %): for a halide the sum is a usable descriptor. For a hydride it is
+        // not - CH4 sums to 4.34 A^3 against 2.66 A^3 measured, because hydrogen bound to
+        // carbon is far less polarizable than a free hydrogen atom. So the sum is a fitted
+        // descriptor whose branch carries its own intercept, never a measured molecular value.
+        assertNear(10.33, engine.predict(Molecule.fromSMILESlike("C(Cl)(Cl)(Cl)Cl").graph)
             .polarizibilityCubicAngstroms!!, 0.01)
-        // Methane counts its four implicit hydrogens: 1.76 + 4 * 0.667.
-        assertNear(4.43, engine.predict(Molecule.fromSMILESlike("C").graph)
+        // Methane counts its four implicit hydrogens: 1.674 + 4 * 0.667.
+        assertNear(4.34, engine.predict(Molecule.fromSMILESlike("C").graph)
             .polarizibilityCubicAngstroms!!, 0.01)
-        // Iron has no measured atomic value in the table, and a gap must stay a gap.
-        assertNull(engine.predict(Molecule.fromSMILESlike("[Fe]").graph).polarizibilityCubicAngstroms)
+        // Livermorium is the single element the source table leaves without a value, and a
+        // gap must stay a gap instead of quietly turning into zero.
+        assertNull(engine.predict(Molecule.fromSMILESlike("[Lv]").graph).polarizibilityCubicAngstroms)
     }
 
     @Test
