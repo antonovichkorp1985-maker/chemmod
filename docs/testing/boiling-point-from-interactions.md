@@ -268,8 +268,8 @@ no-model:nitrile-fit-excludes-conjugated-alkenenitriles`. Причина изм�
 - `core/chemistry/FunctionalGroupTest.kt` — вывод числа галогенов по элементам.
 - Обновлены `MoleculeTest` (этанол 83.7, диметиловый эфир −41.0, метанол 64.3, циклопропан −29.9
   вместо `null`) и `scripts/smoke-test.sh` (строка `chem lookup CCO`).
-- Исполняет CI (прогон 38099204512, `classes=31 tests=222 failures=0 errors=0`,
-  `BoilingPointModelTest` 14 тестов, `FunctionalGroupTest` 11); локально JDK нет.
+- Исполняет CI (прогон 38133952254, `classes=37 tests=277 failures=0 errors=0`,
+  `BoilingPointModelTest` 17 тестов, `FunctionalGroupTest` 11); локально JDK нет.
   Шаг «Build and test» прогоняет и `scripts/smoke-test.sh`, который проверяет точную строку
   `Boiling point:     83.7 °C (hydroxyl-family+hydrogen-bond-network)` — то есть путь
   данные → модель → CLI проверен целиком, а не только юнитами.
