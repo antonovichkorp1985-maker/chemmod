@@ -121,9 +121,10 @@ The work queue this implies, in order:
   (`GasPhase`), Chapman–Enskog over Lennard-Jones (`GasTransport`), flammability
   by Jones with Le Chatelier (`GasPhase`), the sparse field itself (`GasField`)
   and the world adapter that holds one field per level (`WorldGasField`, a level
-  attachment ticked once a second, fed by a bursting tank) are done and green.
-  Still owed: toxicity by mechanism, environmental reactivity as reaction rules,
-  and the rendering of decision 7.
+  attachment ticked once a second, fed by a bursting tank), toxicity by mechanism
+  (`GasToxicity`) and the rendering of decision 7 (`GasAppearance` plus dust
+  particles tinted from composition) are done and green. Still owed:
+  environmental reactivity as ordinary reaction rules.
 - **C — radiation zone.** Gamma branches and μ tables, secular equilibrium as the
   source term, the world adapter (entity dose, dosimeter, accumulated dose), and
   finally radon as a gas-carried source.
