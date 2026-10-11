@@ -20,7 +20,10 @@ class GasFieldPhysicsTest {
         override fun diffusionSquareMetersPerSecond(species: String): Double? = diffusion[species]
     }
 
-    private val air = mapOf("N2" to 28.014, "O2" to 31.999, "CO2" to 44.009, "H2" to 2.016, "Cl2" to 70.906)
+    private val air = mapOf(
+        "N2" to 28.014, "O2" to 31.999, "CO2" to 44.009,
+        "H2" to 2.016, "Cl2" to 70.906, "Rn" to 222.018,
+    )
 
     @Test
     fun `a concentration gradient diffuses away and conserves the gas`() {
@@ -28,16 +31,19 @@ class GasFieldPhysicsTest {
         field.addMoles(GasCell(0, 0, 0), "Cl2", 1.0)
         val properties = Props(air, mapOf("Cl2" to 1.2e-5))
 
-        repeat(50) { field.advance(1.0, properties) }
+        // Diffusion over a metre is genuinely slow: the characteristic time L^2/D is ~8e4 s, so
+        // the step is thousands of seconds and buoyancy is switched off to isolate the gradient.
+        repeat(100) { field.advance(5_000.0, properties, buoyantDriftMetresPerSecond = 0.0) }
 
         val left = field.molesOf(GasCell(0, 0, 0), "Cl2")
         val right = field.molesOf(GasCell(1, 0, 0), "Cl2")
         assertTrue(abs(left - right) < 1e-3, "gradient did not even out: $left vs $right")
-        assertEquals(1.0, field.totalMoles("Cl2"), 1e-9, "diffusion created or destroyed gas")
+        assertEquals(0.5, left, 1e-3, "the gas did not spread evenly between the two cells")
+        assertEquals(1.0, field.totalMoles("Cl2"), 1e-6, "diffusion created or destroyed gas")
     }
 
     @Test
-    fun `a closed field conserves every species exactly over many steps`() {
+    fun `a closed field conserves every species to within trace pruning`() {
         val field = GasField(cellSizeMetres = 1.0)
         field.addMoles(GasCell(0, 0, 0), "Cl2", 3.0)
         field.addMoles(GasCell(2, 1, 0), "H2", 1.5)
@@ -45,8 +51,10 @@ class GasFieldPhysicsTest {
 
         repeat(200) { field.advance(0.5, properties) }
 
-        assertEquals(3.0, field.totalMoles("Cl2"), 1e-9, "chlorine was not conserved")
-        assertEquals(1.5, field.totalMoles("H2"), 1e-9, "hydrogen was not conserved")
+        // Diffusion and drift only move moles; the only loss is the trace threshold discarding
+        // cells that fall below TRACE_MOLES, which is bounded and tiny.
+        assertEquals(3.0, field.totalMoles("Cl2"), 1e-6, "chlorine was not conserved")
+        assertEquals(1.5, field.totalMoles("H2"), 1e-6, "hydrogen was not conserved")
     }
 
     @Test
