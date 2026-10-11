@@ -1,0 +1,60 @@
+package io.github.antonovichkorp.chemmod.core
+
+import io.github.antonovichkorp.chemmod.core.model.MoleculeGraph
+
+object FormulaCalculator {
+    fun counts(graph: MoleculeGraph): Map<String, Int> {
+        val counts = linkedMapOf<String, Int>()
+        graph.atoms.forEach { atom ->
+            counts[atom.element.symbol] = counts.getOrDefault(atom.element.symbol, 0) + 1
+            val hydrogenCount = atom.explicitHydrogens + graph.implicitHydrogens(atom.id)
+            if (hydrogenCount > 0) counts["H"] = counts.getOrDefault("H", 0) + hydrogenCount
+        }
+        return counts
+    }
+
+    fun hillFormula(graph: MoleculeGraph): String {
+        val counts = counts(graph)
+        val order = when {
+            "C" in counts -> listOf("C", "H") + counts.keys.filterNot { it == "C" || it == "H" }.sorted()
+            else -> counts.keys.sorted()
+        }
+        return order.filter { it in counts }.joinToString("") { symbol ->
+            val count = counts.getValue(symbol)
+            symbol + if (count == 1) "" else count
+        }
+    }
+
+    fun molarMass(graph: MoleculeGraph): Double = elementMolarMasses(graph).values.sum()
+
+    /**
+     * Mass contribution of each element in g/mol, keyed by symbol, counting implicit hydrogens the
+     * way [molarMass] does. [molarMass] is the sum of this, so a per-element mass and the molar
+     * mass can never disagree: they are the same numbers.
+     */
+    fun elementMolarMasses(graph: MoleculeGraph): Map<String, Double> {
+        val elements = graph.atoms.associate { it.element.symbol to it.element }
+        val hydrogen = graph.atoms.firstOrNull { it.element.symbol == "H" }?.element
+            ?: io.github.antonovichkorp.chemmod.core.model.ElementTable.default().require("H")
+        return counts(graph).mapValues { (symbol, count) ->
+            (elements[symbol] ?: if (symbol == "H") hydrogen else error("Missing element $symbol")).atomicMass * count
+        }
+    }
+
+    /**
+     * Sum of atomic polarizibilities in cubic angstroms, counting implicit hydrogens the way
+     * [molarMass] does. Returns null as soon as one element has no measured value, because a gap
+     * in the data must not be read as a small polarizibility.
+     */
+    fun polarizibilityCubicAngstroms(graph: MoleculeGraph): Double? {
+        val elements = graph.atoms.associate { it.element.symbol to it.element }
+        val hydrogen = graph.atoms.firstOrNull { it.element.symbol == "H" }?.element
+            ?: io.github.antonovichkorp.chemmod.core.model.ElementTable.default().require("H")
+        var total = 0.0
+        for ((symbol, count) in counts(graph)) {
+            val element = elements[symbol] ?: if (symbol == "H") hydrogen else return null
+            total += (element.polarizibilityCubicAngstroms ?: return null) * count
+        }
+        return total
+    }
+}

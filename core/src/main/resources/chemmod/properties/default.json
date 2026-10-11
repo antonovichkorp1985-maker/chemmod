@@ -1,0 +1,110 @@
+{
+  "schemaVersion": 1,
+  "modelId": "joback-light-bond-energy-v1",
+  "bondEnergies": [
+    {
+      "first": "C",
+      "second": "C",
+      "order": "SINGLE",
+      "kilojoulesPerMole": 347.0
+    },
+    {
+      "first": "C",
+      "second": "C",
+      "order": "DOUBLE",
+      "kilojoulesPerMole": 614.0
+    },
+    {
+      "first": "C",
+      "second": "C",
+      "order": "TRIPLE",
+      "kilojoulesPerMole": 839.0
+    },
+    {
+      "first": "C",
+      "second": "H",
+      "order": "SINGLE",
+      "kilojoulesPerMole": 413.0
+    },
+    {
+      "first": "C",
+      "second": "O",
+      "order": "SINGLE",
+      "kilojoulesPerMole": 358.0
+    },
+    {
+      "first": "C",
+      "second": "O",
+      "order": "DOUBLE",
+      "kilojoulesPerMole": 745.0
+    },
+    {
+      "first": "O",
+      "second": "H",
+      "order": "SINGLE",
+      "kilojoulesPerMole": 463.0
+    },
+    {
+      "first": "O",
+      "second": "O",
+      "order": "SINGLE",
+      "kilojoulesPerMole": 146.0
+    },
+    {
+      "first": "O",
+      "second": "O",
+      "order": "DOUBLE",
+      "kilojoulesPerMole": 498.0
+    }
+  ],
+  "carbonDioxideCarbonOxygenDoubleBondKilojoulesPerMole": 799.0,
+  "boiling": {
+    "exactFormulaCelsius": {
+      "H2O": 100.0
+    },
+    "hydrocarbonBaseCelsius": -242.88,
+    "hydrocarbonDispersionCelsius": 15.71,
+    "ringCelsius": 22.89,
+    "aromaticRingCelsius": 8.93,
+    "hydroxylBaseCelsius": -84.66,
+    "hydroxylDispersionCelsius": 7.02,
+    "hydrogenBondCelsiusPerKilojoulePerMole": 3.72,
+    "amineBaseCelsius": -167.22,
+    "amineDispersionCelsius": 11.73,
+    "amineHydrogenBondDonorCelsius": 20.44,
+    "carbonylBaseCelsius": -79.77,
+    "carbonylDispersionCelsius": 9.11,
+    "etherBaseCelsius": -190.63,
+    "etherDispersionCelsius": 12.85,
+    "halideBaseCelsius": -211.02,
+    "halideDispersionCelsius": 13.71,
+    "halideCelsiusPerAtom": {
+      "F": -11.33,
+      "Cl": 0.0,
+      "Br": -63.67,
+      "I": -113.48
+    },
+    "nitrileBaseCelsius": -11.92,
+    "nitrileDispersionCelsius": 7.72,
+    "branchPointCelsius": -15.33,
+    "esterBaseCelsius": -155.37,
+    "esterDispersionCelsius": 11.94,
+    "acidBaseCelsius": -28.15,
+    "acidDispersionCelsius": 9.74
+  },
+  "interactions": {
+    "hydrogenBondDonorElements": [
+      "N",
+      "O",
+      "F"
+    ],
+    "hydrogenBondAcceptorElements": [
+      "N",
+      "O",
+      "F"
+    ],
+    "hydrogenBondKilojoulesPerMole": 21.0,
+    "coordinateBondKilojoulesPerMole": 100.0,
+    "aromaticResonanceKilojoulesPerMolePerRing": 150.0
+  }
+}

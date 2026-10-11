@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "abundances": [
+    {"symbol":"H","isotopes":[{"massNumber":1,"fraction":0.999885},{"massNumber":2,"fraction":0.000115}]},
+    {"symbol":"K","isotopes":[{"massNumber":39,"fraction":0.932581},{"massNumber":40,"fraction":0.000117},{"massNumber":41,"fraction":0.067302}]},
+    {"symbol":"Rb","isotopes":[{"massNumber":85,"fraction":0.7217},{"massNumber":87,"fraction":0.2783}]},
+    {"symbol":"Pb","isotopes":[{"massNumber":204,"fraction":0.014},{"massNumber":206,"fraction":0.241},{"massNumber":207,"fraction":0.221},{"massNumber":208,"fraction":0.524}]},
+    {"symbol":"Bi","isotopes":[{"massNumber":209,"fraction":1.0}]},
+    {"symbol":"Th","isotopes":[{"massNumber":232,"fraction":1.0}]},
+    {"symbol":"U","isotopes":[{"massNumber":234,"fraction":0.000055},{"massNumber":235,"fraction":0.0072},{"massNumber":238,"fraction":0.992745}]}
+  ]
+}

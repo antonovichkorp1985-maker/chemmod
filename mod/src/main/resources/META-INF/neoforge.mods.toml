@@ -1,0 +1,41 @@
+modLoader="javafml"
+loaderVersion="[4,)"
+license="All Rights Reserved"
+
+[[mods]]
+modId="chemmod"
+version="${modVersion}"
+displayName="ChemMod"
+description='''
+Predictive chemistry and exact physical material batches for Minecraft.
+Optional adapters preserve ChemMod's server-authoritative processing model.
+'''
+authors="antonovichkorp1985-maker"
+
+[[dependencies.chemmod]]
+modId="neoforge"
+type="required"
+versionRange="[21.1.251,)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.chemmod]]
+modId="minecraft"
+type="required"
+versionRange="[1.21.1,1.21.2)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.chemmod]]
+modId="tfc"
+type="optional"
+versionRange="[4,)"
+ordering="AFTER"
+side="BOTH"
+
+[[dependencies.chemmod]]
+modId="create"
+type="optional"
+versionRange="[6.0.10,7)"
+ordering="AFTER"
+side="BOTH"

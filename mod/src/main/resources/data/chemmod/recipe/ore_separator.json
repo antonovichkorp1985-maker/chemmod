@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": ["PIP", "BCB", "B B"],
+  "key": {
+    "P": {"item": "chemmod:copper_plate"},
+    "I": {"item": "minecraft:iron_bars"},
+    "B": {"item": "minecraft:brick"},
+    "C": {"item": "minecraft:cauldron"}
+  },
+  "result": {"id": "chemmod:ore_separator", "count": 1}
+}

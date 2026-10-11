@@ -1,0 +1,13 @@
+.gradle/
+build/
+**/build/
+.idea/
+*.iml
+out/
+**/run/
+.DS_Store
+
+# Python prerelease validation helpers
+.venv/
+__pycache__/
+*.pyc

@@ -1,0 +1,98 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Validate prerelease metadata
+        id: metadata
+        run: |
+          python3 -m unittest discover -s scripts -p 'test_release_metadata.py'
+          python3 scripts/release_metadata.py >> "$GITHUB_OUTPUT"
+      - name: Check generated element data matches its source
+        run: |
+          python3 scripts/generate_element_polarizability.py
+          git diff --exit-code core/src/main/resources/chemmod/elements.json
+      - name: Check the isotope table is complete and consistent
+        run: |
+          python3 scripts/extend_isotope_table.py
+          git diff --exit-code core/src/main/resources/chemmod/isotopes.json
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Build and test
+        shell: bash
+        run: |
+          set -o pipefail
+          set +e
+          ./scripts/smoke-test.sh 2>&1 | tee build.log
+          status=${PIPESTATUS[0]}
+          set -e
+          {
+            echo '```text'
+            tail -n 200 build.log
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [[ "$status" -ne 0 ]]; then
+            # Progress bars can exhaust GitHub's annotation limit before the real failure.
+            # Emit short individual diagnostics, available through the Checks API too.
+            # The JUnit summary itself contains "failures=0"; keep those lines
+            # out of the failure diagnostics or they crowd out the real cause.
+            # Kotlin compiler diagnostics start with "e: file:///..." and contain none of the
+            # words below, so a Kotlin compile failure used to be reported with no cause at all.
+            grep -Ei 'error|failed|failure|exception|assert|^e: ' build.log \
+              | grep -vE '^(core|core-cli|mod) |^JUnit totals:' \
+              | tail -n 20 | cut -c 1-300 > failure-lines.txt || true
+            while IFS= read -r line; do
+              escaped=$(printf '%s' "$line" | sed 's/%/%25/g; s/\r/%0D/g')
+              echo "::error title=Test diagnostic::$escaped"
+            done < failure-lines.txt
+            diagnostic=$(tail -n 40 build.log | cut -c 1-300 | sed 's/%/%25/g; s/\r/%0D/g; s/$/%0A/' | tr -d '\n')
+            echo "::error title=Gradle build failed::$diagnostic"
+          fi
+          exit "$status"
+      # Raw Gradle logs are not always downloadable, so republish the test
+      # totals as one annotation that stays readable from the Checks API.
+      - name: Publish JUnit summary annotation
+        if: always()
+        shell: bash
+        run: |
+          python3 scripts/junit_summary.py > junit-summary.txt 2>&1 || true
+          [[ -s junit-summary.txt ]] || echo "JUnit summary unavailable: no parseable test results" > junit-summary.txt
+          cat junit-summary.txt
+          escaped=$(sed 's/%/%25/g; s/\r/%0D/g; s/$/%0A/' junit-summary.txt | tr -d '\n')
+          echo "::notice title=JUnit summary::${escaped}"
+      # This is deliberately a short-lived CI artifact, not a GitHub release:
+      # Exact-commit builds remain available alongside numbered player-test
+      # prereleases; neither artifact type closes the manual M3 acceptance gate.
+      - name: Write manual-acceptance checksum
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/release_metadata.py --verify-jar
+          artifact="${{ steps.metadata.outputs.artifact }}"
+          artifact_name=$(basename "$artifact")
+          cd "$(dirname "$artifact")"
+          sha256sum "$artifact_name" > "$artifact_name.sha256"
+          sha256sum -c "$artifact_name.sha256"
+      - name: Upload M3 manual-acceptance JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: chemmod-m3-manual-acceptance-${{ github.sha }}
+          path: |
+            mod/build/libs/chemmod-*.jar
+            !mod/build/libs/*sources*.jar
+            mod/build/libs/chemmod-*.jar.sha256
+          if-no-files-found: error
+          retention-days: 14

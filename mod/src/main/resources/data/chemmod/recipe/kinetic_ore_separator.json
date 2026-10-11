@@ -1,0 +1,18 @@
+{
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "create"
+    }
+  ],
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [" S ", "POP", " A "],
+  "key": {
+    "S": {"item": "create:shaft"},
+    "P": {"item": "chemmod:copper_plate"},
+    "O": {"item": "chemmod:ore_separator"},
+    "A": {"item": "create:andesite_casing"}
+  },
+  "result": {"id": "chemmod:kinetic_ore_separator", "count": 1}
+}

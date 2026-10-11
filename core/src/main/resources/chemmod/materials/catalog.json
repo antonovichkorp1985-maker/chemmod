@@ -1,0 +1,840 @@
+{
+  "schemaVersion": 1,
+  "species": [
+    {
+      "id": "chemmod:water",
+      "structure": "O"
+    },
+    {
+      "id": "chemmod:oxygen",
+      "structure": "O=O"
+    },
+    {
+      "id": "chemmod:carbon_dioxide",
+      "structure": "O=C=O"
+    }
+  ],
+  "minerals": [
+    {
+      "id": "chemmod:native_copper",
+      "chemicalFormula": "Cu",
+      "elementStoichiometry": {
+        "Cu": 1
+      },
+      "hardnessMohs": 3.0,
+      "colourArgb": -4689101
+    },
+    {
+      "id": "chemmod:quartz",
+      "chemicalFormula": "SiO2",
+      "elementStoichiometry": {
+        "Si": 1,
+        "O": 2
+      },
+      "hardnessMohs": 7.0
+    },
+    {
+      "id": "chemmod:hematite",
+      "chemicalFormula": "Fe2O3",
+      "elementStoichiometry": {
+        "Fe": 2,
+        "O": 3
+      },
+      "hardnessMohs": 6.0,
+      "colourArgb": -9549246
+    },
+    {
+      "id": "chemmod:magnetite",
+      "chemicalFormula": "Fe3O4",
+      "elementStoichiometry": {
+        "Fe": 3,
+        "O": 4
+      },
+      "hardnessMohs": 6.0,
+      "colourArgb": -13948114
+    },
+    {
+      "id": "chemmod:goethite",
+      "chemicalFormula": "FeO(OH)",
+      "elementStoichiometry": {
+        "Fe": 1,
+        "O": 2,
+        "H": 1
+      },
+      "hardnessMohs": 5.0,
+      "colourArgb": -7640273
+    },
+    {
+      "id": "chemmod:siderite",
+      "chemicalFormula": "FeCO3",
+      "elementStoichiometry": {
+        "Fe": 1,
+        "C": 1,
+        "O": 3
+      },
+      "hardnessMohs": 4.0,
+      "colourArgb": -5201788
+    },
+    {
+      "id": "chemmod:pyrite",
+      "chemicalFormula": "FeS2",
+      "elementStoichiometry": {
+        "Fe": 1,
+        "S": 2
+      },
+      "hardnessMohs": 6.0,
+      "colourArgb": -3558312
+    },
+    {
+      "id": "chemmod:chalcopyrite",
+      "chemicalFormula": "CuFeS2",
+      "elementStoichiometry": {
+        "Cu": 1,
+        "Fe": 1,
+        "S": 2
+      },
+      "hardnessMohs": 3.5,
+      "colourArgb": -4677576
+    },
+    {
+      "id": "chemmod:malachite",
+      "chemicalFormula": "Cu2CO3(OH)2",
+      "elementStoichiometry": {
+        "Cu": 2,
+        "C": 1,
+        "O": 5,
+        "H": 2
+      },
+      "hardnessMohs": 3.75,
+      "colourArgb": -13726889
+    },
+    {
+      "id": "chemmod:azurite",
+      "chemicalFormula": "Cu3(CO3)2(OH)2",
+      "elementStoichiometry": {
+        "Cu": 3,
+        "C": 2,
+        "O": 8,
+        "H": 2
+      },
+      "hardnessMohs": 3.75,
+      "colourArgb": -13739352
+    },
+    {
+      "id": "chemmod:galena",
+      "chemicalFormula": "PbS",
+      "elementStoichiometry": {
+        "Pb": 1,
+        "S": 1
+      },
+      "hardnessMohs": 2.5,
+      "colourArgb": -9539978
+    },
+    {
+      "id": "chemmod:cerussite",
+      "chemicalFormula": "PbCO3",
+      "elementStoichiometry": {
+        "Pb": 1,
+        "C": 1,
+        "O": 3
+      },
+      "hardnessMohs": 3.25,
+      "colourArgb": -2040106
+    },
+    {
+      "id": "chemmod:anglesite",
+      "chemicalFormula": "PbSO4",
+      "elementStoichiometry": {
+        "Pb": 1,
+        "S": 1,
+        "O": 4
+      },
+      "hardnessMohs": 3.0,
+      "colourArgb": -2303278
+    },
+    {
+      "id": "chemmod:sphalerite",
+      "chemicalFormula": "ZnS",
+      "elementStoichiometry": {
+        "Zn": 1,
+        "S": 1
+      },
+      "hardnessMohs": 3.75,
+      "colourArgb": -9745878
+    },
+    {
+      "id": "chemmod:millerite",
+      "chemicalFormula": "NiS",
+      "elementStoichiometry": {
+        "Ni": 1,
+        "S": 1
+      },
+      "hardnessMohs": 4.0,
+      "colourArgb": -3558312
+    },
+    {
+      "id": "chemmod:pentlandite",
+      "chemicalFormula": "Fe4Ni5S8",
+      "elementStoichiometry": {
+        "Fe": 4,
+        "Ni": 5,
+        "S": 8
+      },
+      "hardnessMohs": 4.25,
+      "colourArgb": -6649254
+    },
+    {
+      "id": "chemmod:cassiterite",
+      "chemicalFormula": "SnO2",
+      "elementStoichiometry": {
+        "Sn": 1,
+        "O": 2
+      },
+      "hardnessMohs": 6.5,
+      "colourArgb": -11912662
+    },
+    {
+      "id": "chemmod:rutile",
+      "chemicalFormula": "TiO2",
+      "elementStoichiometry": {
+        "Ti": 1,
+        "O": 2
+      },
+      "hardnessMohs": 6.0,
+      "colourArgb": -7706054
+    },
+    {
+      "id": "chemmod:ilmenite",
+      "chemicalFormula": "FeTiO3",
+      "elementStoichiometry": {
+        "Fe": 1,
+        "Ti": 1,
+        "O": 3
+      },
+      "hardnessMohs": 5.5,
+      "colourArgb": -13750734
+    },
+    {
+      "id": "chemmod:pyrolusite",
+      "chemicalFormula": "MnO2",
+      "elementStoichiometry": {
+        "Mn": 1,
+        "O": 2
+      },
+      "hardnessMohs": 5.5,
+      "colourArgb": -12961218
+    },
+    {
+      "id": "chemmod:chromite",
+      "chemicalFormula": "FeCr2O4",
+      "elementStoichiometry": {
+        "Fe": 1,
+        "Cr": 2,
+        "O": 4
+      },
+      "hardnessMohs": 5.5,
+      "colourArgb": -14013906
+    },
+    {
+      "id": "chemmod:gibbsite",
+      "chemicalFormula": "Al(OH)3",
+      "elementStoichiometry": {
+        "Al": 1,
+        "O": 3,
+        "H": 3
+      },
+      "hardnessMohs": 2.75,
+      "colourArgb": -1185054
+    },
+    {
+      "id": "chemmod:kaolinite",
+      "chemicalFormula": "Al2Si2O5(OH)4",
+      "elementStoichiometry": {
+        "Al": 2,
+        "Si": 2,
+        "O": 9,
+        "H": 4
+      },
+      "hardnessMohs": 2.25,
+      "colourArgb": -1514796
+    },
+    {
+      "id": "chemmod:forsterite",
+      "chemicalFormula": "Mg2SiO4",
+      "elementStoichiometry": {
+        "Mg": 2,
+        "Si": 1,
+        "O": 4
+      },
+      "hardnessMohs": 6.5,
+      "colourArgb": -4669302
+    },
+    {
+      "id": "chemmod:calcite",
+      "chemicalFormula": "CaCO3",
+      "elementStoichiometry": {
+        "Ca": 1,
+        "C": 1,
+        "O": 3
+      },
+      "hardnessMohs": 3.0
+    },
+    {
+      "id": "chemmod:dolomite",
+      "chemicalFormula": "CaMg(CO3)2",
+      "elementStoichiometry": {
+        "Ca": 1,
+        "Mg": 1,
+        "C": 2,
+        "O": 6
+      },
+      "hardnessMohs": 3.75,
+      "colourArgb": -2040622
+    },
+    {
+      "id": "chemmod:halite",
+      "chemicalFormula": "NaCl",
+      "elementStoichiometry": {
+        "Na": 1,
+        "Cl": 1
+      },
+      "hardnessMohs": 2.5,
+      "colourArgb": -1183758
+    },
+    {
+      "id": "chemmod:sylvite",
+      "chemicalFormula": "KCl",
+      "elementStoichiometry": {
+        "K": 1,
+        "Cl": 1
+      },
+      "hardnessMohs": 2.5,
+      "colourArgb": -1644306
+    },
+    {
+      "id": "chemmod:gypsum",
+      "chemicalFormula": "CaSO4(H2O)2",
+      "elementStoichiometry": {
+        "Ca": 1,
+        "S": 1,
+        "O": 6,
+        "H": 4
+      },
+      "hardnessMohs": 2.0,
+      "colourArgb": -1447968
+    },
+    {
+      "id": "chemmod:anhydrite",
+      "chemicalFormula": "CaSO4",
+      "elementStoichiometry": {
+        "Ca": 1,
+        "S": 1,
+        "O": 4
+      },
+      "hardnessMohs": 3.25,
+      "colourArgb": -1776934
+    },
+    {
+      "id": "chemmod:fluorite",
+      "chemicalFormula": "CaF2",
+      "elementStoichiometry": {
+        "Ca": 1,
+        "F": 2
+      },
+      "hardnessMohs": 4.0
+    },
+    {
+      "id": "chemmod:apatite",
+      "chemicalFormula": "Ca5(PO4)3F",
+      "elementStoichiometry": {
+        "Ca": 5,
+        "P": 3,
+        "O": 12,
+        "F": 1
+      },
+      "hardnessMohs": 5.0
+    }
+  ],
+  "deposits": [
+    {
+      "id": "chemmod:overworld_native_copper",
+      "mineralWeights": {
+        "chemmod:native_copper": 100
+      },
+      "dimensionTags": [
+        "minecraft:is_overworld"
+      ],
+      "minY": -32,
+      "maxY": 80,
+      "attemptsPerChunk": 1
+    }
+  ],
+  "materials": [
+    {
+      "id": "chemmod:copper",
+      "source": {
+        "type": "mineral",
+        "id": "chemmod:native_copper"
+      },
+      "supportedForms": [
+        "ore",
+        "crushed_ore",
+        "purified_crushed_ore",
+        "dust",
+        "liquid",
+        "ingot",
+        "nugget",
+        "block",
+        "plate",
+        "rod",
+        "wire",
+        "gear"
+      ]
+    },
+    {
+      "id": "chemmod:silicate_gangue",
+      "source": {
+        "type": "mineral",
+        "id": "chemmod:quartz"
+      },
+      "supportedForms": [
+        "dust"
+      ]
+    }
+  ],
+  "processes": [
+    {
+      "id": "chemmod:crush_native_copper",
+      "machineTag": "chemmod:crushing",
+      "inputs": [
+        {
+          "material": "chemmod:copper",
+          "form": "ore",
+          "massMicrograms": 1000000000
+        }
+      ],
+      "outputs": [
+        {
+          "material": "chemmod:copper",
+          "form": "crushed_ore",
+          "massMicrograms": 1000000000
+        }
+      ],
+      "durationTicks": 200
+    },
+    {
+      "id": "chemmod:grind_native_copper",
+      "machineTag": "chemmod:grinding",
+      "inputs": [
+        {
+          "material": "chemmod:copper",
+          "form": "crushed_ore",
+          "massMicrograms": 1000000000
+        }
+      ],
+      "outputs": [
+        {
+          "material": "chemmod:copper",
+          "form": "dust",
+          "massMicrograms": 1000000000
+        }
+      ],
+      "durationTicks": 200
+    },
+    {
+      "id": "chemmod:wash_native_copper",
+      "machineTag": "chemmod:washing",
+      "inputs": [
+        {
+          "material": "chemmod:copper",
+          "form": "crushed_ore",
+          "massMicrograms": 1000000000
+        }
+      ],
+      "outputs": [
+        {
+          "material": "chemmod:copper",
+          "form": "purified_crushed_ore",
+          "massMicrograms": 1000000000
+        }
+      ],
+      "durationTicks": 300
+    },
+    {
+      "id": "chemmod:separate_purified_native_copper",
+      "machineTag": "chemmod:separating",
+      "inputs": [
+        {
+          "material": "chemmod:copper",
+          "form": "purified_crushed_ore",
+          "massMicrograms": 861632033
+        }
+      ],
+      "outputs": [
+        {
+          "material": "chemmod:copper",
+          "form": "dust",
+          "massMicrograms": 850000000
+        },
+        {
+          "material": "chemmod:silicate_gangue",
+          "form": "dust",
+          "massMicrograms": 11632033
+        }
+      ],
+      "durationTicks": 300
+    },
+    {
+      "id": "chemmod:grind_purified_native_copper",
+      "machineTag": "chemmod:grinding",
+      "inputs": [
+        {
+          "material": "chemmod:copper",
+          "form": "purified_crushed_ore",
+          "massMicrograms": 1000000000
+        }
+      ],
+      "outputs": [
+        {
+          "material": "chemmod:copper",
+          "form": "dust",
+          "massMicrograms": 1000000000
+        }
+      ],
+      "durationTicks": 200
+    },
+    {
+      "id": "chemmod:melt_copper",
+      "machineTag": "chemmod:melting",
+      "inputs": [
+        {
+          "material": "chemmod:copper",
+          "form": "dust",
+          "massMicrograms": 1000000000
+        }
+      ],
+      "outputs": [
+        {
+          "material": "chemmod:copper",
+          "form": "liquid",
+          "massMicrograms": 1000000000
+        }
+      ],
+      "durationTicks": 400,
+      "conditions": {
+        "minimumTemperatureKelvin": 1357.77
+      }
+    },
+    {
+      "id": "chemmod:cast_copper_ingot",
+      "machineTag": "chemmod:casting",
+      "inputs": [
+        {
+          "material": "chemmod:copper",
+          "form": "liquid",
+          "massMicrograms": 1000000000
+        }
+      ],
+      "outputs": [
+        {
+          "material": "chemmod:copper",
+          "form": "ingot",
+          "massMicrograms": 1000000000
+        }
+      ],
+      "durationTicks": 200,
+      "conditions": {
+        "maximumTemperatureKelvin": 1357.77
+      }
+    },
+    {
+      "id": "chemmod:hammer_copper_plate",
+      "machineTag": "chemmod:forming_hammer",
+      "inputs": [
+        {
+          "material": "chemmod:copper",
+          "form": "ingot",
+          "massMicrograms": 1000000000
+        }
+      ],
+      "outputs": [
+        {
+          "material": "chemmod:copper",
+          "form": "plate",
+          "massMicrograms": 1000000000
+        }
+      ],
+      "durationTicks": 200
+    },
+    {
+      "id": "chemmod:draw_copper_rod",
+      "machineTag": "chemmod:drawing",
+      "inputs": [
+        {
+          "material": "chemmod:copper",
+          "form": "ingot",
+          "massMicrograms": 1000000000
+        }
+      ],
+      "outputs": [
+        {
+          "material": "chemmod:copper",
+          "form": "rod",
+          "massMicrograms": 1000000000
+        }
+      ],
+      "durationTicks": 200
+    },
+    {
+      "id": "chemmod:draw_copper_wire",
+      "machineTag": "chemmod:drawing",
+      "inputs": [
+        {
+          "material": "chemmod:copper",
+          "form": "rod",
+          "massMicrograms": 1000000000
+        }
+      ],
+      "outputs": [
+        {
+          "material": "chemmod:copper",
+          "form": "wire",
+          "massMicrograms": 1000000000
+        }
+      ],
+      "durationTicks": 200
+    },
+    {
+      "id": "chemmod:cut_copper_nuggets",
+      "machineTag": "chemmod:cutting",
+      "inputs": [
+        {
+          "material": "chemmod:copper",
+          "form": "ingot",
+          "massMicrograms": 1000000000
+        }
+      ],
+      "outputs": [
+        {
+          "material": "chemmod:copper",
+          "form": "nugget",
+          "massMicrograms": 125000000,
+          "count": 8
+        }
+      ],
+      "durationTicks": 200
+    },
+    {
+      "id": "chemmod:compact_copper_nuggets",
+      "machineTag": "chemmod:forming_hammer",
+      "inputs": [
+        {
+          "material": "chemmod:copper",
+          "form": "nugget",
+          "massMicrograms": 125000000,
+          "count": 8
+        }
+      ],
+      "outputs": [
+        {
+          "material": "chemmod:copper",
+          "form": "ingot",
+          "massMicrograms": 1000000000
+        }
+      ],
+      "durationTicks": 200
+    },
+    {
+      "id": "chemmod:compact_copper_block",
+      "machineTag": "chemmod:forming_hammer",
+      "inputs": [
+        {
+          "material": "chemmod:copper",
+          "form": "ingot",
+          "massMicrograms": 1000000000,
+          "count": 9
+        }
+      ],
+      "outputs": [
+        {
+          "material": "chemmod:copper",
+          "form": "block",
+          "massMicrograms": 9000000000
+        }
+      ],
+      "durationTicks": 300
+    },
+    {
+      "id": "chemmod:unpack_copper_block",
+      "machineTag": "chemmod:cutting",
+      "inputs": [
+        {
+          "material": "chemmod:copper",
+          "form": "block",
+          "massMicrograms": 9000000000
+        }
+      ],
+      "outputs": [
+        {
+          "material": "chemmod:copper",
+          "form": "ingot",
+          "massMicrograms": 1000000000,
+          "count": 9
+        }
+      ],
+      "durationTicks": 300
+    },
+    {
+      "id": "chemmod:cut_copper_gear",
+      "machineTag": "chemmod:cutting",
+      "inputs": [
+        {
+          "material": "chemmod:copper",
+          "form": "plate",
+          "massMicrograms": 1000000000
+        }
+      ],
+      "outputs": [
+        {
+          "material": "chemmod:copper",
+          "form": "gear",
+          "massMicrograms": 1000000000
+        }
+      ],
+      "durationTicks": 300
+    },
+    {
+      "id": "chemmod:remelt_copper_ingot",
+      "machineTag": "chemmod:melting",
+      "inputs": [
+        {
+          "material": "chemmod:copper",
+          "form": "ingot",
+          "massMicrograms": 1000000000
+        }
+      ],
+      "outputs": [
+        {
+          "material": "chemmod:copper",
+          "form": "liquid",
+          "massMicrograms": 1000000000
+        }
+      ],
+      "durationTicks": 400,
+      "conditions": {
+        "minimumTemperatureKelvin": 1357.77
+      }
+    },
+    {
+      "id": "chemmod:remelt_copper_nugget",
+      "machineTag": "chemmod:melting",
+      "inputs": [
+        {
+          "material": "chemmod:copper",
+          "form": "nugget",
+          "massMicrograms": 125000000,
+          "count": 8
+        }
+      ],
+      "outputs": [
+        {
+          "material": "chemmod:copper",
+          "form": "liquid",
+          "massMicrograms": 1000000000
+        }
+      ],
+      "durationTicks": 400,
+      "conditions": {
+        "minimumTemperatureKelvin": 1357.77
+      }
+    },
+    {
+      "id": "chemmod:remelt_copper_plate",
+      "machineTag": "chemmod:melting",
+      "inputs": [
+        {
+          "material": "chemmod:copper",
+          "form": "plate",
+          "massMicrograms": 1000000000
+        }
+      ],
+      "outputs": [
+        {
+          "material": "chemmod:copper",
+          "form": "liquid",
+          "massMicrograms": 1000000000
+        }
+      ],
+      "durationTicks": 400,
+      "conditions": {
+        "minimumTemperatureKelvin": 1357.77
+      }
+    },
+    {
+      "id": "chemmod:remelt_copper_rod",
+      "machineTag": "chemmod:melting",
+      "inputs": [
+        {
+          "material": "chemmod:copper",
+          "form": "rod",
+          "massMicrograms": 1000000000
+        }
+      ],
+      "outputs": [
+        {
+          "material": "chemmod:copper",
+          "form": "liquid",
+          "massMicrograms": 1000000000
+        }
+      ],
+      "durationTicks": 400,
+      "conditions": {
+        "minimumTemperatureKelvin": 1357.77
+      }
+    },
+    {
+      "id": "chemmod:remelt_copper_wire",
+      "machineTag": "chemmod:melting",
+      "inputs": [
+        {
+          "material": "chemmod:copper",
+          "form": "wire",
+          "massMicrograms": 1000000000
+        }
+      ],
+      "outputs": [
+        {
+          "material": "chemmod:copper",
+          "form": "liquid",
+          "massMicrograms": 1000000000
+        }
+      ],
+      "durationTicks": 400,
+      "conditions": {
+        "minimumTemperatureKelvin": 1357.77
+      }
+    },
+    {
+      "id": "chemmod:remelt_copper_gear",
+      "machineTag": "chemmod:melting",
+      "inputs": [
+        {
+          "material": "chemmod:copper",
+          "form": "gear",
+          "massMicrograms": 1000000000
+        }
+      ],
+      "outputs": [
+        {
+          "material": "chemmod:copper",
+          "form": "liquid",
+          "massMicrograms": 1000000000
+        }
+      ],
+      "durationTicks": 400,
+      "conditions": {
+        "minimumTemperatureKelvin": 1357.77
+      }
+    }
+  ]
+}
