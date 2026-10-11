@@ -57,6 +57,17 @@ class LaboratoryAssetsTest(unittest.TestCase):
         for key in ('item.chemmod.test_tube_rack', 'item.chemmod.laboratory_tray', 'tooltip.chemmod.holder.use'):
             self.assertTrue(ru[key] and en[key])
 
+    def test_every_trivial_substance_has_a_localized_name(self):
+        root = Path(__file__).resolve().parents[1]
+        trivial = json.loads((root / 'core/src/main/resources/chemmod/names/trivial.json').read_text())
+        entries = trivial['entries'] if isinstance(trivial, dict) and 'entries' in trivial else trivial
+        ru = json.loads((ASSETS / 'lang/ru_ru.json').read_text())
+        en = json.loads((ASSETS / 'lang/en_us.json').read_text())
+        for entry in entries:
+            key = 'substance.chemmod.' + entry['canonicalName']
+            self.assertTrue(ru.get(key), key)
+            self.assertTrue(en.get(key), key)
+
     def test_content_type_labels_are_distinct(self):
         labels = [(ASSETS / f'textures/block/lab/{name}_label.png').read_bytes() for name in ('empty','pure','mixture')]
         self.assertEqual(len(set(labels)), 3)

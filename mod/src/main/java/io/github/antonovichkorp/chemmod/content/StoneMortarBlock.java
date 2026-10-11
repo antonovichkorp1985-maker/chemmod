@@ -22,8 +22,34 @@ public final class StoneMortarBlock extends Block {
     private static final List<MaterialTransitionSpec> TRANSITIONS =
         MaterialProcessExports.bundledManualTransitions();
 
+    // The bowl model occupies 2..14 in X/Z and rises to y=9. Collision must follow those
+    // bounds; the default full-cube shape let the player stand on and select a whole block
+    // of air around the bowl.
+    private static final net.minecraft.world.phys.shapes.VoxelShape SHAPE =
+        Block.box(2, 0, 2, 14, 9, 14);
+
     public StoneMortarBlock(Properties properties) {
         super(properties);
+    }
+
+    @Override
+    protected net.minecraft.world.phys.shapes.VoxelShape getShape(
+        BlockState state, net.minecraft.world.level.BlockGetter level, BlockPos pos,
+        net.minecraft.world.phys.shapes.CollisionContext context) {
+        return SHAPE;
+    }
+
+    @Override
+    protected net.minecraft.world.phys.shapes.VoxelShape getCollisionShape(
+        BlockState state, net.minecraft.world.level.BlockGetter level, BlockPos pos,
+        net.minecraft.world.phys.shapes.CollisionContext context) {
+        return SHAPE;
+    }
+
+    @Override
+    protected net.minecraft.world.phys.shapes.VoxelShape getInteractionShape(
+        BlockState state, net.minecraft.world.level.BlockGetter level, BlockPos pos) {
+        return SHAPE;
     }
 
     @Override
