@@ -48,6 +48,18 @@ public final class ChemBlocks {
         )
     );
 
+    public static final DeferredHolder<Block, GasTankBlock> GAS_TANK = BLOCKS.register(
+        "gas_tank",
+        () -> new GasTankBlock(
+            BlockBehaviour.Properties.of()
+                .mapColor(MapColor.METAL)
+                .requiresCorrectToolForDrops()
+                .strength(3.0F, 6.0F)
+                .sound(SoundType.METAL)
+                .noOcclusion()
+        )
+    );
+
     public static final DeferredHolder<Block, OreWasherBlock> ORE_WASHER = BLOCKS.register(
         "ore_washer",
         () -> new OreWasherBlock(

@@ -34,6 +34,10 @@ public final class ChemBlockEntities {
         BLOCK_ENTITY_TYPES.register("laboratory_holder", () -> BlockEntityType.Builder.of(
             LaboratoryHolderBlockEntity::new, ChemBlocks.LABORATORY_HOLDER.get()).build(null));
 
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<GasTankBlockEntity>> GAS_TANK =
+        BLOCK_ENTITY_TYPES.register("gas_tank", () -> BlockEntityType.Builder.of(
+            GasTankBlockEntity::new, ChemBlocks.GAS_TANK.get()).build(null));
+
     private ChemBlockEntities() {}
 
     public static void register(IEventBus eventBus) {

@@ -234,5 +234,7 @@
   "substance.chemmod.formic_acid": "Formic-acid",
   "substance.chemmod.ethylene_glycol": "Ethylene-glycol",
   "substance.chemmod.methylamine": "Ch5n",
-  "substance.chemmod.acetonitrile": "C2h3n"
+  "substance.chemmod.acetonitrile": "C2h3n",
+  "block.chemmod.gas_tank": "Gas Tank",
+  "message.chemmod.gas_tank.readout": "Tank pressure %s kPa, temperature %s K"
 }

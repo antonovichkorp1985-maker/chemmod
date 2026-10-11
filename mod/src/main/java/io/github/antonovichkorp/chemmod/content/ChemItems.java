@@ -52,6 +52,11 @@ public final class ChemItems {
         () -> new BlockItem(ChemBlocks.STONE_MORTAR.get(), new Item.Properties())
     );
 
+    public static final DeferredHolder<Item, BlockItem> GAS_TANK = ITEMS.register(
+        "gas_tank",
+        () -> new BlockItem(ChemBlocks.GAS_TANK.get(), new Item.Properties())
+    );
+
     public static final DeferredHolder<Item, BlockItem> ORE_WASHER = ITEMS.register(
         "ore_washer",
         () -> new BlockItem(ChemBlocks.ORE_WASHER.get(), new Item.Properties())
