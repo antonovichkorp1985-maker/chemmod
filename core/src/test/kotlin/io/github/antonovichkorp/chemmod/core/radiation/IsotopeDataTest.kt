@@ -131,14 +131,19 @@ class IsotopeDataTest {
 
     @Test
     fun `branches whose release energy is not sourced are listed, not silently zero`() {
-        // Half-lives for these five come from the decay-chain tables; their Q values did not, and
-        // the data carries 0.0 rather than an invented number.
+        // The half-lives of these come from published tables; their Q values do not, so the data
+        // carries 0.0 rather than an invented number. Rb-87 joined the list with the natural
+        // isotopic composition slice: its half-life is what the specific activity needs, and its
+        // beta endpoint was not sourced, so it stays a known hole instead of a guess.
         val unsourced = data.all()
             .filter { isotope -> isotope.scheme.branches.any { it.releasedEnergyMeV == 0.0 } }
             .map { it.nuclide.displayName }
             .toSet()
         assertEquals(
-            setOf("Pb-214", "Bi-214", "Po-214", "Pb-210", "Bi-210", "Co-60", "I-131", "Pu-238"),
+            setOf(
+                "Pb-214", "Bi-214", "Po-214", "Pb-210", "Bi-210",
+                "Co-60", "I-131", "Pu-238", "Rb-87",
+            ),
             unsourced,
         )
     }

@@ -21,6 +21,10 @@ jobs:
         run: |
           python3 scripts/generate_element_polarizability.py
           git diff --exit-code core/src/main/resources/chemmod/elements.json
+      - name: Check the isotope table is complete and consistent
+        run: |
+          python3 scripts/extend_isotope_table.py
+          git diff --exit-code core/src/main/resources/chemmod/isotopes.json
       - uses: actions/setup-java@v5
         with:
           distribution: temurin

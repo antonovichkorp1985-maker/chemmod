@@ -105,6 +105,10 @@
     {"symbol":"Ni","massNumber":60},
     {"symbol":"I","massNumber":131,"halfLifeSeconds":692928.0,"branches":[{"mode":"beta-","daughterSymbol":"Xe","daughterMassNumber":131,"fraction":1.0,"energyMeV":0.0}]},
     {"symbol":"Xe","massNumber":131},
-    {"symbol":"Pu","massNumber":238,"halfLifeSeconds":2767601520.0,"branches":[{"mode":"alpha","daughterSymbol":"U","daughterMassNumber":234,"fraction":1.0,"energyMeV":0.0}]}
+    {"symbol":"Pu","massNumber":238,"halfLifeSeconds":2767601520.0,"branches":[{"mode":"alpha","daughterSymbol":"U","daughterMassNumber":234,"fraction":1.0,"energyMeV":0.0}]},
+    {"symbol":"Rb","massNumber":85},
+    {"symbol":"Rb","massNumber":87,"halfLifeSeconds":1.568412e+18,"branches":[{"mode":"beta-","daughterSymbol":"Sr","daughterMassNumber":87,"fraction":1.0,"energyMeV":0.0}]},
+    {"symbol":"Sr","massNumber":87},
+    {"symbol":"Pb","massNumber":204}
   ]
 }
