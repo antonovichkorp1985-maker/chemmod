@@ -118,6 +118,14 @@ data class BoilingRuleSet(
     /** Ethers: an oxygen that accepts but never donates. */
     val etherBaseCelsius: Double,
     val etherDispersionCelsius: Double,
+    /**
+     * Monohalides: dispersion plus one term per halogen element, chlorine being the reference of
+     * the fit (`halideCelsiusPerAtom["Cl"]` is zero by construction). The per-element map is data,
+     * so widening the family means widening the map, not editing the predictor.
+     */
+    val halideBaseCelsius: Double,
+    val halideDispersionCelsius: Double,
+    val halideCelsiusPerAtom: Map<String, Double>,
 )
 
 @Serializable
@@ -155,6 +163,9 @@ private data class BoilingRuleSetDocument(
     val carbonylDispersionCelsius: Double,
     val etherBaseCelsius: Double,
     val etherDispersionCelsius: Double,
+    val halideBaseCelsius: Double,
+    val halideDispersionCelsius: Double,
+    val halideCelsiusPerAtom: Map<String, Double> = emptyMap(),
 ) {
     fun toDomain(): BoilingRuleSet {
         val values = listOf(
@@ -169,7 +180,8 @@ private data class BoilingRuleSetDocument(
             amineHydrogenBondDonorCelsius,
             carbonylDispersionCelsius,
             etherDispersionCelsius,
-        ) + exactFormulaCelsius.values
+            halideDispersionCelsius,
+        ) + exactFormulaCelsius.values + halideCelsiusPerAtom.values
         require(values.all { it.isFinite() }) { "Boiling rule coefficients must be finite" }
         require(hydrogenBondCelsiusPerKilojoulePerMole >= 0.0) {
             "A hydrogen bond cannot lower the boiling point"
@@ -179,8 +191,11 @@ private data class BoilingRuleSetDocument(
         }
         require(
             amineDispersionCelsius > 0.0 && carbonylDispersionCelsius > 0.0 &&
-                etherDispersionCelsius > 0.0
+                etherDispersionCelsius > 0.0 && halideDispersionCelsius > 0.0
         ) { "A heavier molecule of the same class cannot boil lower" }
+        require(halideCelsiusPerAtom.isNotEmpty()) {
+            "A halide branch with no per-element coefficient would silently refuse every halide"
+        }
         return BoilingRuleSet(
             exactFormulaCelsius = exactFormulaCelsius.toMap(),
             hydrocarbonBaseCelsius = hydrocarbonBaseCelsius,
@@ -197,6 +212,9 @@ private data class BoilingRuleSetDocument(
             carbonylDispersionCelsius = carbonylDispersionCelsius,
             etherBaseCelsius = etherBaseCelsius,
             etherDispersionCelsius = etherDispersionCelsius,
+            halideBaseCelsius = halideBaseCelsius,
+            halideDispersionCelsius = halideDispersionCelsius,
+            halideCelsiusPerAtom = halideCelsiusPerAtom.toMap(),
         )
     }
 }

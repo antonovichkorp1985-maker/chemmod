@@ -90,6 +90,18 @@ object FunctionalGroups {
         }
     }.distinct()
 
+    /**
+     * How many atoms of each halogen the graph carries, keyed by element symbol. The halogen set
+     * lives here and nowhere else: a property branch that needs it reads this map instead of
+     * naming elements itself, so the day astatine gets a coefficient nothing moves in code.
+     */
+    fun halogenCounts(graph: MoleculeGraph): Map<String, Int> =
+        graph.atoms.asSequence()
+            .map { it.element.symbol }
+            .filter { it in HALOGENS }
+            .groupingBy { it }
+            .eachCount()
+
     /** The compound classes a graph belongs to; a molecule usually carries several. */
     fun classes(graph: MoleculeGraph): Set<String> {
         val groups = groups(graph)

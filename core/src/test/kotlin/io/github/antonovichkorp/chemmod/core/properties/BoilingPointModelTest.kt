@@ -76,16 +76,43 @@ class BoilingPointModelTest {
         // Measured this way against experiment the old mass-only branch gave dimethyl ether
         // -41.0 instead of -24.8, acetone -7.3 instead of 56.1, acetonitrile -55.9 instead of
         // 81.6 and tetrachloromethane 208.1 instead of 76.7. Refusing is the smaller lie.
-        // Ethers, ketones and amines have their own branches now; what is still refused is a
-        // nitrile, a halide, an ester and a carboxylic acid - measured, they were off by 137 K,
-        // 131 K and more, so no number is better than a wrong one.
+        // Ethers, ketones, amines and monohalides have their own branches now; what is still
+        // refused is a nitrile, an ester, a carboxylic acid - and any polyhalide, because the
+        // monohalide fit put dichlorodifluoromethane +131 K and tetrachloromethane +106 K out.
         assertNull(boiling("CC#N"))
         assertNull(boiling("C(Cl)(Cl)(Cl)Cl"))
+        assertNull(boiling("ClCCl"))
         assertNull(boiling("CCOC(C)=O"))
         assertNull(boiling("CC(=O)O"))
-        assertEquals("no-model:fit-covers-hydrocarbons-only", basis("C(Cl)(Cl)(Cl)Cl"))
+        assertEquals("no-model:halide-fit-covers-monohalides-only", basis("C(Cl)(Cl)(Cl)Cl"))
         // Hydrocarbons stay inside the fit and keep their numbers.
         assertEquals("dispersion+ring+aromatic", basis("CCCCCC"))
+    }
+
+    @Test
+    fun `monohalides boil by dispersion plus a term for the halogen they carry`() {
+        // Fit on twelve sourced monohalides with the shared ring and aromaticity corrections,
+        // RMS 4.9 K, worst chlorobenzene at +8.7 K. Chlorine is the reference of the fit, so its
+        // per-element coefficient is zero and the others are measured against it: replacing
+        // chlorine by bromine lowers the term by 63.7 K, by iodine by 113.5 K, because the extra
+        // mass of the halogen is already in the dispersion term.
+        assertNear(-78.4, boiling("CF")!!, 10.0)
+        assertNear(-24.2, boiling("CCl")!!, 10.0)
+        assertNear(12.3, boiling("CCCl")!!, 10.0)
+        assertNear(46.6, boiling("CCC(Cl)")!!, 10.0)
+        assertNear(3.6, boiling("CBr")!!, 10.0)
+        assertNear(38.4, boiling("CCBr")!!, 10.0)
+        assertNear(71.0, boiling("CCCBr")!!, 10.0)
+        assertNear(42.6, boiling("CI")!!, 10.0)
+        assertNear(72.3, boiling("CCI")!!, 10.0)
+        assertNear(102.4, boiling("CCCI")!!, 10.0)
+        assertNear(131.7, boiling("ClC1=CC=CC=C1")!!, 10.0)
+        assertNear(156.0, boiling("BrC1=CC=CC=C1")!!, 10.0)
+        assertEquals("monohalide+dispersion", basis("CCCl"))
+        // Three isomers of C3H7I are indistinguishable here, but the halogen series is not: the
+        // same carbon skeleton boils in the order F < Cl < Br < I, which is what the term does.
+        assertTrue(boiling("CCCl")!! < boiling("CCBr")!!)
+        assertTrue(boiling("CCBr")!! < boiling("CCI")!!)
     }
 
     @Test

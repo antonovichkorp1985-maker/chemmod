@@ -18,12 +18,24 @@ class FunctionalGroupTest {
     private fun groups(structure: String): Set<String> =
         FunctionalGroups.groups(Molecule.fromSMILESlike(structure).graph).map { it.kind }.toSet()
 
+    private fun halogens(structure: String): Map<String, Int> =
+        FunctionalGroups.halogenCounts(Molecule.fromSMILESlike(structure).graph)
+
     @Test
     fun `alkanes are hydrocarbons with nothing else in them`() {
         assertEquals(setOf("hydrocarbon", "alkane"), classes("CCCC"))
         // Branched or not makes no difference to the class, only to the identity.
         assertEquals(classes("CCCC"), classes("CC(C)C"))
         assertEquals(setOf("hydrocarbon", "alkane"), classes("C"))
+    }
+
+    @Test
+    fun `halogen counts come out per element, so no branch has to name them`() {
+        // Dichlorofluoromethane: the set of halogens lives in one place and the counts are read
+        // from the graph, which is what lets a property branch stay element-agnostic.
+        assertEquals(mapOf("Cl" to 2, "F" to 1), halogens("ClC(Cl)F"))
+        assertEquals(mapOf("I" to 1), halogens("CCCI"))
+        assertEquals(emptyMap(), halogens("CCCCCC"))
     }
 
     @Test

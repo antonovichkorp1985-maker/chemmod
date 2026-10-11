@@ -127,12 +127,20 @@ class PropertyEngine(private val rules: PropertyRuleSet) {
      *  * a calibration anchor, reported as such, for substances the model cannot derive yet;
      *  * alcohols and polyols: dispersion plus the hydrogen-bond network, so ethylene glycol and
      *    glycerol boil higher because of the donor and acceptor sites they carry;
+     *  * amines: dispersion plus one term per hydrogen the nitrogen can donate, which is what
+     *    orders the three C4H11N isomers (RMS 4.4 K);
+     *  * ketones and aldehydes, ethers: dispersion plus ring and aromaticity corrections
+     *    (RMS 2.6 K and 1.1 K);
+     *  * monohalides: dispersion plus one term per halogen element, read from
+     *    [FunctionalGroups.halogenCounts] so the branch names no element itself (RMS 4.9 K);
      *  * hydrocarbons: dispersion `a + b * M^(2/3)` plus ring and aromaticity corrections,
      *    fitted on alkanes, alkenes, cycloalkanes and arenes (RMS 6.3 K);
      *  * anything else: no value at all. Molar mass is a stand-in for polarizibility and it
      *    collapses outside carbon and hydrogen - measured against experiment the old branch gave
      *    tetrachloromethane +131 K, tetrafluoromethane +196 K, acetonitrile -137 K, methylamine
-     *    -81 K. A refused number is honest; a wrong one is not.
+     *    -81 K. A refused number is honest; a wrong one is not. Polyhalides are refused for the
+     *    same reason: geminal and vicinal arrangements differ through permanent dipoles this
+     *    model has no term for.
      */
     private fun predictBoilingPoint(graph: MoleculeGraph, formula: Map<String, Int>): BoilingEstimate {
         val formulaText = FormulaCalculator.hillFormula(graph)
@@ -195,6 +203,27 @@ class PropertyEngine(private val rules: PropertyRuleSet) {
                 "ether+dispersion",
             )
         }
+        if (FunctionalGroups.HALIDE_CLASS in classes && classes.none { it in polarClasses }) {
+            // One halogen per molecule is the fitted domain. Polyhalides are refused rather than
+            // extrapolated: measured, these coefficients put dichlorodifluoromethane +131 K and
+            // tetrachloromethane +106 K out, because geminal and vicinal arrangements differ
+            // through permanent dipoles this model has no term for.
+            val halogens = FunctionalGroups.halogenCounts(graph)
+            val perAtom = halogens.mapNotNull { (symbol, count) ->
+                rules.boiling.halideCelsiusPerAtom[symbol]?.let { it * count }
+            }
+            if (halogens.values.sum() == 1 && perAtom.size == halogens.size) {
+                return BoilingEstimate(
+                    rules.boiling.halideBaseCelsius +
+                        rules.boiling.halideDispersionCelsius * dispersion +
+                        perAtom.sum() +
+                        rules.boiling.ringCelsius * rings +
+                        rules.boiling.aromaticRingCelsius * aromatic,
+                    "monohalide+dispersion",
+                )
+            }
+            return BoilingEstimate(null, "no-model:halide-fit-covers-monohalides-only")
+        }
         if (FunctionalGroups.HYDROCARBON in classes) {
             return BoilingEstimate(
                 rules.boiling.hydrocarbonBaseCelsius +
@@ -205,7 +234,7 @@ class PropertyEngine(private val rules: PropertyRuleSet) {
             )
         }
         if ((formula["C"] ?: 0) > 0) {
-            return BoilingEstimate(null, "no-model:fit-covers-hydrocarbons-only")
+            return BoilingEstimate(null, "no-model:no-fitted-branch-for-these-classes")
         }
         return BoilingEstimate(null, "no-model")
     }

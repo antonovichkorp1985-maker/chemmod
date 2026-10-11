@@ -75,7 +75,15 @@
     "carbonylBaseCelsius": -79.77,
     "carbonylDispersionCelsius": 9.11,
     "etherBaseCelsius": -190.63,
-    "etherDispersionCelsius": 12.85
+    "etherDispersionCelsius": 12.85,
+    "halideBaseCelsius": -211.02,
+    "halideDispersionCelsius": 13.71,
+    "halideCelsiusPerAtom": {
+      "F": -11.33,
+      "Cl": 0.0,
+      "Br": -63.67,
+      "I": -113.48
+    }
   },
   "interactions": {
     "hydrogenBondDonorElements": [
