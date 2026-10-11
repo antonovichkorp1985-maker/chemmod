@@ -1,5 +1,7 @@
 package io.github.antonovichkorp.chemmod.core.model
 
+import io.github.antonovichkorp.chemmod.core.bond.BondCharacter
+
 /**
  * Whether an ion exchange actually proceeds, derived from the properties of the ions involved.
  *
