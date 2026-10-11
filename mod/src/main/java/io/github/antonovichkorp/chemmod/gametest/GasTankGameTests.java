@@ -52,8 +52,11 @@ public class GasTankGameTests {
     }
 
     private static GasTankBlockEntity place(GameTestHelper helper) {
-        helper.getLevel().setBlock(helper.absolutePos(TANK),
-            ChemBlocks.GAS_TANK.get().defaultBlockState(), 3);
-        return (GasTankBlockEntity) helper.getLevel().getBlockEntity(helper.absolutePos(TANK));
+        helper.setBlock(TANK, ChemBlocks.GAS_TANK.get().defaultBlockState());
+        var state = helper.getBlockState(TANK);
+        helper.assertTrue(state.is(ChemBlocks.GAS_TANK.get()), "tank block was not placed: " + state);
+        var be = helper.getBlockEntity(TANK);
+        helper.assertTrue(be != null, "tank block entity was null, state=" + state);
+        return (GasTankBlockEntity) be;
     }
 }
