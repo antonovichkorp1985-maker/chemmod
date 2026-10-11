@@ -77,12 +77,11 @@ class BoilingPointModelTest {
         // Measured this way against experiment the old mass-only branch gave dimethyl ether
         // -41.0 instead of -24.8, acetone -7.3 instead of 56.1, acetonitrile -55.9 instead of
         // 81.6 and tetrachloromethane 208.1 instead of 76.7. Refusing is the smaller lie.
-        // Ethers, ketones, amines, monohalides and nitriles have their own branches now; what is
-        // still refused is an ester, a carboxylic acid - and any polyhalide, because the
-        // monohalide fit put dichlorodifluoromethane +131 K and tetrachloromethane +106 K out.
+        // Ethers, ketones, amines, monohalides, nitriles and esters have their own branches now;
+        // what is still refused is a carboxylic acid - and any polyhalide, because the monohalide
+        // fit put dichlorodifluoromethane +131 K and tetrachloromethane +106 K out.
         assertNull(boiling("C(Cl)(Cl)(Cl)Cl"))
         assertNull(boiling("ClCCl"))
-        assertNull(boiling("CCOC(C)=O"))
         assertNull(boiling("CC(=O)O"))
         assertEquals("no-model:halide-fit-covers-monohalides-only", basis("C(Cl)(Cl)(Cl)Cl"))
         // Hydrocarbons stay inside the fit and keep their numbers.
@@ -90,14 +89,42 @@ class BoilingPointModelTest {
     }
 
     @Test
+    fun `esters boil by dispersion, corrected for rings and for a branched skeleton`() {
+        // Eight sourced esters. An ester cannot donate a hydrogen bond, so unlike the alcohols it
+        // needs no network term: polarity is absorbed by the intercept and the rest is dispersion.
+        assertNear(32.0, boiling("COC=O")!!, 4.5)               // methyl formate
+        assertNear(57.0, boiling("CC(=O)OC")!!, 4.5)            // methyl acetate
+        assertNear(77.1, boiling("CC(=O)OCC")!!, 4.5)           // ethyl acetate
+        assertNear(79.8, boiling("CCC(=O)OC")!!, 4.5)           // methyl propionate
+        assertNear(89.0, boiling("CC(=O)OC(C)C")!!, 4.5)        // isopropyl acetate
+        assertNear(101.6, boiling("CC(=O)OCCC")!!, 4.5)         // propyl acetate
+        assertNear(126.1, boiling("CC(=O)OCCCC")!!, 4.5)        // butyl acetate
+        // The worst point, and the reason it is worst is named: the aromaticity correction was
+        // fitted on hydrocarbons, and an ester carbonyl conjugated with a ring is not quite that.
+        assertNear(199.0, boiling("COC(=O)C1=CC=CC=C1")!!, 7.0) // methyl benzoate
+        assertEquals("ester+dispersion+branching", basis("CC(=O)OCC"))
+    }
+
+    @Test
+    fun `constitutional isomers of the same ester formula come out in the measured order`() {
+        // Ethyl acetate and methyl propionate are both C4H8O2 and boil 2.8 K apart; propyl acetate
+        // and isopropyl acetate are both C5H10O2 and boil 12.6 K apart, because one is branched.
+        // A model keyed on molar mass alone cannot separate either pair.
+        assertTrue(boiling("CCC(=O)OC")!! > boiling("CC(=O)OCC")!!)
+        assertTrue(boiling("CC(=O)OCCC")!! > boiling("CC(=O)OC(C)C")!!)
+    }
+
+    @Test
     fun `nitriles boil by dispersion, corrected for rings and for a branched skeleton`() {
         // Five sourced nitriles, saturated or aryl. The cyano group is polar - acetonitrile carries
         // 3.93 D - and that is what the intercept absorbs; nothing here is told it is polar.
-        assertNear(81.7, boiling("CC#N")!!, 3.0)            // acetonitrile
-        assertNear(97.0, boiling("CCC#N")!!, 3.0)           // propionitrile
-        assertNear(117.9, boiling("CCCC#N")!!, 3.0)         // butyronitrile
-        assertNear(103.9, boiling("CC(C)C#N")!!, 3.0)       // isobutyronitrile
-        assertNear(190.0, boiling("N#CC1=CC=CC=C1")!!, 3.0) // benzonitrile
+        // Tolerance widened from 3.0 to 3.5 when the branching coefficient stopped being fitted on
+        // nitriles alone and was refitted jointly with the esters: one physical effect, one number.
+        assertNear(81.7, boiling("CC#N")!!, 3.5)            // acetonitrile
+        assertNear(97.0, boiling("CCC#N")!!, 3.5)           // propionitrile
+        assertNear(117.9, boiling("CCCC#N")!!, 3.5)         // butyronitrile
+        assertNear(103.9, boiling("CC(C)C#N")!!, 3.5)       // isobutyronitrile
+        assertNear(190.0, boiling("N#CC1=CC=CC=C1")!!, 3.5) // benzonitrile
         assertEquals("nitrile+dispersion+branching", basis("CC#N"))
     }
 

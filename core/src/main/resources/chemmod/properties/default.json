@@ -84,9 +84,11 @@
       "Br": -63.67,
       "I": -113.48
     },
-    "nitrileBaseCelsius": -12.02,
-    "nitrileDispersionCelsius": 7.71,
-    "branchPointCelsius": -13.93
+    "nitrileBaseCelsius": -11.92,
+    "nitrileDispersionCelsius": 7.72,
+    "branchPointCelsius": -15.33,
+    "esterBaseCelsius": -155.37,
+    "esterDispersionCelsius": 11.94
   },
   "interactions": {
     "hydrogenBondDonorElements": [

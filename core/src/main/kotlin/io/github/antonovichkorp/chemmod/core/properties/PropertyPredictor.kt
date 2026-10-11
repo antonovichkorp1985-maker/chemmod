@@ -134,7 +134,9 @@ class PropertyEngine(private val rules: PropertyRuleSet) {
      *  * monohalides: dispersion plus one term per halogen element, read from
      *    [FunctionalGroups.halogenCounts] so the branch names no element itself (RMS 4.9 K);
      *  * nitriles: dispersion plus the ring, aromaticity and skeleton-branching corrections, on
-     *    saturated and aryl nitriles (RMS 1.5 K). Conjugated alkenenitriles are refused;
+     *    saturated and aryl nitriles (RMS 1.6 K). Conjugated alkenenitriles are refused;
+     *  * esters: the same shape of correction on eight sourced esters (RMS 3.6 K). The branching
+     *    coefficient is shared with the nitrile branch and fitted jointly over both;
      *  * hydrocarbons: dispersion `a + b * M^(2/3)` plus ring and aromaticity corrections,
      *    fitted on alkanes, alkenes, cycloalkanes and arenes (RMS 6.3 K);
      *  * anything else: no value at all. Molar mass is a stand-in for polarizibility and it
@@ -222,6 +224,18 @@ class PropertyEngine(private val rules: PropertyRuleSet) {
                     rules.boiling.ringCelsius * rings +
                     rules.boiling.aromaticRingCelsius * aromatic,
                 "nitrile+dispersion+branching",
+            )
+        }
+        if (FunctionalGroups.ESTER_CLASS in classes &&
+            classes.none { it in polarClasses - FunctionalGroups.ESTER_CLASS }
+        ) {
+            return BoilingEstimate(
+                rules.boiling.esterBaseCelsius +
+                    rules.boiling.esterDispersionCelsius * dispersion +
+                    rules.boiling.branchPointCelsius * FunctionalGroups.branchPoints(graph) +
+                    rules.boiling.ringCelsius * rings +
+                    rules.boiling.aromaticRingCelsius * aromatic,
+                "ester+dispersion+branching",
             )
         }
         if (FunctionalGroups.HALIDE_CLASS in classes && classes.none { it in polarClasses }) {

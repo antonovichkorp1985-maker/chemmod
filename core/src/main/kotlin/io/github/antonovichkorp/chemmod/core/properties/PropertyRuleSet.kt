@@ -134,9 +134,19 @@ data class BoilingRuleSet(
     val nitrileBaseCelsius: Double,
     val nitrileDispersionCelsius: Double,
     /**
-     * Per skeleton branch point. A branch compacts the molecule and lowers the boiling point;
-     * −13.93 K here sits inside the 8–18 K the alkane series shows on its own, from n-butane
-     * against isobutane to isopentane against neopentane.
+     * Esters: dispersion plus the skeleton and ring corrections. Fitted on eight sourced esters —
+     * RMS 3.6 K, worst methyl benzoate at −6.6 K, because the aromaticity correction was fitted on
+     * hydrocarbons and an ester carbonyl conjugated with a ring is not quite that.
+     */
+    val esterBaseCelsius: Double,
+    val esterDispersionCelsius: Double,
+    /**
+     * Per skeleton branch point, shared by every branch that uses it. A branch compacts the
+     * molecule and lowers the boiling point. Fitted jointly on the nitriles and the esters rather
+     * than per class, because it is one physical effect and two fitted values for it would be a
+     * shared coefficient pretending to be independent. The joint value, −15.33 K, sits inside the
+     * 8–18 K the alkane series shows on its own, from n-butane against isobutane to isopentane
+     * against neopentane.
      */
     val branchPointCelsius: Double,
 )
@@ -181,6 +191,8 @@ private data class BoilingRuleSetDocument(
     val halideCelsiusPerAtom: Map<String, Double> = emptyMap(),
     val nitrileBaseCelsius: Double,
     val nitrileDispersionCelsius: Double,
+    val esterBaseCelsius: Double,
+    val esterDispersionCelsius: Double,
     val branchPointCelsius: Double,
 ) {
     fun toDomain(): BoilingRuleSet {
@@ -198,6 +210,7 @@ private data class BoilingRuleSetDocument(
             etherDispersionCelsius,
             halideDispersionCelsius,
             nitrileDispersionCelsius,
+            esterDispersionCelsius,
             branchPointCelsius,
         ) + exactFormulaCelsius.values + halideCelsiusPerAtom.values
         require(values.all { it.isFinite() }) { "Boiling rule coefficients must be finite" }
@@ -210,7 +223,7 @@ private data class BoilingRuleSetDocument(
         require(
             amineDispersionCelsius > 0.0 && carbonylDispersionCelsius > 0.0 &&
                 etherDispersionCelsius > 0.0 && halideDispersionCelsius > 0.0 &&
-                nitrileDispersionCelsius > 0.0
+                nitrileDispersionCelsius > 0.0 && esterDispersionCelsius > 0.0
         ) { "A heavier molecule of the same class cannot boil lower" }
         require(branchPointCelsius <= 0.0) {
             "A branch reduces the surface a molecule touches, so it cannot raise the boiling point"
@@ -239,6 +252,8 @@ private data class BoilingRuleSetDocument(
             halideCelsiusPerAtom = halideCelsiusPerAtom.toMap(),
             nitrileBaseCelsius = nitrileBaseCelsius,
             nitrileDispersionCelsius = nitrileDispersionCelsius,
+            esterBaseCelsius = esterBaseCelsius,
+            esterDispersionCelsius = esterDispersionCelsius,
             branchPointCelsius = branchPointCelsius,
         )
     }
