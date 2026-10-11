@@ -29,6 +29,21 @@ data class Element(
      * are left null rather than guessed, and a null must be reported as "no model", never as zero.
      */
     val electronegativity: Double? = null,
+    /**
+     * Ionic radius in picometres for the most common ion at six-coordination, or null where no
+     * measured value is held. Shannon's 1976 revised effective ionic radii.
+     *
+     * A radius is only meaningful together with a charge and a coordination number, so this is a
+     * deliberate simplification: one characteristic ion per element. It is enough for the
+     * radius-ratio rules that pick a lattice, and a null means "no model", never "small ion".
+     */
+    val ionicRadiusPicometres: Double? = null,
+    /**
+     * Charges this element actually forms as an ion, most characteristic first. Empty where the
+     * element does not form simple ions. Which partners can exchange in a metathesis follows from
+     * these, not from an enumerated list of salts.
+     */
+    val commonIonCharges: List<Int> = emptyList(),
 ) {
     init {
         require(symbol.matches(Regex("[A-Z][a-z]?"))) { "Invalid element symbol: $symbol" }
@@ -47,5 +62,9 @@ data class Element(
         require(electronegativity == null || electronegativity > 0.0) {
             "Electronegativity must be positive where it is known"
         }
+        require(ionicRadiusPicometres == null || ionicRadiusPicometres > 0.0) {
+            "Ionic radius must be positive where it is known"
+        }
+        require(commonIonCharges.none { it == 0 }) { "An ion charge of zero is not an ion" }
     }
 }

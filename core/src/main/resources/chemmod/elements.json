@@ -11,7 +11,11 @@
       ],
       "valenceElectrons": 1,
       "polarizibilityCubicAngstroms": 0.667,
-      "electronegativity": 2.2
+      "electronegativity": 2.2,
+      "commonIonCharges": [
+        1,
+        -1
+      ]
     },
     {
       "symbol": "He",
@@ -34,7 +38,11 @@
       ],
       "valenceElectrons": 1,
       "polarizibilityCubicAngstroms": 24.302,
-      "electronegativity": 0.98
+      "electronegativity": 0.98,
+      "ionicRadiusPicometres": 76,
+      "commonIonCharges": [
+        1
+      ]
     },
     {
       "symbol": "Be",
@@ -46,7 +54,11 @@
       ],
       "valenceElectrons": 2,
       "polarizibilityCubicAngstroms": 5.587,
-      "electronegativity": 1.57
+      "electronegativity": 1.57,
+      "ionicRadiusPicometres": 45,
+      "commonIonCharges": [
+        2
+      ]
     },
     {
       "symbol": "B",
@@ -58,7 +70,11 @@
       ],
       "valenceElectrons": 3,
       "polarizibilityCubicAngstroms": 3.038,
-      "electronegativity": 2.04
+      "electronegativity": 2.04,
+      "ionicRadiusPicometres": 27,
+      "commonIonCharges": [
+        3
+      ]
     },
     {
       "symbol": "C",
@@ -70,7 +86,12 @@
       ],
       "valenceElectrons": 4,
       "polarizibilityCubicAngstroms": 1.674,
-      "electronegativity": 2.55
+      "electronegativity": 2.55,
+      "ionicRadiusPicometres": 16,
+      "commonIonCharges": [
+        4,
+        -4
+      ]
     },
     {
       "symbol": "N",
@@ -83,7 +104,11 @@
       ],
       "valenceElectrons": 5,
       "polarizibilityCubicAngstroms": 1.097,
-      "electronegativity": 3.04
+      "electronegativity": 3.04,
+      "ionicRadiusPicometres": 146,
+      "commonIonCharges": [
+        -3
+      ]
     },
     {
       "symbol": "O",
@@ -95,7 +120,11 @@
       ],
       "valenceElectrons": 6,
       "polarizibilityCubicAngstroms": 0.785,
-      "electronegativity": 3.44
+      "electronegativity": 3.44,
+      "ionicRadiusPicometres": 140,
+      "commonIonCharges": [
+        -2
+      ]
     },
     {
       "symbol": "F",
@@ -107,7 +136,11 @@
       ],
       "valenceElectrons": 7,
       "polarizibilityCubicAngstroms": 0.554,
-      "electronegativity": 3.98
+      "electronegativity": 3.98,
+      "ionicRadiusPicometres": 133,
+      "commonIonCharges": [
+        -1
+      ]
     },
     {
       "symbol": "Ne",
@@ -130,7 +163,11 @@
       ],
       "valenceElectrons": 1,
       "polarizibilityCubicAngstroms": 24.154,
-      "electronegativity": 0.93
+      "electronegativity": 0.93,
+      "ionicRadiusPicometres": 102,
+      "commonIonCharges": [
+        1
+      ]
     },
     {
       "symbol": "Mg",
@@ -142,7 +179,11 @@
       ],
       "valenceElectrons": 2,
       "polarizibilityCubicAngstroms": 10.551,
-      "electronegativity": 1.31
+      "electronegativity": 1.31,
+      "ionicRadiusPicometres": 72,
+      "commonIonCharges": [
+        2
+      ]
     },
     {
       "symbol": "Al",
@@ -154,7 +195,11 @@
       ],
       "valenceElectrons": 3,
       "polarizibilityCubicAngstroms": 8.565,
-      "electronegativity": 1.61
+      "electronegativity": 1.61,
+      "ionicRadiusPicometres": 53.5,
+      "commonIonCharges": [
+        3
+      ]
     },
     {
       "symbol": "Si",
@@ -166,7 +211,11 @@
       ],
       "valenceElectrons": 4,
       "polarizibilityCubicAngstroms": 5.527,
-      "electronegativity": 1.9
+      "electronegativity": 1.9,
+      "ionicRadiusPicometres": 40,
+      "commonIonCharges": [
+        4
+      ]
     },
     {
       "symbol": "P",
@@ -179,7 +228,12 @@
       ],
       "valenceElectrons": 5,
       "polarizibilityCubicAngstroms": 3.705,
-      "electronegativity": 2.19
+      "electronegativity": 2.19,
+      "ionicRadiusPicometres": 212,
+      "commonIonCharges": [
+        -3,
+        5
+      ]
     },
     {
       "symbol": "S",
@@ -193,7 +247,13 @@
       ],
       "valenceElectrons": 6,
       "polarizibilityCubicAngstroms": 2.875,
-      "electronegativity": 2.58
+      "electronegativity": 2.58,
+      "ionicRadiusPicometres": 184,
+      "commonIonCharges": [
+        -2,
+        4,
+        6
+      ]
     },
     {
       "symbol": "Cl",
@@ -205,7 +265,14 @@
       ],
       "valenceElectrons": 7,
       "polarizibilityCubicAngstroms": 2.163,
-      "electronegativity": 3.16
+      "electronegativity": 3.16,
+      "ionicRadiusPicometres": 181,
+      "commonIonCharges": [
+        -1,
+        1,
+        5,
+        7
+      ]
     },
     {
       "symbol": "Ar",
@@ -228,7 +295,11 @@
       ],
       "valenceElectrons": 1,
       "polarizibilityCubicAngstroms": 42.974,
-      "electronegativity": 0.82
+      "electronegativity": 0.82,
+      "ionicRadiusPicometres": 138,
+      "commonIonCharges": [
+        1
+      ]
     },
     {
       "symbol": "Ca",
@@ -240,7 +311,11 @@
       ],
       "valenceElectrons": 2,
       "polarizibilityCubicAngstroms": 23.858,
-      "electronegativity": 1.0
+      "electronegativity": 1.0,
+      "ionicRadiusPicometres": 100,
+      "commonIonCharges": [
+        2
+      ]
     },
     {
       "symbol": "Sc",
@@ -252,7 +327,11 @@
       ],
       "valenceElectrons": 3,
       "polarizibilityCubicAngstroms": 14.374,
-      "electronegativity": 1.36
+      "electronegativity": 1.36,
+      "ionicRadiusPicometres": 74.5,
+      "commonIonCharges": [
+        3
+      ]
     },
     {
       "symbol": "Ti",
@@ -266,7 +345,11 @@
       ],
       "valenceElectrons": 4,
       "polarizibilityCubicAngstroms": 14.818,
-      "electronegativity": 1.54
+      "electronegativity": 1.54,
+      "ionicRadiusPicometres": 60.5,
+      "commonIonCharges": [
+        4
+      ]
     },
     {
       "symbol": "V",
@@ -281,7 +364,11 @@
       ],
       "valenceElectrons": 5,
       "polarizibilityCubicAngstroms": 12.892,
-      "electronegativity": 1.63
+      "electronegativity": 1.63,
+      "ionicRadiusPicometres": 54,
+      "commonIonCharges": [
+        5
+      ]
     },
     {
       "symbol": "Cr",
@@ -295,7 +382,12 @@
       ],
       "valenceElectrons": 6,
       "polarizibilityCubicAngstroms": 12.299,
-      "electronegativity": 1.66
+      "electronegativity": 1.66,
+      "ionicRadiusPicometres": 61.5,
+      "commonIonCharges": [
+        3,
+        6
+      ]
     },
     {
       "symbol": "Mn",
@@ -311,7 +403,12 @@
       ],
       "valenceElectrons": 7,
       "polarizibilityCubicAngstroms": 10.077,
-      "electronegativity": 1.55
+      "electronegativity": 1.55,
+      "ionicRadiusPicometres": 83,
+      "commonIonCharges": [
+        2,
+        7
+      ]
     },
     {
       "symbol": "Fe",
@@ -324,7 +421,12 @@
       ],
       "valenceElectrons": 8,
       "polarizibilityCubicAngstroms": 9.187,
-      "electronegativity": 1.83
+      "electronegativity": 1.83,
+      "ionicRadiusPicometres": 78,
+      "commonIonCharges": [
+        2,
+        3
+      ]
     },
     {
       "symbol": "Co",
@@ -337,7 +439,11 @@
       ],
       "valenceElectrons": 9,
       "polarizibilityCubicAngstroms": 8.15,
-      "electronegativity": 1.88
+      "electronegativity": 1.88,
+      "ionicRadiusPicometres": 74.5,
+      "commonIonCharges": [
+        2
+      ]
     },
     {
       "symbol": "Ni",
@@ -350,7 +456,11 @@
       ],
       "valenceElectrons": 10,
       "polarizibilityCubicAngstroms": 7.261,
-      "electronegativity": 1.91
+      "electronegativity": 1.91,
+      "ionicRadiusPicometres": 69,
+      "commonIonCharges": [
+        2
+      ]
     },
     {
       "symbol": "Cu",
@@ -363,7 +473,12 @@
       ],
       "valenceElectrons": 11,
       "polarizibilityCubicAngstroms": 6.965,
-      "electronegativity": 1.9
+      "electronegativity": 1.9,
+      "ionicRadiusPicometres": 73,
+      "commonIonCharges": [
+        1,
+        2
+      ]
     },
     {
       "symbol": "Zn",
@@ -375,7 +490,11 @@
       ],
       "valenceElectrons": 2,
       "polarizibilityCubicAngstroms": 5.735,
-      "electronegativity": 1.65
+      "electronegativity": 1.65,
+      "ionicRadiusPicometres": 74,
+      "commonIonCharges": [
+        2
+      ]
     },
     {
       "symbol": "Ga",
@@ -387,7 +506,11 @@
       ],
       "valenceElectrons": 3,
       "polarizibilityCubicAngstroms": 7.409,
-      "electronegativity": 1.81
+      "electronegativity": 1.81,
+      "ionicRadiusPicometres": 62,
+      "commonIonCharges": [
+        3
+      ]
     },
     {
       "symbol": "Ge",
@@ -400,7 +523,11 @@
       ],
       "valenceElectrons": 4,
       "polarizibilityCubicAngstroms": 5.927,
-      "electronegativity": 2.01
+      "electronegativity": 2.01,
+      "ionicRadiusPicometres": 53,
+      "commonIonCharges": [
+        4
+      ]
     },
     {
       "symbol": "As",
@@ -413,7 +540,13 @@
       ],
       "valenceElectrons": 5,
       "polarizibilityCubicAngstroms": 4.446,
-      "electronegativity": 2.18
+      "electronegativity": 2.18,
+      "ionicRadiusPicometres": 222,
+      "commonIonCharges": [
+        -3,
+        3,
+        5
+      ]
     },
     {
       "symbol": "Se",
@@ -427,7 +560,13 @@
       ],
       "valenceElectrons": 6,
       "polarizibilityCubicAngstroms": 4.297,
-      "electronegativity": 2.55
+      "electronegativity": 2.55,
+      "ionicRadiusPicometres": 198,
+      "commonIonCharges": [
+        -2,
+        4,
+        6
+      ]
     },
     {
       "symbol": "Br",
@@ -439,7 +578,13 @@
       ],
       "valenceElectrons": 7,
       "polarizibilityCubicAngstroms": 3.112,
-      "electronegativity": 2.96
+      "electronegativity": 2.96,
+      "ionicRadiusPicometres": 196,
+      "commonIonCharges": [
+        -1,
+        1,
+        5
+      ]
     },
     {
       "symbol": "Kr",
@@ -463,7 +608,11 @@
       ],
       "valenceElectrons": 1,
       "polarizibilityCubicAngstroms": 47.419,
-      "electronegativity": 0.82
+      "electronegativity": 0.82,
+      "ionicRadiusPicometres": 152,
+      "commonIonCharges": [
+        1
+      ]
     },
     {
       "symbol": "Sr",
@@ -475,7 +624,11 @@
       ],
       "valenceElectrons": 2,
       "polarizibilityCubicAngstroms": 29.192,
-      "electronegativity": 0.95
+      "electronegativity": 0.95,
+      "ionicRadiusPicometres": 118,
+      "commonIonCharges": [
+        2
+      ]
     },
     {
       "symbol": "Y",
@@ -487,7 +640,11 @@
       ],
       "valenceElectrons": 3,
       "polarizibilityCubicAngstroms": 24.006,
-      "electronegativity": 1.22
+      "electronegativity": 1.22,
+      "ionicRadiusPicometres": 90,
+      "commonIonCharges": [
+        3
+      ]
     },
     {
       "symbol": "Zr",
@@ -499,7 +656,11 @@
       ],
       "valenceElectrons": 4,
       "polarizibilityCubicAngstroms": 16.597,
-      "electronegativity": 1.33
+      "electronegativity": 1.33,
+      "ionicRadiusPicometres": 72,
+      "commonIonCharges": [
+        4
+      ]
     },
     {
       "symbol": "Nb",
@@ -512,7 +673,11 @@
       ],
       "valenceElectrons": 5,
       "polarizibilityCubicAngstroms": 14.522,
-      "electronegativity": 1.6
+      "electronegativity": 1.6,
+      "ionicRadiusPicometres": 64,
+      "commonIonCharges": [
+        5
+      ]
     },
     {
       "symbol": "Mo",
@@ -528,7 +693,11 @@
       ],
       "valenceElectrons": 6,
       "polarizibilityCubicAngstroms": 12.892,
-      "electronegativity": 2.16
+      "electronegativity": 2.16,
+      "ionicRadiusPicometres": 59,
+      "commonIonCharges": [
+        6
+      ]
     },
     {
       "symbol": "Tc",
@@ -594,7 +763,11 @@
       ],
       "valenceElectrons": 11,
       "polarizibilityCubicAngstroms": 8.15,
-      "electronegativity": 1.93
+      "electronegativity": 1.93,
+      "ionicRadiusPicometres": 115,
+      "commonIonCharges": [
+        1
+      ]
     },
     {
       "symbol": "Cd",
@@ -606,7 +779,11 @@
       ],
       "valenceElectrons": 2,
       "polarizibilityCubicAngstroms": 6.816,
-      "electronegativity": 1.69
+      "electronegativity": 1.69,
+      "ionicRadiusPicometres": 95,
+      "commonIonCharges": [
+        2
+      ]
     },
     {
       "symbol": "In",
@@ -619,7 +796,11 @@
       ],
       "valenceElectrons": 3,
       "polarizibilityCubicAngstroms": 9.632,
-      "electronegativity": 1.78
+      "electronegativity": 1.78,
+      "ionicRadiusPicometres": 80,
+      "commonIonCharges": [
+        3
+      ]
     },
     {
       "symbol": "Sn",
@@ -632,7 +813,12 @@
       ],
       "valenceElectrons": 4,
       "polarizibilityCubicAngstroms": 7.854,
-      "electronegativity": 1.96
+      "electronegativity": 1.96,
+      "ionicRadiusPicometres": 69,
+      "commonIonCharges": [
+        2,
+        4
+      ]
     },
     {
       "symbol": "Sb",
@@ -645,7 +831,12 @@
       ],
       "valenceElectrons": 5,
       "polarizibilityCubicAngstroms": 6.372,
-      "electronegativity": 2.05
+      "electronegativity": 2.05,
+      "ionicRadiusPicometres": 76,
+      "commonIonCharges": [
+        3,
+        5
+      ]
     },
     {
       "symbol": "Te",
@@ -659,7 +850,13 @@
       ],
       "valenceElectrons": 6,
       "polarizibilityCubicAngstroms": 5.631,
-      "electronegativity": 2.1
+      "electronegativity": 2.1,
+      "ionicRadiusPicometres": 221,
+      "commonIonCharges": [
+        -2,
+        4,
+        6
+      ]
     },
     {
       "symbol": "I",
@@ -671,7 +868,14 @@
       ],
       "valenceElectrons": 7,
       "polarizibilityCubicAngstroms": 4.875,
-      "electronegativity": 2.66
+      "electronegativity": 2.66,
+      "ionicRadiusPicometres": 220,
+      "commonIonCharges": [
+        -1,
+        1,
+        5,
+        7
+      ]
     },
     {
       "symbol": "Xe",
@@ -695,7 +899,11 @@
       ],
       "valenceElectrons": 1,
       "polarizibilityCubicAngstroms": 59.422,
-      "electronegativity": 0.79
+      "electronegativity": 0.79,
+      "ionicRadiusPicometres": 167,
+      "commonIonCharges": [
+        1
+      ]
     },
     {
       "symbol": "Ba",
@@ -707,7 +915,11 @@
       ],
       "valenceElectrons": 2,
       "polarizibilityCubicAngstroms": 40.306,
-      "electronegativity": 0.89
+      "electronegativity": 0.89,
+      "ionicRadiusPicometres": 135,
+      "commonIonCharges": [
+        2
+      ]
     },
     {
       "symbol": "La",
@@ -719,7 +931,11 @@
       ],
       "valenceElectrons": 3,
       "polarizibilityCubicAngstroms": 31.86,
-      "electronegativity": 1.1
+      "electronegativity": 1.1,
+      "ionicRadiusPicometres": 103.2,
+      "commonIonCharges": [
+        3
+      ]
     },
     {
       "symbol": "Ce",
@@ -915,7 +1131,11 @@
       ],
       "valenceElectrons": 6,
       "polarizibilityCubicAngstroms": 10.077,
-      "electronegativity": 2.36
+      "electronegativity": 2.36,
+      "ionicRadiusPicometres": 60,
+      "commonIonCharges": [
+        6
+      ]
     },
     {
       "symbol": "Re",
@@ -969,7 +1189,12 @@
       ],
       "valenceElectrons": 10,
       "polarizibilityCubicAngstroms": 7.113,
-      "electronegativity": 2.28
+      "electronegativity": 2.28,
+      "ionicRadiusPicometres": 80,
+      "commonIonCharges": [
+        2,
+        4
+      ]
     },
     {
       "symbol": "Au",
@@ -982,7 +1207,11 @@
       ],
       "valenceElectrons": 11,
       "polarizibilityCubicAngstroms": 5.335,
-      "electronegativity": 2.54
+      "electronegativity": 2.54,
+      "ionicRadiusPicometres": 85,
+      "commonIonCharges": [
+        3
+      ]
     },
     {
       "symbol": "Hg",
@@ -995,7 +1224,11 @@
       ],
       "valenceElectrons": 2,
       "polarizibilityCubicAngstroms": 5.023,
-      "electronegativity": 2.0
+      "electronegativity": 2.0,
+      "ionicRadiusPicometres": 102,
+      "commonIonCharges": [
+        2
+      ]
     },
     {
       "symbol": "Tl",
@@ -1008,7 +1241,11 @@
       ],
       "valenceElectrons": 3,
       "polarizibilityCubicAngstroms": 7.409,
-      "electronegativity": 1.62
+      "electronegativity": 1.62,
+      "ionicRadiusPicometres": 150,
+      "commonIonCharges": [
+        1
+      ]
     },
     {
       "symbol": "Pb",
@@ -1021,7 +1258,12 @@
       ],
       "valenceElectrons": 4,
       "polarizibilityCubicAngstroms": 6.965,
-      "electronegativity": 2.33
+      "electronegativity": 2.33,
+      "ionicRadiusPicometres": 119,
+      "commonIonCharges": [
+        2,
+        4
+      ]
     },
     {
       "symbol": "Bi",
@@ -1034,7 +1276,11 @@
       ],
       "valenceElectrons": 5,
       "polarizibilityCubicAngstroms": 7.113,
-      "electronegativity": 2.02
+      "electronegativity": 2.02,
+      "ionicRadiusPicometres": 103,
+      "commonIonCharges": [
+        3
+      ]
     },
     {
       "symbol": "Po",
@@ -1139,7 +1385,12 @@
       ],
       "valenceElectrons": 6,
       "polarizibilityCubicAngstroms": 19.116,
-      "electronegativity": 1.38
+      "electronegativity": 1.38,
+      "ionicRadiusPicometres": 73,
+      "commonIonCharges": [
+        4,
+        6
+      ]
     },
     {
       "symbol": "Np",
