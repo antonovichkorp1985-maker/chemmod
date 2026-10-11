@@ -141,6 +141,15 @@ data class BoilingRuleSet(
     val esterBaseCelsius: Double,
     val esterDispersionCelsius: Double,
     /**
+     * Carboxylic acids: dispersion plus the skeleton and ring corrections. Fitted on seven sourced
+     * monocarboxylic acids — RMS 3.1 K, worst benzoic acid at −5.6 K. The high intercept is the
+     * cyclic dimer: two acids hold each other with two hydrogen bonds, so the class boils far above
+     * an ester of the same mass. Every fitted member donates exactly one hydrogen bond, so a
+     * dicarboxylic acid is refused rather than extrapolated.
+     */
+    val acidBaseCelsius: Double,
+    val acidDispersionCelsius: Double,
+    /**
      * Per skeleton branch point, shared by every branch that uses it. A branch compacts the
      * molecule and lowers the boiling point. Fitted jointly on the nitriles and the esters rather
      * than per class, because it is one physical effect and two fitted values for it would be a
@@ -193,6 +202,8 @@ private data class BoilingRuleSetDocument(
     val nitrileDispersionCelsius: Double,
     val esterBaseCelsius: Double,
     val esterDispersionCelsius: Double,
+    val acidBaseCelsius: Double,
+    val acidDispersionCelsius: Double,
     val branchPointCelsius: Double,
 ) {
     fun toDomain(): BoilingRuleSet {
@@ -211,6 +222,7 @@ private data class BoilingRuleSetDocument(
             halideDispersionCelsius,
             nitrileDispersionCelsius,
             esterDispersionCelsius,
+            acidDispersionCelsius,
             branchPointCelsius,
         ) + exactFormulaCelsius.values + halideCelsiusPerAtom.values
         require(values.all { it.isFinite() }) { "Boiling rule coefficients must be finite" }
@@ -223,7 +235,8 @@ private data class BoilingRuleSetDocument(
         require(
             amineDispersionCelsius > 0.0 && carbonylDispersionCelsius > 0.0 &&
                 etherDispersionCelsius > 0.0 && halideDispersionCelsius > 0.0 &&
-                nitrileDispersionCelsius > 0.0 && esterDispersionCelsius > 0.0
+                nitrileDispersionCelsius > 0.0 && esterDispersionCelsius > 0.0 &&
+                acidDispersionCelsius > 0.0
         ) { "A heavier molecule of the same class cannot boil lower" }
         require(branchPointCelsius <= 0.0) {
             "A branch reduces the surface a molecule touches, so it cannot raise the boiling point"
@@ -254,6 +267,8 @@ private data class BoilingRuleSetDocument(
             nitrileDispersionCelsius = nitrileDispersionCelsius,
             esterBaseCelsius = esterBaseCelsius,
             esterDispersionCelsius = esterDispersionCelsius,
+            acidBaseCelsius = acidBaseCelsius,
+            acidDispersionCelsius = acidDispersionCelsius,
             branchPointCelsius = branchPointCelsius,
         )
     }

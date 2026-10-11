@@ -238,6 +238,28 @@ class PropertyEngine(private val rules: PropertyRuleSet) {
                 "ester+dispersion+branching",
             )
         }
+        if (FunctionalGroups.CARBOXYLIC_ACID in classes &&
+            // A carboxyl always brings a hydroxyl with it, so ALCOHOL is expected here and must
+            // not disqualify the class - unlike every other polar class, which means a second
+            // functional family is present and the fit no longer applies.
+            classes.none { it in polarClasses - FunctionalGroups.CARBOXYLIC_ACID - FunctionalGroups.ALCOHOL }
+        ) {
+            // Monocarboxylic acids: every member of the fit donates exactly one hydrogen bond.
+            // A dicarboxylic acid donates twice and its two carboxyls interact with each other as
+            // well as with a partner, which is a different association than the fitted dimer, so
+            // it is refused rather than extrapolated.
+            if (donors != 1) {
+                return BoilingEstimate(null, "no-model:acid-fit-covers-monocarboxylic-only")
+            }
+            return BoilingEstimate(
+                rules.boiling.acidBaseCelsius +
+                    rules.boiling.acidDispersionCelsius * dispersion +
+                    rules.boiling.branchPointCelsius * FunctionalGroups.branchPoints(graph) +
+                    rules.boiling.ringCelsius * rings +
+                    rules.boiling.aromaticRingCelsius * aromatic,
+                "acid+dispersion+branching",
+            )
+        }
         if (FunctionalGroups.HALIDE_CLASS in classes && classes.none { it in polarClasses }) {
             // One halogen per molecule is the fitted domain. Polyhalides are refused rather than
             // extrapolated: measured, these coefficients put dichlorodifluoromethane +131 K and

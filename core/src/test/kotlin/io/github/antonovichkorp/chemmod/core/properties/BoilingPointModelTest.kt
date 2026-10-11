@@ -77,15 +77,46 @@ class BoilingPointModelTest {
         // Measured this way against experiment the old mass-only branch gave dimethyl ether
         // -41.0 instead of -24.8, acetone -7.3 instead of 56.1, acetonitrile -55.9 instead of
         // 81.6 and tetrachloromethane 208.1 instead of 76.7. Refusing is the smaller lie.
-        // Ethers, ketones, amines, monohalides, nitriles and esters have their own branches now;
-        // what is still refused is a carboxylic acid - and any polyhalide, because the monohalide
+        // Ethers, ketones, amines, monohalides, nitriles, esters and monocarboxylic acids have
+        // their own branches now; what is still refused is any polyhalide, because the monohalide
         // fit put dichlorodifluoromethane +131 K and tetrachloromethane +106 K out.
         assertNull(boiling("C(Cl)(Cl)(Cl)Cl"))
         assertNull(boiling("ClCCl"))
-        assertNull(boiling("CC(=O)O"))
         assertEquals("no-model:halide-fit-covers-monohalides-only", basis("C(Cl)(Cl)(Cl)Cl"))
         // Hydrocarbons stay inside the fit and keep their numbers.
         assertEquals("dispersion+ring+aromatic", basis("CCCCCC"))
+    }
+
+    @Test
+    fun `acids boil by dispersion over the fitted monocarboxylic domain`() {
+        // Seven sourced monocarboxylic acids. The intercept is high because the class dimerises:
+        // two acids hold each other with two hydrogen bonds, so acetic acid boils 61 K above
+        // methyl acetate at a lower molar mass.
+        assertNear(100.8, boiling("OC=O")!!, 4.5)              // formic
+        assertNear(118.1, boiling("CC(=O)O")!!, 4.5)           // acetic
+        assertNear(141.2, boiling("CCC(=O)O")!!, 4.5)          // propionic
+        assertNear(163.5, boiling("CCCC(=O)O")!!, 4.5)         // butyric
+        assertNear(186.0, boiling("CCCCC(=O)O")!!, 4.5)        // valeric
+        assertNear(205.0, boiling("CCCCCC(=O)O")!!, 4.5)       // hexanoic
+        // The worst point: the aromaticity correction was fitted on hydrocarbons.
+        assertNear(249.0, boiling("OC(=O)C1=CC=CC=C1")!!, 7.0) // benzoic
+        assertEquals("acid+dispersion+branching", basis("CC(=O)O"))
+    }
+
+    @Test
+    fun `a branched acid outside the fit still lands near measurement`() {
+        // Isobutyric acid was not in the fit. It has one skeleton branch point, so it is predicted
+        // by the branch coefficient that nitriles and esters constrain - an out-of-sample check on
+        // that shared value from a class that never fitted it. Sourced at 152 C.
+        assertNear(152.0, boiling("CC(C)C(=O)O")!!, 4.0)
+    }
+
+    @Test
+    fun `a dicarboxylic acid is refused rather than extrapolated`() {
+        // Oxalic acid donates two hydrogen bonds and its carboxyls interact with each other, which
+        // is not the fitted dimer. Every member of the fit donates exactly one.
+        assertNull(boiling("OC(=O)C(=O)O"))
+        assertEquals("no-model:acid-fit-covers-monocarboxylic-only", basis("OC(=O)C(=O)O"))
     }
 
     @Test
