@@ -62,6 +62,7 @@ private data class ElementDocument(
     val valences: List<Int>,
     val valenceElectrons: Int,
     val polarizibilityCubicAngstroms: Double? = null,
+    val electronegativity: Double? = null,
 ) {
     fun toDomain() = Element(
         symbol,
@@ -71,5 +72,6 @@ private data class ElementDocument(
         valences,
         valenceElectrons,
         polarizibilityCubicAngstroms,
+        electronegativity,
     )
 }

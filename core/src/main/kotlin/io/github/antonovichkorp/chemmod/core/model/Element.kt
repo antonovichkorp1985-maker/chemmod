@@ -18,6 +18,17 @@ data class Element(
      * list (Miller & Bederson 1977) for H through Kr, Miller 1990 for iodine.
      */
     val polarizibilityCubicAngstroms: Double? = null,
+    /**
+     * Pauling electronegativity, or null where no accepted value is held.
+     *
+     * This is the property bond character is derived from rather than recorded: the difference
+     * between two bonded atoms decides how ionic the bond is, and from that follow whether partners
+     * can exchange in a metathesis, which product leaves solution, and whether a lattice is ionic or
+     * molecular at all. Storing it per bond or per substance would be the table this design avoids.
+     * Values are Pauling's scale as revised by Allred (1961); noble gases and the heaviest elements
+     * are left null rather than guessed, and a null must be reported as "no model", never as zero.
+     */
+    val electronegativity: Double? = null,
 ) {
     init {
         require(symbol.matches(Regex("[A-Z][a-z]?"))) { "Invalid element symbol: $symbol" }
@@ -32,6 +43,9 @@ data class Element(
         require(valenceElectrons > 0) { "An element needs at least one valence electron" }
         require(polarizibilityCubicAngstroms == null || polarizibilityCubicAngstroms > 0.0) {
             "Polarizibility must be positive where it is known"
+        }
+        require(electronegativity == null || electronegativity > 0.0) {
+            "Electronegativity must be positive where it is known"
         }
     }
 }
