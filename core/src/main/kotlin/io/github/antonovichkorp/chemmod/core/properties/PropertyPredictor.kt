@@ -133,6 +133,8 @@ class PropertyEngine(private val rules: PropertyRuleSet) {
      *    (RMS 2.6 K and 1.1 K);
      *  * monohalides: dispersion plus one term per halogen element, read from
      *    [FunctionalGroups.halogenCounts] so the branch names no element itself (RMS 4.9 K);
+     *  * nitriles: dispersion plus the ring, aromaticity and skeleton-branching corrections, on
+     *    saturated and aryl nitriles (RMS 1.5 K). Conjugated alkenenitriles are refused;
      *  * hydrocarbons: dispersion `a + b * M^(2/3)` plus ring and aromaticity corrections,
      *    fitted on alkanes, alkenes, cycloalkanes and arenes (RMS 6.3 K);
      *  * anything else: no value at all. Molar mass is a stand-in for polarizibility and it
@@ -201,6 +203,25 @@ class PropertyEngine(private val rules: PropertyRuleSet) {
                     rules.boiling.ringCelsius * rings +
                     rules.boiling.aromaticRingCelsius * aromatic,
                 "ether+dispersion",
+            )
+        }
+        if (FunctionalGroups.NITRILE_CLASS in classes &&
+            classes.none { it in polarClasses - FunctionalGroups.NITRILE_CLASS }
+        ) {
+            // Saturated and aryl nitriles only. An alpha,beta-unsaturated nitrile conjugates its
+            // C=C with the C#N and boils some 20 K below a saturated nitrile of the same mass,
+            // which no dispersion term can see: measured, this fit would put acrylonitrile out by
+            // that much. Refused, not extrapolated.
+            if (FunctionalGroups.hasConjugatedNitrile(graph)) {
+                return BoilingEstimate(null, "no-model:nitrile-fit-excludes-conjugated-alkenenitriles")
+            }
+            return BoilingEstimate(
+                rules.boiling.nitrileBaseCelsius +
+                    rules.boiling.nitrileDispersionCelsius * dispersion +
+                    rules.boiling.branchPointCelsius * FunctionalGroups.branchPoints(graph) +
+                    rules.boiling.ringCelsius * rings +
+                    rules.boiling.aromaticRingCelsius * aromatic,
+                "nitrile+dispersion+branching",
             )
         }
         if (FunctionalGroups.HALIDE_CLASS in classes && classes.none { it in polarClasses }) {

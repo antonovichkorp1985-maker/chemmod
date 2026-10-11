@@ -1,6 +1,7 @@
 package io.github.antonovichkorp.chemmod.core.properties
 
 import io.github.antonovichkorp.chemmod.core.Molecule
+import io.github.antonovichkorp.chemmod.core.chemistry.FunctionalGroups
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -76,10 +77,9 @@ class BoilingPointModelTest {
         // Measured this way against experiment the old mass-only branch gave dimethyl ether
         // -41.0 instead of -24.8, acetone -7.3 instead of 56.1, acetonitrile -55.9 instead of
         // 81.6 and tetrachloromethane 208.1 instead of 76.7. Refusing is the smaller lie.
-        // Ethers, ketones, amines and monohalides have their own branches now; what is still
-        // refused is a nitrile, an ester, a carboxylic acid - and any polyhalide, because the
+        // Ethers, ketones, amines, monohalides and nitriles have their own branches now; what is
+        // still refused is an ester, a carboxylic acid - and any polyhalide, because the
         // monohalide fit put dichlorodifluoromethane +131 K and tetrachloromethane +106 K out.
-        assertNull(boiling("CC#N"))
         assertNull(boiling("C(Cl)(Cl)(Cl)Cl"))
         assertNull(boiling("ClCCl"))
         assertNull(boiling("CCOC(C)=O"))
@@ -87,6 +87,40 @@ class BoilingPointModelTest {
         assertEquals("no-model:halide-fit-covers-monohalides-only", basis("C(Cl)(Cl)(Cl)Cl"))
         // Hydrocarbons stay inside the fit and keep their numbers.
         assertEquals("dispersion+ring+aromatic", basis("CCCCCC"))
+    }
+
+    @Test
+    fun `nitriles boil by dispersion, corrected for rings and for a branched skeleton`() {
+        // Five sourced nitriles, saturated or aryl. The cyano group is polar - acetonitrile carries
+        // 3.93 D - and that is what the intercept absorbs; nothing here is told it is polar.
+        assertNear(81.7, boiling("CC#N")!!, 3.0)            // acetonitrile
+        assertNear(97.0, boiling("CCC#N")!!, 3.0)           // propionitrile
+        assertNear(117.9, boiling("CCCC#N")!!, 3.0)         // butyronitrile
+        assertNear(103.9, boiling("CC(C)C#N")!!, 3.0)       // isobutyronitrile
+        assertNear(190.0, boiling("N#CC1=CC=CC=C1")!!, 3.0) // benzonitrile
+        assertEquals("nitrile+dispersion+branching", basis("CC#N"))
+    }
+
+    @Test
+    fun `a branch lowers the boiling point, and only a real one counts`() {
+        // Same formula, same mass, 14 K apart: n-butane boils at -0.5 and isobutane at -11.8, so
+        // compactness matters and molar mass alone cannot see it.
+        assertTrue(boiling("CCCC#N")!! > boiling("CC(C)C#N")!!)
+        assertEquals(1, FunctionalGroups.branchPoints(Molecule.fromSMILESlike("CC(C)C#N").graph))
+        assertEquals(0, FunctionalGroups.branchPoints(Molecule.fromSMILESlike("CCCC#N").graph))
+        // An aromatic carbon carrying the cyano group has three heavy neighbours but is not a
+        // branch: counting it would drop benzonitrile by 14 K.
+        assertEquals(0, FunctionalGroups.branchPoints(Molecule.fromSMILESlike("N#CC1=CC=CC=C1").graph))
+    }
+
+    @Test
+    fun `a conjugated nitrile is refused rather than mispredicted`() {
+        // Acrylonitrile boils at 77 C at 53 g/mol; propionitrile at 97 C at 55. The C=C conjugated
+        // with the C#N is worth some 20 K that dispersion has no term for, so the model declines.
+        assertNull(boiling("C=CC#N"))
+        assertEquals("no-model:nitrile-fit-excludes-conjugated-alkenenitriles", basis("C=CC#N"))
+        assertTrue(FunctionalGroups.hasConjugatedNitrile(Molecule.fromSMILESlike("C=CC#N").graph))
+        assertTrue(!FunctionalGroups.hasConjugatedNitrile(Molecule.fromSMILESlike("CCCC#N").graph))
     }
 
     @Test

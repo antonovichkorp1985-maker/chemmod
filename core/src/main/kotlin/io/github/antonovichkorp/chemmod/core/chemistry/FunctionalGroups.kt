@@ -102,6 +102,46 @@ object FunctionalGroups {
             .groupingBy { it }
             .eachCount()
 
+    /**
+     * Skeleton branch points: heavy atoms joined to three or more other heavy atoms, all through
+     * single bonds. A branch makes a molecule more compact, so it touches its neighbours over less
+     * surface and boils lower — n-butane at −0.5 °C against isobutane at −11.8 °C.
+     *
+     * Restricted to single bonds so an aromatic carbon carrying a substituent is not counted:
+     * benzonitrile's ring carbon has three heavy neighbours and is not branched in any sense that
+     * reduces its surface. Ring atoms are not branches either, since a ring atom has two.
+     *
+     * Coarse by construction — isopentane and neopentane both report one and boil 18 K apart. It
+     * counts branch points, not how crowded they are.
+     */
+    fun branchPoints(graph: MoleculeGraph): Int =
+        graph.atoms.count { atom ->
+            val bonds = graph.bondsOf(atom.id)
+            bonds.all { it.order == BondOrder.SINGLE } &&
+                bonds.count { graph.atom(it.other(atom.id)).element.symbol != "H" } >= 3
+        }
+
+    /**
+     * True when a nitrile carbon sits beside a carbon that carries a double bond: an
+     * α,β-unsaturated nitrile, where the C=C is conjugated with the C≡N. That conjugation is worth
+     * some 20 K against a saturated nitrile of the same mass — acrylonitrile boils at 77 °C at
+     * 53 g/mol while propionitrile boils at 97 °C at 55 — and the mass-only dispersion term has
+     * nothing to say about it, so such molecules are refused rather than mispredicted.
+     */
+    fun hasConjugatedNitrile(graph: MoleculeGraph): Boolean =
+        graph.atoms.any { atom ->
+            atom.element.symbol == "C" &&
+                graph.neighbors(atom.id).any { (neighbor, order) ->
+                    neighbor.element.symbol == "N" && order == BondOrder.TRIPLE
+                } &&
+                graph.neighbors(atom.id).any { (neighbor, order) ->
+                    order == BondOrder.SINGLE && neighbor.element.symbol == "C" &&
+                        graph.neighbors(neighbor.id).any { (next, nextOrder) ->
+                            next.id != atom.id && nextOrder == BondOrder.DOUBLE
+                        }
+                }
+        }
+
     /** The compound classes a graph belongs to; a molecule usually carries several. */
     fun classes(graph: MoleculeGraph): Set<String> {
         val groups = groups(graph)

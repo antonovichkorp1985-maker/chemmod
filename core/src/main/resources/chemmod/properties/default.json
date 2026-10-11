@@ -83,7 +83,10 @@
       "Cl": 0.0,
       "Br": -63.67,
       "I": -113.48
-    }
+    },
+    "nitrileBaseCelsius": -12.02,
+    "nitrileDispersionCelsius": 7.71,
+    "branchPointCelsius": -13.93
   },
   "interactions": {
     "hydrogenBondDonorElements": [
