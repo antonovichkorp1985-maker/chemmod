@@ -40,6 +40,15 @@ data class MineralDefinition(
     val chemicalFormula: String,
     val elementStoichiometry: Map<String, Int>,
     val hardnessMohs: Double? = null,
+    /**
+     * Streak or body colour as opaque ARGB, or null where the mineral is too variable to name one.
+     *
+     * Colour is a measured property of the mineral, exactly as hardness is - it is not derived and
+     * it does not drive behaviour, so holding it here is not the tabulation the design forbids.
+     * Fluorite and a few others come in every colour depending on trace activators; those are left
+     * null rather than pinned to one arbitrary hue.
+     */
+    val colourArgb: Int? = null,
     val schemaVersion: Int = CURRENT_SCHEMA,
 ) {
     init {

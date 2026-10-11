@@ -21,7 +21,8 @@
       "elementStoichiometry": {
         "Cu": 1
       },
-      "hardnessMohs": 3.0
+      "hardnessMohs": 3.0,
+      "colourArgb": 4290278195
     },
     {
       "id": "chemmod:quartz",
@@ -39,7 +40,8 @@
         "Fe": 2,
         "O": 3
       },
-      "hardnessMohs": 6.0
+      "hardnessMohs": 6.0,
+      "colourArgb": 4285418050
     },
     {
       "id": "chemmod:magnetite",
@@ -48,7 +50,8 @@
         "Fe": 3,
         "O": 4
       },
-      "hardnessMohs": 6.0
+      "hardnessMohs": 6.0,
+      "colourArgb": 4281019182
     },
     {
       "id": "chemmod:goethite",
@@ -58,7 +61,8 @@
         "O": 2,
         "H": 1
       },
-      "hardnessMohs": 5.0
+      "hardnessMohs": 5.0,
+      "colourArgb": 4287327023
     },
     {
       "id": "chemmod:siderite",
@@ -68,7 +72,8 @@
         "C": 1,
         "O": 3
       },
-      "hardnessMohs": 4.0
+      "hardnessMohs": 4.0,
+      "colourArgb": 4289765508
     },
     {
       "id": "chemmod:pyrite",
@@ -77,7 +82,8 @@
         "Fe": 1,
         "S": 2
       },
-      "hardnessMohs": 6.0
+      "hardnessMohs": 6.0,
+      "colourArgb": 4291408984
     },
     {
       "id": "chemmod:chalcopyrite",
@@ -87,7 +93,8 @@
         "Fe": 1,
         "S": 2
       },
-      "hardnessMohs": 3.5
+      "hardnessMohs": 3.5,
+      "colourArgb": 4290289720
     },
     {
       "id": "chemmod:malachite",
@@ -98,7 +105,8 @@
         "O": 5,
         "H": 2
       },
-      "hardnessMohs": 3.75
+      "hardnessMohs": 3.75,
+      "colourArgb": 4281240407
     },
     {
       "id": "chemmod:azurite",
@@ -109,7 +117,8 @@
         "O": 8,
         "H": 2
       },
-      "hardnessMohs": 3.75
+      "hardnessMohs": 3.75,
+      "colourArgb": 4281227944
     },
     {
       "id": "chemmod:galena",
@@ -118,7 +127,8 @@
         "Pb": 1,
         "S": 1
       },
-      "hardnessMohs": 2.5
+      "hardnessMohs": 2.5,
+      "colourArgb": 4285427318
     },
     {
       "id": "chemmod:cerussite",
@@ -128,7 +138,8 @@
         "C": 1,
         "O": 3
       },
-      "hardnessMohs": 3.25
+      "hardnessMohs": 3.25,
+      "colourArgb": 4292927190
     },
     {
       "id": "chemmod:anglesite",
@@ -138,7 +149,8 @@
         "S": 1,
         "O": 4
       },
-      "hardnessMohs": 3.0
+      "hardnessMohs": 3.0,
+      "colourArgb": 4292664018
     },
     {
       "id": "chemmod:sphalerite",
@@ -147,7 +159,8 @@
         "Zn": 1,
         "S": 1
       },
-      "hardnessMohs": 3.75
+      "hardnessMohs": 3.75,
+      "colourArgb": 4285221418
     },
     {
       "id": "chemmod:millerite",
@@ -156,7 +169,8 @@
         "Ni": 1,
         "S": 1
       },
-      "hardnessMohs": 4.0
+      "hardnessMohs": 4.0,
+      "colourArgb": 4291408984
     },
     {
       "id": "chemmod:pentlandite",
@@ -166,7 +180,8 @@
         "Ni": 5,
         "S": 8
       },
-      "hardnessMohs": 4.25
+      "hardnessMohs": 4.25,
+      "colourArgb": 4288318042
     },
     {
       "id": "chemmod:cassiterite",
@@ -175,7 +190,8 @@
         "Sn": 1,
         "O": 2
       },
-      "hardnessMohs": 6.5
+      "hardnessMohs": 6.5,
+      "colourArgb": 4283054634
     },
     {
       "id": "chemmod:rutile",
@@ -184,7 +200,8 @@
         "Ti": 1,
         "O": 2
       },
-      "hardnessMohs": 6.0
+      "hardnessMohs": 6.0,
+      "colourArgb": 4287261242
     },
     {
       "id": "chemmod:ilmenite",
@@ -194,7 +211,8 @@
         "Ti": 1,
         "O": 3
       },
-      "hardnessMohs": 5.5
+      "hardnessMohs": 5.5,
+      "colourArgb": 4281216562
     },
     {
       "id": "chemmod:pyrolusite",
@@ -203,7 +221,8 @@
         "Mn": 1,
         "O": 2
       },
-      "hardnessMohs": 5.5
+      "hardnessMohs": 5.5,
+      "colourArgb": 4282006078
     },
     {
       "id": "chemmod:chromite",
@@ -213,7 +232,8 @@
         "Cr": 2,
         "O": 4
       },
-      "hardnessMohs": 5.5
+      "hardnessMohs": 5.5,
+      "colourArgb": 4280953390
     },
     {
       "id": "chemmod:gibbsite",
@@ -223,7 +243,8 @@
         "O": 3,
         "H": 3
       },
-      "hardnessMohs": 2.75
+      "hardnessMohs": 2.75,
+      "colourArgb": 4293782242
     },
     {
       "id": "chemmod:kaolinite",
@@ -234,7 +255,8 @@
         "O": 9,
         "H": 4
       },
-      "hardnessMohs": 2.25
+      "hardnessMohs": 2.25,
+      "colourArgb": 4293452500
     },
     {
       "id": "chemmod:forsterite",
@@ -244,7 +266,8 @@
         "Si": 1,
         "O": 4
       },
-      "hardnessMohs": 6.5
+      "hardnessMohs": 6.5,
+      "colourArgb": 4290297994
     },
     {
       "id": "chemmod:calcite",
@@ -265,7 +288,8 @@
         "C": 2,
         "O": 6
       },
-      "hardnessMohs": 3.75
+      "hardnessMohs": 3.75,
+      "colourArgb": 4292926674
     },
     {
       "id": "chemmod:halite",
@@ -274,7 +298,8 @@
         "Na": 1,
         "Cl": 1
       },
-      "hardnessMohs": 2.5
+      "hardnessMohs": 2.5,
+      "colourArgb": 4293783538
     },
     {
       "id": "chemmod:sylvite",
@@ -283,7 +308,8 @@
         "K": 1,
         "Cl": 1
       },
-      "hardnessMohs": 2.5
+      "hardnessMohs": 2.5,
+      "colourArgb": 4293322990
     },
     {
       "id": "chemmod:gypsum",
@@ -294,7 +320,8 @@
         "O": 6,
         "H": 4
       },
-      "hardnessMohs": 2.0
+      "hardnessMohs": 2.0,
+      "colourArgb": 4293519328
     },
     {
       "id": "chemmod:anhydrite",
@@ -304,7 +331,8 @@
         "S": 1,
         "O": 4
       },
-      "hardnessMohs": 3.25
+      "hardnessMohs": 3.25,
+      "colourArgb": 4293190362
     },
     {
       "id": "chemmod:fluorite",

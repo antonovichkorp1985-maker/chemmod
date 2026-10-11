@@ -131,12 +131,14 @@ private data class MineralDocument(
     val chemicalFormula: String,
     val elementStoichiometry: Map<String, Int>,
     val hardnessMohs: Double? = null,
+    val colourArgb: Int? = null,
 ) {
     fun toDomain() = MineralDefinition(
         id = MineralId.of(id),
         chemicalFormula = chemicalFormula,
         elementStoichiometry = elementStoichiometry,
         hardnessMohs = hardnessMohs,
+        colourArgb = colourArgb,
     )
 }
 
