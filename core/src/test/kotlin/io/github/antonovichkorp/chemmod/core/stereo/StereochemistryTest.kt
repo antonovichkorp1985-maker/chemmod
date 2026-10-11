@@ -9,7 +9,7 @@ import kotlin.test.assertTrue
 /**
  * Whether a spatial arrangement exists at all is a question about the graph, and these tests check
  * it is answered from the graph: nothing here is told that 2-butanol has a centre or that ethylene
- * has no *cis*/*trans*.
+ * has no cis or trans form to be told about.
  */
 class StereochemistryTest {
     private fun graph(structure: String) = Molecule.fromSMILESlike(structure).graph
