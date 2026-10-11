@@ -65,7 +65,7 @@ public class GasTankBlockEntity extends BlockEntity {
         // together with the block.
         Map<String, Double> contents = new LinkedHashMap<>();
         for (String species : vessel.species()) contents.put(species, vessel.molesOf(species));
-        level.getData(ChemAttachments.GAS_FIELD).release(worldPosition, contents);
+        level.getData(ChemAttachments.GAS_FIELD.get()).release(worldPosition, contents);
         Block.popResource(level, worldPosition, new ItemStack(ChemItems.GAS_TANK.get()));
         level.removeBlock(worldPosition, false);
         if (fiery) {

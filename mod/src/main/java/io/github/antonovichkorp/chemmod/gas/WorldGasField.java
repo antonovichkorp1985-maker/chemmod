@@ -42,7 +42,7 @@ public final class WorldGasField {
     }
 
     public GasCell cellOf(BlockPos pos) {
-        return field.cellOf(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
+        return field.cellOf(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, 0);
     }
 
     /** Put gas into the world at a position - what a bursting tank or a leaking pipe does. */

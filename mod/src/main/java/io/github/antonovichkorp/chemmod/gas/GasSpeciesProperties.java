@@ -24,7 +24,7 @@ public final class GasSpeciesProperties implements GasFieldProperties {
     private static final double STANDARD_PRESSURE_PASCALS = 101_325.0;
 
     private final double temperatureKelvin;
-    private final ElementTable elements = ElementTable.Companion.default();
+    private final ElementTable elements = ElementTable.defaultTable();
     private final Map<String, Double> molarMasses = new LinkedHashMap<>();
 
     public GasSpeciesProperties(double temperatureKelvin) {

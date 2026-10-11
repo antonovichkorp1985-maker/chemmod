@@ -34,7 +34,9 @@ class ElementTable private constructor(elements: List<Element>) {
             return ElementTable(document.elements.map(ElementDocument::toDomain))
         }
 
+        // `default` is a Java keyword, so Java callers need a name they can write.
         @JvmStatic
+        @JvmName("defaultTable")
         fun default(): ElementTable {
             val stream = ElementTable::class.java.getResourceAsStream("/chemmod/elements.json")
                 ?: error("Bundled element table is missing")

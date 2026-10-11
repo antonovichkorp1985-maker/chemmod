@@ -25,7 +25,7 @@ public class WorldGasFieldGameTests {
 
     @GameTest(template = "chemical_reactor_batch", timeoutTicks = 60)
     public static void gasReleasedIntoTheWorldIsInTheWorld(GameTestHelper helper) {
-        WorldGasField gas = helper.getLevel().getData(ChemAttachments.GAS_FIELD);
+        WorldGasField gas = helper.getLevel().getData(ChemAttachments.GAS_FIELD.get());
         gas.release(helper.absolutePos(HERE), Map.of("CO2", 2.0));
 
         helper.assertTrue(gas.molesAt(helper.absolutePos(HERE), "CO2") > 0.0,
@@ -37,7 +37,7 @@ public class WorldGasFieldGameTests {
 
     @GameTest(template = "chemical_reactor_batch", timeoutTicks = 60)
     public static void heavyGasReleasedIntoTheWorldSettles(GameTestHelper helper) {
-        WorldGasField gas = helper.getLevel().getData(ChemAttachments.GAS_FIELD);
+        WorldGasField gas = helper.getLevel().getData(ChemAttachments.GAS_FIELD.get());
         BlockPos pos = helper.absolutePos(HERE.above(8));
         gas.release(pos, Map.of("CO2", 4.0));
 
@@ -55,7 +55,7 @@ public class WorldGasFieldGameTests {
 
     @GameTest(template = "chemical_reactor_batch", timeoutTicks = 60)
     public static void theWorldGasFieldSurvivesASaveRoundTrip(GameTestHelper helper) {
-        WorldGasField gas = helper.getLevel().getData(ChemAttachments.GAS_FIELD);
+        WorldGasField gas = helper.getLevel().getData(ChemAttachments.GAS_FIELD.get());
         BlockPos pos = helper.absolutePos(HERE.above(16));
         gas.release(pos, Map.of("SF6", 1.5));
         double before = gas.molesAt(pos, "SF6");

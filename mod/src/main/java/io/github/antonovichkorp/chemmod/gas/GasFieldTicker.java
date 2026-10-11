@@ -24,7 +24,7 @@ public final class GasFieldTicker {
         if (level.isClientSide() || level.getGameTime() % TICKS_PER_STEP != 0) {
             return;
         }
-        level.getData(ChemAttachments.GAS_FIELD).advance(level, TICKS_PER_STEP / 20.0);
+        level.getData(ChemAttachments.GAS_FIELD.get()).advance(level, TICKS_PER_STEP / 20.0);
     }
 
     private GasFieldTicker() {
