@@ -53,9 +53,39 @@ class StereochemistryTest {
     }
 
     @Test
-    fun `a ring double bond has no cis or trans to speak of`() {
-        // The ring already ties the two ends together, so E/Z would be describing nothing.
+    fun `a ring double bond counts only when the ring can hold a trans form`() {
+        // In a small ring the two ends are tied together and E/Z describes nothing. But the ring can
+        // grow: trans-cyclohexene is a proposed intermediate, trans-cycloheptene lives for seconds,
+        // and trans-cyclooctene is routinely isolated.
         assertEquals(emptyList(), Stereochemistry.stereogenicDoubleBonds(graph("C1=CCCCC1")))
+        assertEquals(emptyList(), Stereochemistry.stereogenicDoubleBonds(graph("C1=CCCCCC1")))
+        assertEquals(1, Stereochemistry.stereogenicDoubleBonds(graph("C1=CCCCCCC1")).size)
+        assertEquals(8, Stereochemistry.SMALLEST_STABLE_TRANS_CYCLOALKENE)
+    }
+
+    @Test
+    fun `a biaryl axis is reported with the bulk hanging off its ortho positions`() {
+        // Biphenyl rotates freely: nothing at the ortho positions to get in the way.
+        val biphenyl = Stereochemistry.hinderedRotationCandidates(graph("C1=CC=CC=C1C1=CC=CC=C1"))
+        assertEquals(1, biphenyl.size)
+        assertEquals(0, biphenyl.single().orthoHeavyAtoms)
+        // Two methyls at the ortho positions, one heavy atom each.
+        val dimethyl = Stereochemistry.hinderedRotationCandidates(graph("CC1=CC=CC=C1C1=CC=CC=C1C"))
+        assertEquals(1, dimethyl.size)
+        assertEquals(2, dimethyl.single().orthoHeavyAtoms)
+    }
+
+    @Test
+    fun `bulk at the ortho positions is measured, but no threshold is invented`() {
+        // The line between fluxional and isolable is a barrier of some 22-25 kcal/mol, and turning
+        // ortho bulk into a barrier needs measured data this repository does not hold. So the model
+        // reports the candidate and the quantity a barrier rule would consume, and stops there.
+        val candidates = Stereochemistry.hinderedRotationCandidates(graph("CC1=CC=CC=C1C1=CC=CC=C1C"))
+        assertTrue(candidates.single().orthoHeavyAtoms >= 0)
+        // A single aromatic ring has no axis between rings at all.
+        assertEquals(emptyList(), Stereochemistry.hinderedRotationCandidates(graph("C1=CC=CC=C1")))
+        // Nor does an ordinary single bond between two saturated carbons.
+        assertEquals(emptyList(), Stereochemistry.hinderedRotationCandidates(graph("CCCCCC")))
     }
 
     @Test

@@ -1,6 +1,6 @@
 # ADR-0005: geometry stays derived, configuration becomes part of the graph
 
-- Status: Accepted (detection); Proposed (parity fields)
+- Status: Accepted (detection); Proposed (parity fields and digest version)
 - Date: 2026-10-11
 - Updated: 2026-10-11
 
@@ -114,11 +114,40 @@ boiling points.
    be written down is a structure a player cannot trade or record.
 
 Where the pieces live: detection in `stereo/Stereochemistry.kt` (implemented —
-stereogenic centres, stereogenic double bonds, pyramidal chirality centres and
-the rapidly inverting subset), the parity fields in `model/MoleculeGraph.kt`, CIP
-ranking alongside detection, the digest change in `Canonicalizer.kt`, notation in
-the parser and the writer. Steric hindrance at a crowded single bond — the
-atropisomer case — needs a substituent size estimate and is not decided yet.
+stereogenic centres, stereogenic double bonds including trans-cycloalkenes,
+pyramidal chirality centres, the rapidly inverting subset, and biaryl axes with
+their ortho bulk), the parity fields in `model/MoleculeGraph.kt`, CIP ranking
+alongside detection, the digest change in `Canonicalizer.kt`, notation in the
+parser and the writer.
+
+Two of the gaps named when this was first written are now closed. Ring double
+bonds are stereogenic when the ring is large enough to hold the trans form —
+eight members, because trans-cyclohexene is only a proposed intermediate,
+trans-cycloheptene lives for seconds, and trans-cyclooctene is routinely
+isolated. And a biaryl axis is reported together with the count of heavy atoms
+hanging off its ortho positions, which is the quantity a barrier rule consumes:
+biphenyl reports zero and rotates freely, a 2,2'-disubstituted biphenyl reports
+its bulk. **No threshold is applied**, because the line between fluxional and
+isolable is a barrier near 22–25 kcal/mol and converting ortho bulk into a
+barrier needs measured data this repository does not hold.
+
+## The parity convention, so that it is not left vague
+
+The remaining piece is the one datum that cannot be derived. It has to be stored
+relative to something, and the reference has to survive relabelling of atom ids,
+or the digest stops being canonical. The convention to implement:
+
+rank the four substituents of a centre by their converged Morgan labels — the
+same labels `canonicalKey` is built from, so the ranking is order-independent —
+then record whether the arrangement, viewed from opposite the lowest-ranked
+substituent, runs clockwise or anticlockwise. That is the CIP rule restated in
+terms the canonicalizer already computes, and it makes the stored bit a property
+of the molecule rather than of the order a parser happened to meet its atoms.
+Double bonds take the equivalent bit over the two higher-ranked substituents.
+
+The hashed input carries a version marker from the day this lands, so a digest
+written before it can be recognised and upgraded on read instead of silently
+describing a different substance.
 
 ## Consequences
 

@@ -1,6 +1,7 @@
 package io.github.antonovichkorp.chemmod.core.stereo
 
 import io.github.antonovichkorp.chemmod.core.MoleculeCanonicalizer
+import io.github.antonovichkorp.chemmod.core.bond.AromaticityModel
 import io.github.antonovichkorp.chemmod.core.model.Bond
 import io.github.antonovichkorp.chemmod.core.model.BondOrder
 import io.github.antonovichkorp.chemmod.core.model.MoleculeGraph
@@ -68,22 +69,58 @@ object Stereochemistry {
     }
 
     /**
+     * The smallest ring that can hold a stable trans double bond. Below it the ring cannot reach
+     * round: trans-cyclohexene is only a proposed intermediate, trans-cycloheptene has been detected
+     * with a lifetime of seconds, and trans-cyclooctene is the first that is routinely isolated.
+     */
+    const val SMALLEST_STABLE_TRANS_CYCLOALKENE = 8
+
+    /**
      * Double bonds with two different substituents at each end: *cis* and *trans* exist here, and
      * the π bond that stops them interconverting is worth tens of kcal/mol.
      *
-     * Ring double bonds are excluded, because the ring already ties the two ends together and E/Z
-     * has nothing to say. That also drops trans-cycloalkenes, which from cyclooctene up are real and
-     * separable — a known gap, recorded rather than guessed at.
+     * A ring double bond counts only when the ring is large enough to hold the trans form, so
+     * cyclohexene has nothing to report and trans-cyclooctene does. In a small ring the two ends are
+     * already tied together and E/Z describes nothing.
      */
     fun stereogenicDoubleBonds(graph: MoleculeGraph): List<Bond> {
         val labels = MoleculeCanonicalizer.morganLabels(graph)
         return graph.bonds.filter { bond ->
             bond.order == BondOrder.DOUBLE &&
-                !liesInRing(graph, bond) &&
+                ringAllowsGeometricIsomerism(graph, bond) &&
                 endIsStereogenic(graph, bond.first, bond.second, labels) &&
                 endIsStereogenic(graph, bond.second, bond.first, labels)
         }
     }
+
+    /**
+     * A single bond joining two aromatic rings, with the count of heavy atoms hanging off the ortho
+     * positions: the structural precondition for atropisomerism and the quantity a barrier rule
+     * would need.
+     *
+     * Biphenyl itself reports zero and rotates freely. BINAP reports the bulk of two diphenylphosphino
+     * groups and is a pair of isolable substances. **No threshold is applied here on purpose**: the
+     * line between "fluxional" and "isolable" is a barrier of roughly 22-25 kcal/mol, and turning
+     * ortho bulk into a barrier needs measured data this repository does not hold. Reporting the
+     * candidate and the bulk is honest; inventing a cut-off would not be.
+     */
+    fun hinderedRotationCandidates(graph: MoleculeGraph): List<HinderedRotation> {
+        val rings = AromaticityModel.aromaticRings(graph)
+        return graph.bonds.mapNotNull { bond ->
+            if (bond.order != BondOrder.SINGLE) return@mapNotNull null
+            val firstRing = rings.firstOrNull { bond.first in it } ?: return@mapNotNull null
+            val secondRing = rings.firstOrNull { bond.second in it } ?: return@mapNotNull null
+            if (firstRing === secondRing) return@mapNotNull null
+            HinderedRotation(
+                bond = bond,
+                orthoHeavyAtoms = orthoBulk(graph, bond.first, firstRing) +
+                    orthoBulk(graph, bond.second, secondRing),
+            )
+        }
+    }
+
+    /** A biaryl-type single bond and how much hangs off its ortho positions. */
+    data class HinderedRotation(val bond: Bond, val orthoHeavyAtoms: Int)
 
     /**
      * Three-coordinate pyramidal atoms with three different substituents. Chiral in principle —
@@ -140,25 +177,62 @@ object Stereochemistry {
         return descriptors.size == 2 && descriptors.distinct().size == 2
     }
 
-    /** True when the two endpoints stay connected with [bond] taken out, which is what a ring is. */
-    private fun liesInRing(graph: MoleculeGraph, bond: Bond): Boolean {
+    /**
+     * Whether the ring holding [bond], if any, is big enough for a trans arrangement. An acyclic
+     * double bond is unconstrained and returns true.
+     */
+    private fun ringAllowsGeometricIsomerism(graph: MoleculeGraph, bond: Bond): Boolean {
+        val size = smallestRingSizeThrough(graph, bond) ?: return true
+        return size >= SMALLEST_STABLE_TRANS_CYCLOALKENE
+    }
+
+    /**
+     * Size of the smallest ring through [bond], or null when the bond is not in a ring: the shortest
+     * path between its endpoints with the bond itself taken out, plus the bond.
+     */
+    private fun smallestRingSizeThrough(graph: MoleculeGraph, bond: Bond): Int? {
         val start = bond.first
         val target = bond.second
+        val distance = mutableMapOf(start to 0)
         val pending = ArrayDeque<Int>()
-        val seen = mutableSetOf(start)
         pending.add(start)
         while (pending.isNotEmpty()) {
             val current = pending.removeFirst()
+            val here = distance.getValue(current)
             for (neighbor in graph.bondsOf(current)) {
                 val isTheBondItself =
                     (neighbor.first == bond.first && neighbor.second == bond.second) ||
                         (neighbor.first == bond.second && neighbor.second == bond.first)
                 if (isTheBondItself) continue
                 val next = neighbor.other(current)
-                if (next == target) return true
-                if (seen.add(next)) pending.add(next)
+                if (next == target) return here + 2
+                if (distance.putIfAbsent(next, here + 1) == null) pending.add(next)
             }
         }
-        return false
+        return null
     }
+
+    /** Heavy atoms hanging off the ortho positions of [ipsoId], ignoring the ring itself. */
+    private fun orthoBulk(graph: MoleculeGraph, ipsoId: Int, ring: List<Int>): Int {
+        val ringAtoms = ring.toSet()
+        return graph.neighbors(ipsoId)
+            .filter { (neighbor, _) -> neighbor.id in ringAtoms }
+            .sumOf { (ortho, _) -> offRingHeavyAtoms(graph, ortho.id, ringAtoms) }
+    }
+
+    /** Heavy atoms reachable from [startId] without passing through [excluded], not counting it. */
+    private fun offRingHeavyAtoms(graph: MoleculeGraph, startId: Int, excluded: Set<Int>): Int {
+        val seen = mutableSetOf(startId)
+        val pending = ArrayDeque<Int>()
+        pending.add(startId)
+        while (pending.isNotEmpty()) {
+            val current = pending.removeFirst()
+            for ((neighbor, _) in graph.neighbors(current)) {
+                if (neighbor.id in excluded || neighbor.element.symbol == "H") continue
+                if (seen.add(neighbor.id)) pending.add(neighbor.id)
+            }
+        }
+        return seen.size - 1
+    }
+
 }
