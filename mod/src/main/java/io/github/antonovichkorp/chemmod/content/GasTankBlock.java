@@ -21,10 +21,12 @@ public class GasTankBlock extends Block {
     @Override
     protected void neighborChanged(BlockState state, Level level, BlockPos pos, Block block,
                                    BlockPos fromPos, boolean isMoving) {
-        super.neighborChanged(state, level, block, fromPos, isMoving);
+        super.neighborChanged(state, level, pos, block, fromPos, isMoving);
         if (level.isClientSide()) return;
-        if (level.getBlockState(fromPos).isFire()
-            && level.getBlockEntity(pos) instanceof GasTankBlockEntity tank) {
+        net.minecraft.world.level.block.state.BlockState neighbour = level.getBlockState(fromPos);
+        boolean fire = neighbour.is(net.minecraft.world.level.block.Blocks.FIRE)
+            || neighbour.is(net.minecraft.world.level.block.Blocks.SOUL_FIRE);
+        if (fire && level.getBlockEntity(pos) instanceof GasTankBlockEntity tank) {
             tank.ignite();
         }
     }
