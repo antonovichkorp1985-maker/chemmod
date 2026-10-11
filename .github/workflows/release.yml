@@ -69,6 +69,7 @@ jobs:
           ARTIFACT: ${{ steps.metadata.outputs.artifact }}
           NOTES: ${{ steps.metadata.outputs.notes }}
           SOURCE_SHA: ${{ steps.metadata.outputs.source_sha }}
+          PRERELEASE: ${{ steps.metadata.outputs.prerelease }}
         shell: bash
         run: |
           set -euo pipefail
@@ -86,11 +87,19 @@ jobs:
             printf '\n## Идентичность сборки\n\nИсходный commit: `%s`.\n\nSHA-256 JAR: `%s`.\n' \
               "$SOURCE_SHA" "$(sha256sum "$ARTIFACT" | cut -d ' ' -f 1)"
           } >> "$notes_file"
+          # A full semver version publishes as a real release; only the explicit
+          # -test.N candidates are marked as prereleases. The flag comes from the
+          # metadata contract, never from a hand-edited workflow step.
+          release_kind=()
+          if [[ "$PRERELEASE" == "true" ]]; then
+            release_kind=(--prerelease --title "ChemMod $RELEASE_TAG — M3 player-test candidate")
+          else
+            release_kind=(--latest --title "ChemMod $RELEASE_TAG")
+          fi
           # --target pins creation of a new tag to this tested commit even when
           # dispatched from a work branch. Existing releases are never edited.
           gh release create "$RELEASE_TAG" \
             "$ARTIFACT" "$ARTIFACT.sha256" \
             --target "$SOURCE_SHA" \
-            --prerelease \
-            --title "ChemMod $RELEASE_TAG — M3 player-test candidate" \
+            "${release_kind[@]}" \
             --notes-file "$notes_file"

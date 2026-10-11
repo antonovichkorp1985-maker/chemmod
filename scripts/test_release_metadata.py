@@ -42,10 +42,25 @@ class ReleaseMetadataTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             metadata(self.root)
 
-    def test_non_prerelease_version_rejected(self):
-        (self.root / 'build.gradle.kts').write_text('version = "0.9.0"\n')
-        with self.assertRaises(ValueError):
-            metadata(self.root)
+    def test_full_release_accepted_and_not_marked_prerelease(self):
+        (self.root / 'build.gradle.kts').write_text('version = "1.0.0"\n')
+        for kind in ('releases', 'testing'):
+            path = self.root / f'docs/{kind}/v1.0.0.md'
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text('test document\n')
+        values = metadata(self.root)
+        self.assertEqual(values['tag'], 'v1.0.0')
+        self.assertEqual(values['prerelease'], 'false')
+        self.assertEqual(values['artifact'], 'mod/build/libs/chemmod-1.0.0.jar')
+
+    def test_test_candidate_is_marked_prerelease(self):
+        self.assertEqual(metadata(self.root)['prerelease'], 'true')
+
+    def test_malformed_version_rejected(self):
+        for version in ('1.0', 'v1.0.0', '1.0.0-rc1', '1.0.0-test', 'latest'):
+            (self.root / 'build.gradle.kts').write_text(f'version = "{version}"\n')
+            with self.subTest(version=version), self.assertRaises(ValueError):
+                metadata(self.root)
 
     def write_jar(self, version, mod_id='chemmod'):
         values = metadata(self.root)
