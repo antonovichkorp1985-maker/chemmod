@@ -83,6 +83,21 @@ properties come from the molecular graph, not from a catalogue row.
    prerequisites; until they exist, γ is a shielding rule with nothing to
    attenuate.
 
+7. **The field is visible, by the owner's instruction of 2026-10-11.** §5 of the
+   plan specifies the gas field as a computational field — cells, budget,
+   diffusion, buoyancy, data parameters — and §8.5 has sensors read it. It says
+   nothing about appearance, and the plan carries no requirement for colour: a
+   search of `ПЛАН-ДРУГА.md` finds neither «полупрозрачн» nor «визуал», and
+   «туман» appears only in `МАНИФЕСТ.md`. The owner added visibility himself, on
+   the stated ground that a gas you cannot perceive is not a gas the player can
+   reason about: smell is not expressible in Minecraft, colour is. Gas therefore
+   renders from its own composition — the tint already computed per species in
+   `ClosedVessel`, blended by partial pressure and faded by concentration, so
+   chlorine reads green, NO₂ brown, and hydrogen stays colourless. The tint is a
+   property of the species and is never written per block, and colourless is a
+   real answer rather than a default: it must not be filled in with a placeholder
+   hue. Visibility follows the field; it does not replace any §5 requirement.
+
 ## Consequences
 
 The work queue this implies, in order:
@@ -102,7 +117,13 @@ The work queue this implies, in order:
   style rule over atomic diffusion volumes — to be sourced when implemented, not
   assumed here. Then the sparse field itself within the recorded budget, then
   flammability by Jones, then environmental reactivity as ordinary reaction
-  rules.
+  rules. *Status 2026-10-11:* molar mass and buoyancy from the graph
+  (`GasPhase`), Chapman–Enskog over Lennard-Jones (`GasTransport`), flammability
+  by Jones with Le Chatelier (`GasPhase`), the sparse field itself (`GasField`)
+  and the world adapter that holds one field per level (`WorldGasField`, a level
+  attachment ticked once a second, fed by a bursting tank) are done and green.
+  Still owed: toxicity by mechanism, environmental reactivity as reaction rules,
+  and the rendering of decision 7.
 - **C — radiation zone.** Gamma branches and μ tables, secular equilibrium as the
   source term, the world adapter (entity dose, dosimeter, accumulated dose), and
   finally radon as a gas-carried source.

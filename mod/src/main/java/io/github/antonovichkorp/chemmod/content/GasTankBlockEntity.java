@@ -1,6 +1,7 @@
 package io.github.antonovichkorp.chemmod.content;
 
 import io.github.antonovichkorp.chemmod.core.gas.ClosedVessel;
+import io.github.antonovichkorp.chemmod.gas.ChemAttachments;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
@@ -9,6 +10,9 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * A rigid sealed gas tank in the world. The physics lives in the chemistry core's
@@ -56,6 +60,12 @@ public class GasTankBlockEntity extends BlockEntity {
         if (level == null || level.isClientSide() || !vessel.bursts(WALL_STRENGTH_PASCALS)) return;
         boolean fiery = vessel.species().stream()
             .anyMatch(s -> s.equals("H2") || s.equals("CH4") || s.equals("CO"));
+        // The wall fails, so the contents stop being sealed and become world gas: they go into the
+        // level's gas field and diffuse, settle and ventilate from there instead of disappearing
+        // together with the block.
+        Map<String, Double> contents = new LinkedHashMap<>();
+        for (String species : vessel.species()) contents.put(species, vessel.molesOf(species));
+        level.getData(ChemAttachments.GAS_FIELD).release(worldPosition, contents);
         Block.popResource(level, worldPosition, new ItemStack(ChemItems.GAS_TANK.get()));
         level.removeBlock(worldPosition, false);
         if (fiery) {

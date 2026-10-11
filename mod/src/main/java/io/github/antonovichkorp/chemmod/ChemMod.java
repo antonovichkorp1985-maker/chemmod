@@ -5,6 +5,7 @@ import io.github.antonovichkorp.chemmod.content.ChemBlocks;
 import io.github.antonovichkorp.chemmod.content.ChemComponents;
 import io.github.antonovichkorp.chemmod.content.ChemItems;
 import io.github.antonovichkorp.chemmod.content.ChemMenus;
+import io.github.antonovichkorp.chemmod.gas.ChemAttachments;
 import io.github.antonovichkorp.chemmod.integration.create.CreateIntegration;
 import io.github.antonovichkorp.chemmod.network.ReactorDiscoveryPayload;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
@@ -19,6 +20,7 @@ public final class ChemMod {
 
     public ChemMod(IEventBus modEventBus) {
         ChemComponents.register(modEventBus);
+        ChemAttachments.register(modEventBus);
         ChemBlocks.register(modEventBus);
         ChemBlockEntities.register(modEventBus);
         ChemItems.register(modEventBus);
