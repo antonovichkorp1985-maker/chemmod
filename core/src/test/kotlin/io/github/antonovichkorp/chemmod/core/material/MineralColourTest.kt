@@ -10,7 +10,7 @@ import kotlin.test.assertTrue
  * that is genuinely multicoloured must carry no colour at all, rather than one arbitrary hue.
  */
 class MineralColourTest {
-    private val catalogue = MaterialCatalog.loadDefault()
+    private val catalogue = MaterialCatalog.bundled()
     private val minerals = catalogue.minerals.values.associateBy { it.id.value }
 
     private fun colour(id: String) = minerals.getValue("chemmod:$id").colourArgb
