@@ -475,7 +475,8 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
         return SURFACE_MODEL.siteMolesForMaterialForm(
             batch.materialId(),
             batch.form(),
-            batch.primaryMassMicrograms()
+            batch.primaryMassMicrograms(),
+            java.util.Map.of()
         );
     }
 
