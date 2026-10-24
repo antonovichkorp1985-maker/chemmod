@@ -9,6 +9,7 @@
     {"canonicalName": "methanol", "aliases": ["methanol", "метанол", "ch3oh"], "structure": "CO"},
     {"canonicalName": "ethanol", "aliases": ["ethanol", "этанол", "c2h5oh"], "structure": "CCO"},
     {"canonicalName": "acetaldehyde", "aliases": ["acetaldehyde", "ethanal", "ацетальдегид", "этаналь"], "structure": "CC=O"},
+    {"canonicalName": "acetaldehyde_hydrate", "aliases": ["acetaldehyde_hydrate", "1,1-ethanediol", "ethane-1,1-diol", "гидрат_ацетальдегида", "этан-1,1-диол"], "structure": "CC(O)O"},
     {"canonicalName": "dimethyl_ether", "aliases": ["dimethyl_ether", "dimethyl-ether", "диметиловый_эфир"], "structure": "COC"},
     {"canonicalName": "propane", "aliases": ["propane", "пропан", "c3h8"], "structure": "CCC"},
     {"canonicalName": "cyclopropane", "aliases": ["cyclopropane", "циклопропан"], "structure": "C1CC1"},

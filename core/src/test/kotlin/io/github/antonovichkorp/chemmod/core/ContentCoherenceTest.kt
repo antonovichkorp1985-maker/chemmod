@@ -3,6 +3,7 @@ package io.github.antonovichkorp.chemmod.core
 import io.github.antonovichkorp.chemmod.core.material.MaterialCatalog
 import io.github.antonovichkorp.chemmod.core.model.ElementTable
 import io.github.antonovichkorp.chemmod.core.naming.TrivialNameDirectory
+import io.github.antonovichkorp.chemmod.core.reaction.ReactionRuleSet
 import kotlin.math.abs
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -12,8 +13,8 @@ import kotlin.test.assertTrue
 
 /**
  * Coherence guards for bundled content: mineral stoichiometry may only use elements the
- * table defines, and every trivial label must resolve to the identity of its own graph.
- * None of these tests enumerates substances — they only check that content agrees.
+ * table defines, every trivial label resolves to its graph, and explicit reaction species have
+ * reference samples. They check finite declared content, not arbitrary possible molecular graphs.
  */
 class ContentCoherenceTest {
     private val elements = ElementTable.default()
@@ -134,6 +135,31 @@ class ContentCoherenceTest {
         assertEquals(
             Molecule.fromSMILESlike("O=S(=O)(O)O").canonicalKey(),
             Molecule.fromSMILESlike(sulfuric.structure).canonicalKey(),
+        )
+    }
+
+    @Test
+    fun `creative reference set covers bundled rule species and M3 pathway intermediates`() {
+        val sampleKeys = CommonSubstances.all()
+            .map { Molecule.fromSMILESlike(it.structure).canonicalKey() }
+            .toSet()
+        val explicitRuleSpecies = ReactionRuleSet.bundled().rules.values.flatMap { rule ->
+            rule.coReactantStructures + rule.productStructures
+        }.map { structure -> Molecule.fromSMILESlike(structure).canonicalKey() }
+
+        assertTrue(
+            explicitRuleSpecies.all { it in sampleKeys },
+            "every explicit bundled-rule reactant/product should have a creative reference vial",
+        )
+        val acetaldehyde = CommonSubstances.findByStructure("CC=O")
+        val hydrate = CommonSubstances.findByStructure("CC(O)O")
+        val aceticAcid = CommonSubstances.findByStructure("CC(=O)O")
+        assertNotNull(acetaldehyde, "M3's acetaldehyde intermediate needs a creative sample")
+        assertNotNull(hydrate, "M3's gem-diol intermediate needs a creative sample distinct from ethylene glycol")
+        assertNotNull(aceticAcid, "M3's acetic-acid product needs a creative sample")
+        assertTrue(
+            hydrate.canonicalName != CommonSubstances.find("ethylene_glycol")?.canonicalName,
+            "acetaldehyde hydrate must not be conflated with ethylene glycol",
         )
     }
 }
