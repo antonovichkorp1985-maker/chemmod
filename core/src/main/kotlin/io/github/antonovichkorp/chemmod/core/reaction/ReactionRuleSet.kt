@@ -171,6 +171,8 @@ data class ReactionRule(
     val displayDescriptionKey: String = "reaction.chemmod.unnamed.description",
     /** Null means the rule is valid but has no timed machine execution model yet. */
     val kinetics: ReactionKinetics? = null,
+    /** This ordinary chemistry rule may run in an exposed environmental gas mixture. */
+    val environmental: Boolean = false,
 ) {
     init {
         val bondMatcher = matcher as? BondOrderPattern
@@ -258,6 +260,7 @@ private data class ReactionRuleDocument(
     val displayNameKey: String = "reaction.chemmod.unnamed",
     val displayDescriptionKey: String = "reaction.chemmod.unnamed.description",
     val kinetics: ReactionKineticsDocument? = null,
+    val environmental: Boolean = false,
 ) {
     fun toDomain() = ReactionRule(
         id = ReactionRuleId.of(id),
@@ -269,6 +272,7 @@ private data class ReactionRuleDocument(
         displayNameKey = displayNameKey,
         displayDescriptionKey = displayDescriptionKey,
         kinetics = kinetics?.toDomain(),
+        environmental = environmental,
     )
 }
 

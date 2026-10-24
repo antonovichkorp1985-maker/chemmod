@@ -31,7 +31,8 @@
         "preExponentialFactorPerSecond": 1000.0,
         "activationEnergyJoulesPerMole": 35000.0
       },
-      "displayDescriptionKey": "reaction.chemmod.complete_combustion.description"
+      "displayDescriptionKey": "reaction.chemmod.complete_combustion.description",
+      "environmental": true
     },
     {
       "id": "chemmod:alkene_hydrogenation",
