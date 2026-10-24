@@ -1,6 +1,7 @@
 package io.github.antonovichkorp.chemmod.content;
 
 import io.github.antonovichkorp.chemmod.core.catalysis.CatalystModel;
+import io.github.antonovichkorp.chemmod.core.catalysis.CatalystSurfaceModel;
 import io.github.antonovichkorp.chemmod.core.reaction.FormulaPattern;
 import io.github.antonovichkorp.chemmod.core.reaction.ReactionEnvironment;
 import io.github.antonovichkorp.chemmod.core.reaction.ReactionKinetics;
@@ -73,6 +74,7 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
     private static final String TEMPERATURE_KEY = "body_temperature_kelvin";
 
     private static final ReactionRuleSet RULE_SET = ReactionRuleSet.bundled();
+    private static final CatalystSurfaceModel SURFACE_MODEL = CatalystSurfaceModel.bundled();
     private static final PureSubstanceReactionPlanner PLANNER = PureSubstanceReactionPlanner.bundled();
     private static final List<ReactionRule> TIMED_RULES = RULE_SET.getRules().values().stream()
         .filter(rule -> rule.getKinetics() != null)
@@ -250,7 +252,11 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
             resetProgress(ReactorStatus.NO_TIMED_MODEL);
             return;
         }
-        reactionProgress = Math.min(1.0, reactionProgress + kinetics.ratePerSecond(environment().getTemperatureKelvin()));
+        ReactionEnvironment reactionEnvironment = environment();
+        reactionProgress = Math.min(1.0, reactionProgress + kinetics.ratePerSecond(
+            reactionEnvironment.getTemperatureKelvin(),
+            reactionEnvironment.getCatalystSurfaceSiteMoles()
+        ));
         status = ReactorStatus.PROCESSING;
         setVisualActive(true);
         setChanged();
@@ -386,7 +392,8 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
                 : conditions.getMinimumPressureKilopascals(),
             conditions.getCatalystTags(),
             java.util.Set.of(),
-            conditions.getCatalystCapabilities()
+            conditions.getCatalystCapabilities(),
+            conditions.getMinimumCatalystSurfaceSiteMoles()
         );
     }
 
@@ -396,7 +403,8 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
             ATMOSPHERIC_PRESSURE_KILOPASCALS,
             catalystTags(),
             java.util.Set.of(),
-            catalystCapabilities()
+            catalystCapabilities(),
+            catalystSurfaceSiteMoles()
         );
     }
 
@@ -458,6 +466,19 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
         return java.util.Set.of();
     }
 
+    /** Accessible active-site inventory from a characterized material/form profile, not bulk elements. */
+    private java.util.Map<String, Double> catalystSurfaceSiteMoles() {
+        ItemStack catalyst = items.get(CATALYST_SLOT);
+        if (catalyst.isEmpty()) return java.util.Map.of();
+        MaterialBatchContents batch = catalyst.get(ChemComponents.MATERIAL_BATCH.get());
+        if (batch == null) return java.util.Map.of();
+        return SURFACE_MODEL.siteMolesForMaterialForm(
+            batch.materialId(),
+            batch.form(),
+            batch.primaryMassMicrograms()
+        );
+    }
+
     private java.util.Set<String> catalystTags() {
         ItemStack catalyst = items.get(CATALYST_SLOT);
         if (catalyst.isEmpty()) return java.util.Set.of();
@@ -496,6 +517,11 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
             return ReactorStatus.NEEDS_CATALYST;
         }
         if (!catalystCapabilities().containsAll(conditions.getCatalystCapabilities())) {
+            return ReactorStatus.NEEDS_CATALYST;
+        }
+        java.util.Map<String, Double> surfaceSites = catalystSurfaceSiteMoles();
+        if (conditions.getMinimumCatalystSurfaceSiteMoles().entrySet().stream()
+            .anyMatch(required -> surfaceSites.getOrDefault(required.getKey(), 0.0) < required.getValue())) {
             return ReactorStatus.NEEDS_CATALYST;
         }
         if (conditions.getMinimumPressureKilopascals() != null

@@ -41,6 +41,21 @@ class ReactionEngineTest {
     }
 
     @Test
+    fun `surface site population scales declared Arrhenius kinetics`() {
+        val siteType = "chemmod:fe3_defect_site"
+        val kinetics = ReactionKinetics(
+            preExponentialFactorPerSecond = 2.0,
+            activationEnergyJoulesPerMole = 0.0,
+            surfaceSiteType = siteType,
+            referenceSurfaceSiteMoles = 2.0e-6,
+        )
+
+        assertEquals(0.0, kinetics.ratePerSecond(500.0, emptyMap()), 1e-12)
+        assertEquals(1.0, kinetics.ratePerSecond(500.0, mapOf(siteType to 1.0e-6)), 1e-12)
+        assertEquals(2.0, kinetics.ratePerSecond(500.0, mapOf(siteType to 2.0e-6)), 1e-12)
+    }
+
+    @Test
     fun `data rule combusts an unlisted molecular graph with automatic balancing`() {
         val butanol = Molecule.fromSMILESlike("CCCCO")
         assertTrue(butanol.validate().isEmpty())
@@ -204,6 +219,60 @@ class ReactionEngineTest {
                 environment(350.0, coReactants = setOf(hydrogen)),
             ).isEmpty(),
         )
+    }
+
+    @Test
+    fun `surface-gated reactions require characterized accessible active sites`() {
+        val json = """
+            {
+              "schemaVersion": 2,
+              "rules": [{
+                "id": "chemmod:surface_test_combustion",
+                "matcher": {
+                  "kind": "formula",
+                  "allowedElements": ["C", "H", "O"],
+                  "requiredElements": ["C"],
+                  "requireNeutral": true,
+                  "requirePositiveOxygenDemand": true
+                },
+                "coReactantStructures": ["O=O"],
+                "productStructures": ["O=C=O", "O"],
+                "conditions": {
+                  "minimumCatalystSurfaceSiteMoles": {"chemmod:fe3_defect_site": 1.0e-8}
+                },
+                "displayNameKey": "reaction.chemmod.surface_test",
+                "displayDescriptionKey": "reaction.chemmod.surface_test.description",
+                "kinetics": {
+                  "preExponentialFactorPerSecond": 1.0,
+                  "activationEnergyJoulesPerMole": 0.0,
+                  "surfaceSiteType": "chemmod:fe3_defect_site",
+                  "referenceSurfaceSiteMoles": 1.0e-8
+                }
+              }]
+            }
+        """.trimIndent()
+        val ruleSet = ReactionRuleSet.fromJson(json.byteInputStream())
+        val engine = ReactionEngine(ruleSet)
+        val ethanol = Molecule.fromSMILESlike("CCO")
+        val oxygen = Molecule.fromSMILESlike("O=O")
+        val id = ReactionRuleId.of("chemmod:surface_test_combustion")
+        val baseEnvironment = environment(600.0, coReactants = setOf(oxygen))
+
+        assertTrue(engine.apply(ethanol, id, baseEnvironment).isEmpty())
+        assertTrue(
+            engine.apply(
+                ethanol,
+                id,
+                baseEnvironment.copy(catalystSurfaceSiteMoles = mapOf("chemmod:fe3_defect_site" to 0.5e-8)),
+            ).isEmpty(),
+        )
+        val reaction = engine.apply(
+            ethanol,
+            id,
+            baseEnvironment.copy(catalystSurfaceSiteMoles = mapOf("chemmod:fe3_defect_site" to 1.0e-8)),
+        ).single()
+        assertEquals("C2H6O + 3 O2 -> 2 CO2 + 3 H2O", reaction.formatEquation())
+        assertTrue(reaction.isConserved())
     }
 
     @Test

@@ -33,11 +33,17 @@ both match, the reactor chooses the graph-specific candidate; equally specific
 ambiguous candidates remain refused. This allows selective data-defined
 synthesis to coexist with general combustion without a substance lookup.
 
-The copper material composition now earns the existing general
-`chemmod:oxidation_metal` capability, allowing the new direct oxidation rule to
-be exercised with an already obtainable ChemMod catalyst item. This is an
-explicit capability abstraction; the graph model does not represent catalyst
-surface phase, oxidation state, support, or selectivity.
+The copper material composition earns the existing general
+`chemmod:oxidation_metal` capability, allowing the direct oxidation rule to be
+exercised with an obtainable ChemMod catalyst item. This remains a bulk
+capability abstraction and is not a validated surface mechanism. A separate
+core surface inventory / rule-gate / optional rate-scaling contract is now
+implemented and tested, but no active surface profile is bundled and no
+material-form profile assigns a characterized surface state to the reactor
+catalyst. Therefore these M3 pathways still do not model catalyst surface
+phase, oxidation state, support, adsorbate coverage, or selectivity. See [`catalyst-surface-chemistry.md`](catalyst-surface-chemistry.md)
+for the research, evidence, and unclosed implementation steps. Do not present
+this foundation as surface-chemistry acceptance.
 
 ## Automated evidence
 

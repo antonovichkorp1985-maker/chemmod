@@ -119,7 +119,10 @@ class GasCellReactionPlanner @JvmOverloads constructor(
                     ?: continue
                 if (!candidate.isConserved()) continue
                 val limitingExtent = limitingExtent(candidate, current) ?: continue
-                val rate = requireNotNull(rule.kinetics).ratePerSecond(environment.temperatureKelvin)
+                val rate = requireNotNull(rule.kinetics).ratePerSecond(
+                    environment.temperatureKelvin,
+                    reactionEnvironment.catalystSurfaceSiteMoles,
+                )
                 val conversion = 1.0 - exp(-rate * seconds)
                 val extent = limitingExtent * conversion
                 if (!extent.isFinite() || extent <= 0.0) continue

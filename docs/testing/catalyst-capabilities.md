@@ -53,17 +53,41 @@
 `chemmod:palladium`, `chemmod:chromium_oxide`, `chemmod:nickel`, `chemmod:copper`, и их поведение
 не изменилось.
 
-## 4. Чего срез не делает
+## 4. Surface chemistry — отдельный обязательный слой
+
+Composition capabilities **не являются** моделью поверхности. Добавлен вычислительный контракт
+`CatalystSurfaceModel` и условие `ReactionConditions.minimumCatalystSurfaceSiteMoles`:
+
+- characterized profile: поверхность/фаза, BET area (м²/г), плотность активных сайтов (моль/м²)
+  и ссылка на evidence;
+- inventory: масса образца × measured specific area × site density; заданное покрытие блокирует
+  соответствующую долю только своих сайтов;
+- rule gate: `ReactionEngine` отказывает, если движок не получил требуемый доступный тип/количество
+  поверхностных сайтов;
+- `ReactionKinetics` может масштабировать Arrhenius rate отношением доступных сайтов к
+  документированному reference inventory;
+- неизвестная поверхность не превращается в capability по элементному составу.
+
+`core/src/main/resources/chemmod/catalysis/surfaces.json` пока намеренно содержит пустой список
+профилей: без описания конкретной фазы/образца, поверхности и pathway-specific evidence нельзя
+назначать железной окалине (или меди) произвольные площадь и активность. Эта реализация — проверяемая
+основа для поверхностных данных, **не** утверждение, что M3 уже учитывает поверхность: существующие
+M3 rules ещё используют старое composition/catalyst-tag условие, а игровые catalyst items пока не
+несут characterized surface state. Подробности и исследовательские основания — в
+[`catalyst-surface-chemistry.md`](catalyst-surface-chemistry.md).
+
+## 5. Чего срез не делает
 
 - Кислотный катализ пробиркой (серная кислота как донор `acid_site`) не подключён: слот катализатора
   читает только `MaterialFormItem`, для колбы нужен отдельный путь.
-- Способности не показываются в интерфейсе и не объясняются в тултипе.
+- Surface profiles пока не заведены; результат модели не показан в интерфейсе/tooltip и не влияет
+  на M3 machine kinetics.
 - Pd, Ni, Cr как материалы не добавлены: минеральные источники в каталоге уже есть
   (`chemmod:millerite` NiS, `chemmod:pentlandite` Fe4Ni5S8, `chemmod:chromite` FeCr2O4), но
   материалы `chemmod:nickel` / `chemmod:chromium` и их `supportedForms` не заведены, а предметы
   без моделей и текстур выпускать нельзя.
 
-## 5. Проверка
+## 6. Проверка
 
 - `core/src/test/kotlin/.../core/catalysis/CatalystModelTest.kt` — 6 тестов: медь зарабатывает две
   способности, силикат не зарабатывает ничего, способности следуют за контентом материала,

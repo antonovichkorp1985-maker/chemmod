@@ -18,6 +18,10 @@ This is a source/test evidence audit, **not** a milestone completion declaration
 
 No M0–M3 milestone is claimed owner-accepted by this audit. This does not negate the documented partial reactor feedback.
 
+### 2026-10-25 continuation — surface model remains an open M3 gate
+
+The `arena/bb7eef66-chemmod` continuation adds a data-defined surface-site inventory, rule gate, and optional surface-site rate scaling to the existing `ReactionRuleSet` / `ReactionEngine` path, with the reactor reading characterized material-form profiles. Research identifies iron oxide scale as preparation- and temperature-dependent rather than a unique phase; no source-backed profile is bundled, and neither acetic-acid pathway yet uses the surface gate or surface-dependent kinetics. This is core plumbing, not completion of the owner's surface-chemistry requirement. Details and sources: `docs/testing/catalyst-surface-chemistry.md`. CI status for this continuation is pending at the time of this note; M0–M3 owner acceptance, real-pack checks, and the 100-machine Spark F2 profile remain open.
+
 ## Evidence and gaps
 
 ### M0 — CLI core

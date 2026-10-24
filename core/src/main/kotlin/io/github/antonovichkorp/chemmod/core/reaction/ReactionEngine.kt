@@ -17,10 +17,15 @@ data class ReactionEnvironment @JvmOverloads constructor(
     val availableCanonicalKeys: Set<String> = emptySet(),
     /** Capabilities the present catalyst earns from its composition, see `CatalystModel`. */
     val catalystCapabilities: Set<String> = emptySet(),
+    /** Accessible catalytic surface-site amounts, in moles of sites, from a characterized surface. */
+    val catalystSurfaceSiteMoles: Map<String, Double> = emptyMap(),
 ) {
     init {
         require(temperatureKelvin > 0.0 && temperatureKelvin.isFinite()) { "Temperature must be finite and positive" }
         require(pressureKilopascals > 0.0 && pressureKilopascals.isFinite()) { "Pressure must be finite and positive" }
+        require(catalystSurfaceSiteMoles.all { (id, moles) ->
+            id.matches(Regex("[a-z][a-z0-9_.-]*:[a-z0-9_./-]+")) && moles.isFinite() && moles >= 0.0
+        }) { "Catalyst surface-site amounts need namespaced IDs and finite non-negative amounts" }
     }
 }
 
@@ -288,7 +293,10 @@ class ReactionEngine(private val ruleSet: ReactionRuleSet) {
             (conditions.maximumTemperatureKelvin == null || environment.temperatureKelvin <= conditions.maximumTemperatureKelvin) &&
             (conditions.minimumPressureKilopascals == null || environment.pressureKilopascals >= conditions.minimumPressureKilopascals) &&
             environment.catalystTags.containsAll(conditions.catalystTags) &&
-            environment.catalystCapabilities.containsAll(conditions.catalystCapabilities)
+            environment.catalystCapabilities.containsAll(conditions.catalystCapabilities) &&
+            conditions.minimumCatalystSurfaceSiteMoles.all { (siteType, minimum) ->
+                (environment.catalystSurfaceSiteMoles[siteType] ?: 0.0) >= minimum
+            }
 
     companion object {
         @JvmStatic
