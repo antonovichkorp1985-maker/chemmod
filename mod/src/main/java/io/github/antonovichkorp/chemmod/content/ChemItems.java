@@ -144,6 +144,8 @@ public final class ChemItems {
             .displayItems((parameters, output) -> {
                 output.accept(new ItemStack(SUBSTANCE_VIAL.get()));
                 output.accept(new ItemStack(STEEL_FLASK.get()));
+                // One generic vial item carries each finite named reference sample; arbitrary
+                // valid molecular graphs are not enumerable as separate creative entries.
                 CommonSubstances.INSTANCE.all().forEach(substance -> output.accept(vial(substance.getCanonicalName())));
                 output.accept(mixtureVial("вода", "этанол"));
                 output.accept(new ItemStack(NATIVE_COPPER_ORE.get()));

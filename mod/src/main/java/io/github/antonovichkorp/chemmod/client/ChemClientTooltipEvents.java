@@ -71,5 +71,7 @@ public final class ChemClientTooltipEvents {
                 String.format(Locale.ROOT, "%.2f", estimate.getTemperatureKelvin()),
                 String.format(Locale.ROOT, "%.0f", estimate.getPressurePascals()))
             .withStyle(ChatFormatting.DARK_GRAY));
+        event.getToolTip().add(net.minecraft.network.chat.Component.translatable("tooltip.chemmod.phase.model.earth_isa")
+            .withStyle(ChatFormatting.GRAY));
     }
 }

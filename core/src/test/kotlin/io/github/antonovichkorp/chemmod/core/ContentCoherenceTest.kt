@@ -121,6 +121,14 @@ class ContentCoherenceTest {
         assertEquals(all.size, identities.distinct().size, "two labels describe the same molecule")
         assertTrue(identities.all { it != null })
 
+        val acetaldehyde = CommonSubstances.find("ацетальдегид")
+        assertNotNull(acetaldehyde, "the M3 reaction intermediate needs a Russian creative-sample alias")
+        assertEquals("acetaldehyde", acetaldehyde.canonicalName)
+        assertEquals(
+            Molecule.fromSMILESlike("CC=O").canonicalKey(),
+            Molecule.fromSMILESlike(acetaldehyde.structure).canonicalKey(),
+        )
+
         val sulfuric = CommonSubstances.find("серная_кислота")
         assertNotNull(sulfuric, "the bundled directory lost its Russian alias for sulfuric acid")
         assertEquals(
