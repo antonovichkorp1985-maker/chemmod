@@ -3,6 +3,7 @@ package io.github.antonovichkorp.chemmod.content;
 import io.github.antonovichkorp.chemmod.ChemMod;
 import io.github.antonovichkorp.chemmod.core.CommonSubstance;
 import io.github.antonovichkorp.chemmod.core.CommonSubstances;
+import io.github.antonovichkorp.chemmod.core.chemistry.ReferenceMoleculeCatalog;
 import io.github.antonovichkorp.chemmod.core.material.MaterialItemExports;
 import io.github.antonovichkorp.chemmod.core.material.MaterialItemSpec;
 import io.github.antonovichkorp.chemmod.core.mixture.MolecularMixture;
@@ -146,7 +147,8 @@ public final class ChemItems {
                 output.accept(new ItemStack(STEEL_FLASK.get()));
                 // One generic vial item carries each finite named reference sample; arbitrary
                 // valid molecular graphs are not enumerable as separate creative entries.
-                CommonSubstances.INSTANCE.all().forEach(substance -> output.accept(vial(substance.getCanonicalName())));
+                ReferenceMoleculeCatalog.INSTANCE.sorted(CommonSubstances.INSTANCE.all())
+                    .forEach(substance -> output.accept(vial(substance.getCanonicalName())));
                 output.accept(mixtureVial("вода", "этанол"));
                 output.accept(new ItemStack(NATIVE_COPPER_ORE.get()));
                 output.accept(copperStorageBlockStack(CopperStorageBlockEntity.defaultBatch()));

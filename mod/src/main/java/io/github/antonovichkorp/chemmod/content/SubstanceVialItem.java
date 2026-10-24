@@ -3,6 +3,7 @@ package io.github.antonovichkorp.chemmod.content;
 import io.github.antonovichkorp.chemmod.core.CommonSubstance;
 import io.github.antonovichkorp.chemmod.core.CommonSubstances;
 import io.github.antonovichkorp.chemmod.core.Molecule;
+import io.github.antonovichkorp.chemmod.core.chemistry.ReferenceMoleculeCatalog;
 import io.github.antonovichkorp.chemmod.integration.WaterFluidAdapters;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
@@ -230,6 +231,24 @@ public final class SubstanceVialItem extends Item {
                 "tooltip.chemmod.molar_mass",
                 String.format(Locale.ROOT, "%.3f", molecule.molarMass())
             ).withStyle(ChatFormatting.DARK_GRAY));
+            if (CommonSubstances.INSTANCE.findByCanonicalKey(molecule.canonicalKey()) != null) {
+                var catalogDescriptor = ReferenceMoleculeCatalog.INSTANCE.describe(molecule.getGraph());
+                for (String classId : catalogDescriptor.getClasses()) {
+                    tooltip.add(Component.translatable(
+                        "tooltip.chemmod.molecular_class",
+                        Component.translatable("chemistry_class.chemmod." + classId)
+                    ).withStyle(ChatFormatting.DARK_AQUA));
+                }
+                if (catalogDescriptor.getLongestCarbonChainLength() > 0) {
+                    tooltip.add(Component.translatable(
+                        "tooltip.chemmod.carbon_chain_length",
+                        catalogDescriptor.getLongestCarbonChainLength()
+                    ).withStyle(ChatFormatting.DARK_AQUA));
+                }
+                tooltip.add(Component.translatable(
+                    "tooltip.chemmod.solubility." + catalogDescriptor.getSolubility().name().toLowerCase(Locale.ROOT)
+                ).withStyle(ChatFormatting.DARK_GRAY));
+            }
             if (flag.isAdvanced()) {
                 tooltip.add(Component.translatable("tooltip.chemmod.schema", contents.schemaVersion())
                     .withStyle(ChatFormatting.DARK_GRAY));

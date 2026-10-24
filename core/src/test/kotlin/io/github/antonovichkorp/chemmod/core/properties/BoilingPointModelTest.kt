@@ -1,9 +1,11 @@
 package io.github.antonovichkorp.chemmod.core.properties
 
+import io.github.antonovichkorp.chemmod.core.CommonSubstances
 import io.github.antonovichkorp.chemmod.core.Molecule
 import io.github.antonovichkorp.chemmod.core.chemistry.FunctionalGroups
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
@@ -17,11 +19,19 @@ import kotlin.test.assertTrue
 class BoilingPointModelTest {
     private val engine = PropertyEngine(PropertyRuleSet.bundled())
 
+    private fun referenceMolecule(structure: String): Molecule {
+        assertNotNull(
+            CommonSubstances.findByStructure(structure),
+            "every molecule used to validate the property model must have a finite creative reference sample: $structure",
+        )
+        return Molecule.fromSMILESlike(structure)
+    }
+
     private fun boiling(structure: String): Double? =
-        engine.predict(Molecule.fromSMILESlike(structure).graph).boilingPointC
+        engine.predict(referenceMolecule(structure).graph).boilingPointC
 
     private fun basis(structure: String): String =
-        engine.predict(Molecule.fromSMILESlike(structure).graph).boilingPointBasis
+        engine.predict(referenceMolecule(structure).graph).boilingPointBasis
 
     private fun assertNear(expected: Double, actual: Double, tolerance: Double = 1.0) =
         assertTrue(kotlin.math.abs(expected - actual) <= tolerance, "expected $expected ± $tolerance, got $actual")
@@ -167,11 +177,11 @@ class BoilingPointModelTest {
         // Same formula, same mass, 14 K apart: n-butane boils at -0.5 and isobutane at -11.8, so
         // compactness matters and molar mass alone cannot see it.
         assertTrue(boiling("CCCC#N")!! > boiling("CC(C)C#N")!!)
-        assertEquals(1, FunctionalGroups.branchPoints(Molecule.fromSMILESlike("CC(C)C#N").graph))
-        assertEquals(0, FunctionalGroups.branchPoints(Molecule.fromSMILESlike("CCCC#N").graph))
+        assertEquals(1, FunctionalGroups.branchPoints(referenceMolecule("CC(C)C#N").graph))
+        assertEquals(0, FunctionalGroups.branchPoints(referenceMolecule("CCCC#N").graph))
         // An aromatic carbon carrying the cyano group has three heavy neighbours but is not a
         // branch: counting it would drop benzonitrile by 14 K.
-        assertEquals(0, FunctionalGroups.branchPoints(Molecule.fromSMILESlike("N#CC1=CC=CC=C1").graph))
+        assertEquals(0, FunctionalGroups.branchPoints(referenceMolecule("N#CC1=CC=CC=C1").graph))
     }
 
     @Test
@@ -180,12 +190,12 @@ class BoilingPointModelTest {
         // with the C#N is worth some 20 K that dispersion has no term for, so the model declines.
         assertNull(boiling("C=CC#N"))
         assertEquals("no-model:nitrile-fit-excludes-conjugated-alkenenitriles", basis("C=CC#N"))
-        assertTrue(FunctionalGroups.hasConjugatedNitrile(Molecule.fromSMILESlike("C=CC#N").graph))
-        assertTrue(!FunctionalGroups.hasConjugatedNitrile(Molecule.fromSMILESlike("CCCC#N").graph))
+        assertTrue(FunctionalGroups.hasConjugatedNitrile(referenceMolecule("C=CC#N").graph))
+        assertTrue(!FunctionalGroups.hasConjugatedNitrile(referenceMolecule("CCCC#N").graph))
         // Benzonitrile is conjugated with its ring, but the ring is a different electronic
         // situation and the branch predicts it to within 0.6 K. Counting an aromatic double bond
         // here would refuse a molecule the model actually gets right.
-        assertTrue(!FunctionalGroups.hasConjugatedNitrile(Molecule.fromSMILESlike("N#CC1=CC=CC=C1").graph))
+        assertTrue(!FunctionalGroups.hasConjugatedNitrile(referenceMolecule("N#CC1=CC=CC=C1").graph))
     }
 
     @Test
@@ -221,10 +231,10 @@ class BoilingPointModelTest {
         // not - CH4 sums to 4.34 A^3 against 2.66 A^3 measured, because hydrogen bound to
         // carbon is far less polarizable than a free hydrogen atom. So the sum is a fitted
         // descriptor whose branch carries its own intercept, never a measured molecular value.
-        assertNear(10.33, engine.predict(Molecule.fromSMILESlike("C(Cl)(Cl)(Cl)Cl").graph)
+        assertNear(10.33, engine.predict(referenceMolecule("C(Cl)(Cl)(Cl)Cl").graph)
             .polarizibilityCubicAngstroms!!, 0.01)
         // Methane counts its four implicit hydrogens: 1.674 + 4 * 0.667.
-        assertNear(4.34, engine.predict(Molecule.fromSMILESlike("C").graph)
+        assertNear(4.34, engine.predict(referenceMolecule("C").graph)
             .polarizibilityCubicAngstroms!!, 0.01)
         // Livermorium is the single element the source table leaves without a value, and a
         // gap must stay a gap instead of quietly turning into zero.
