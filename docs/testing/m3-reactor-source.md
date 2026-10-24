@@ -323,7 +323,7 @@ it does not merge that branch or require calling a player test "complete".
 ### Explicit work-branch publication
 
 When the integration cannot dispatch Actions manually, the Release workflow
-also accepts a push to `arena/bf508e30-chemmod` whose commit subject is exactly
+also accepts a push to `arena/bb7eef66-chemmod` whose commit subject is exactly
 `release: publish <tag>`, with `<tag>` matching `build.gradle.kts`. Ordinary
 pushes do not publish. The workflow pins checkout to that event's commit, runs
 the full smoke suite, verifies the JAR version and checksum, and creates the
