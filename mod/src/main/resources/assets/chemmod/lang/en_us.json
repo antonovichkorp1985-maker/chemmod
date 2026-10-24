@@ -275,16 +275,11 @@
   "substance.chemmod.propionitrile": "Propionitrile",
   "substance.chemmod.propionic_acid": "Propionic acid",
   "substance.chemmod.methyl_propionate": "Methyl propionate",
-  "substance.chemmod.2_butanone": "2-Butanone",
-  "substance.chemmod.1_chloropropane": "1-Chloropropane",
   "substance.chemmod.butylamine": "Butylamine",
   "substance.chemmod.butyronitrile": "Butyronitrile",
   "substance.chemmod.valeric_acid": "Valeric acid",
   "substance.chemmod.hexane": "Hexane",
   "substance.chemmod.hexanoic_acid": "Hexanoic acid",
-  "substance.chemmod.1_butanol": "1-Butanol",
-  "substance.chemmod.1_iodopropane": "1-Iodopropane",
-  "substance.chemmod.1_propanol": "1-Propanol",
   "substance.chemmod.chloroethane": "Chloroethane",
   "substance.chemmod.iodoethane": "Iodoethane",
   "substance.chemmod.ethylamine": "Ethylamine",
@@ -332,5 +327,10 @@
   "chemistry_class.chemmod.thioether": "Thioether",
   "chemistry_class.chemmod.hydrocarbon": "Hydrocarbon",
   "substance.chemmod.butyric_acid": "Butyric acid",
-  "substance.chemmod.1_bromopropane": "1-Bromopropane"
+  "substance.chemmod.butanone_2": "2-Butanone",
+  "substance.chemmod.chloropropane_1": "1-Chloropropane",
+  "substance.chemmod.butanol_1": "1-Butanol",
+  "substance.chemmod.iodopropane_1": "1-Iodopropane",
+  "substance.chemmod.propanol_1": "1-Propanol",
+  "substance.chemmod.bromopropane_1": "1-Bromopropane"
 }

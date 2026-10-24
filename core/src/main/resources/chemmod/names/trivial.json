@@ -58,16 +58,16 @@
     {"canonicalName": "propionitrile", "aliases": ["propionitrile", "propionitrile", "пропионитрил"], "structure": "CCC#N"},
     {"canonicalName": "propionic_acid", "aliases": ["propionic_acid", "propionic acid", "пропионовая кислота"], "structure": "CCC(=O)O"},
     {"canonicalName": "methyl_propionate", "aliases": ["methyl_propionate", "methyl propionate", "метилпропионат"], "structure": "CCC(=O)OC"},
-    {"canonicalName": "2_butanone", "aliases": ["2_butanone", "2-butanone", "бутанон-2"], "structure": "CCC(C)=O"},
-    {"canonicalName": "1_chloropropane", "aliases": ["1_chloropropane", "1-chloropropane", "1-хлорпропан"], "structure": "CCC(Cl)"},
+    {"canonicalName": "butanone_2", "aliases": ["2_butanone", "2-butanone", "бутанон-2"], "structure": "CCC(C)=O"},
+    {"canonicalName": "chloropropane_1", "aliases": ["1_chloropropane", "1-chloropropane", "1-хлорпропан"], "structure": "CCC(Cl)"},
     {"canonicalName": "butylamine", "aliases": ["butylamine", "butylamine", "бутиламин"], "structure": "CCCCN"},
     {"canonicalName": "butyronitrile", "aliases": ["butyronitrile", "butyronitrile", "бутиронитрил"], "structure": "CCCC#N"},
     {"canonicalName": "valeric_acid", "aliases": ["valeric_acid", "valeric acid", "валериановая кислота"], "structure": "CCCCC(=O)O"},
     {"canonicalName": "hexane", "aliases": ["hexane", "hexane", "гексан"], "structure": "CCCCCC"},
     {"canonicalName": "hexanoic_acid", "aliases": ["hexanoic_acid", "hexanoic acid", "гексановая кислота"], "structure": "CCCCCC(=O)O"},
-    {"canonicalName": "1_butanol", "aliases": ["1_butanol", "1-butanol", "бутанол-1"], "structure": "CCCCO"},
-    {"canonicalName": "1_iodopropane", "aliases": ["1_iodopropane", "1-iodopropane", "1-иодпропан"], "structure": "CCCI"},
-    {"canonicalName": "1_propanol", "aliases": ["1_propanol", "1-propanol", "пропанол-1"], "structure": "CCCO"},
+    {"canonicalName": "butanol_1", "aliases": ["1_butanol", "1-butanol", "бутанол-1"], "structure": "CCCCO"},
+    {"canonicalName": "iodopropane_1", "aliases": ["1_iodopropane", "1-iodopropane", "1-иодпропан"], "structure": "CCCI"},
+    {"canonicalName": "propanol_1", "aliases": ["1_propanol", "1-propanol", "пропанол-1"], "structure": "CCCO"},
     {"canonicalName": "chloroethane", "aliases": ["chloroethane", "chloroethane", "хлорэтан"], "structure": "CCCl"},
     {"canonicalName": "iodoethane", "aliases": ["iodoethane", "iodoethane", "иодэтан"], "structure": "CCI"},
     {"canonicalName": "ethylamine", "aliases": ["ethylamine", "ethylamine", "этиламин"], "structure": "CCN"},
@@ -88,6 +88,6 @@
     {"canonicalName": "benzoic_acid", "aliases": ["benzoic_acid", "benzoic acid", "бензойная кислота"], "structure": "OC(=O)C1=CC=CC=C1"},
     {"canonicalName": "glycerol", "aliases": ["glycerol", "glycerol", "глицерин"], "structure": "OCC(O)CO"},
     {"canonicalName": "butyric_acid", "aliases": ["butyric_acid", "butyric acid", "масляная кислота"], "structure": "CCCC(=O)O"},
-    {"canonicalName": "1_bromopropane", "aliases": ["1_bromopropane", "1-bromopropane", "1-бромпропан"], "structure": "CCCBr"}
+    {"canonicalName": "bromopropane_1", "aliases": ["1_bromopropane", "1-bromopropane", "1-бромпропан"], "structure": "CCCBr"}
   ]
 }

@@ -275,16 +275,11 @@
   "substance.chemmod.propionitrile": "Пропионитрил",
   "substance.chemmod.propionic_acid": "Пропионовая кислота",
   "substance.chemmod.methyl_propionate": "Метилпропионат",
-  "substance.chemmod.2_butanone": "Бутанон-2",
-  "substance.chemmod.1_chloropropane": "1-хлорпропан",
   "substance.chemmod.butylamine": "Бутиламин",
   "substance.chemmod.butyronitrile": "Бутиронитрил",
   "substance.chemmod.valeric_acid": "Валериановая кислота",
   "substance.chemmod.hexane": "Гексан",
   "substance.chemmod.hexanoic_acid": "Гексановая кислота",
-  "substance.chemmod.1_butanol": "Бутанол-1",
-  "substance.chemmod.1_iodopropane": "1-иодпропан",
-  "substance.chemmod.1_propanol": "Пропанол-1",
   "substance.chemmod.chloroethane": "Хлорэтан",
   "substance.chemmod.iodoethane": "Иодэтан",
   "substance.chemmod.ethylamine": "Этиламин",
@@ -332,5 +327,10 @@
   "chemistry_class.chemmod.thioether": "Тиоэфир",
   "chemistry_class.chemmod.hydrocarbon": "Углеводород",
   "substance.chemmod.butyric_acid": "Масляная кислота",
-  "substance.chemmod.1_bromopropane": "1-бромпропан"
+  "substance.chemmod.butanone_2": "Бутанон-2",
+  "substance.chemmod.chloropropane_1": "1-хлорпропан",
+  "substance.chemmod.butanol_1": "Бутанол-1",
+  "substance.chemmod.iodopropane_1": "1-иодпропан",
+  "substance.chemmod.propanol_1": "Пропанол-1",
+  "substance.chemmod.bromopropane_1": "1-бромпропан"
 }
