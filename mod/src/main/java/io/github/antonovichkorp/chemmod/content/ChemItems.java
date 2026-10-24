@@ -30,6 +30,11 @@ public final class ChemItems {
         () -> new SubstanceVialItem(new Item.Properties().stacksTo(16))
     );
 
+    public static final DeferredHolder<Item, SteelFlaskItem> STEEL_FLASK = ITEMS.register(
+        "steel_flask",
+        () -> new SteelFlaskItem(new Item.Properties().stacksTo(1))
+    );
+
     public static final DeferredHolder<Item, BlockItem> NATIVE_COPPER_ORE = ITEMS.register(
         "native_copper_ore",
         () -> new BlockItem(ChemBlocks.NATIVE_COPPER_ORE.get(), new Item.Properties())
@@ -138,6 +143,7 @@ public final class ChemItems {
             .icon(() -> vial("вода"))
             .displayItems((parameters, output) -> {
                 output.accept(new ItemStack(SUBSTANCE_VIAL.get()));
+                output.accept(new ItemStack(STEEL_FLASK.get()));
                 CommonSubstances.INSTANCE.all().forEach(substance -> output.accept(vial(substance.getCanonicalName())));
                 output.accept(mixtureVial("вода", "этанол"));
                 output.accept(new ItemStack(NATIVE_COPPER_ORE.get()));

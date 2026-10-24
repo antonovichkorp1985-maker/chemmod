@@ -11,7 +11,7 @@ class LaboratoryAssetsTest(unittest.TestCase):
     def test_local_model_texture_references_exist(self):
         names = ['block/test_tube_rack', 'block/laboratory_tray', 'block/chemical_reactor',
                  'block/chemical_reactor_active', 'item/substance_vial',
-                 'item/substance_vial_pure', 'item/substance_vial_mixture']
+                 'item/substance_vial_pure', 'item/substance_vial_mixture', 'item/steel_flask']
         for name in names:
             model = json.loads((ASSETS / f'models/{name}.json').read_text())
             self.assertTrue(model['elements'])

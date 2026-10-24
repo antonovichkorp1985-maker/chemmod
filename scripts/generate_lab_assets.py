@@ -88,6 +88,13 @@ for variant,label in [('', 'empty_label'),('_pure','pure_label'),('_mixture','mi
     model('substance_vial'+variant,elements,{'glass':'glass','cap':'dark','label':label},'item',
           {**DISPLAY,'gui':{'rotation':[0,0,0],'translation':[0,1,0],'scale':[1.2,1.2,1.2]}})
 p=ASSETS/'models/item/substance_vial.json';m=json.loads(p.read_text());m['overrides']=[{'predicate':{'chemmod:contents':1},'model':'chemmod:item/substance_vial_pure'},{'predicate':{'chemmod:contents':2},'model':'chemmod:item/substance_vial_mixture'}];write(p,m)
+steel_flask=[
+    box([3,1,3],[13,11,13],'steel'),
+    box([5,11,5],[11,14,11],'steel'),
+    box([4,14,4],[12,15,12],'dark'),
+]
+model('steel_flask',steel_flask,{'steel':'steel','dark':'dark'},'item',
+      {**DISPLAY,'gui':{'rotation':[0,0,0],'translation':[0,1,0],'scale':[1.2,1.2,1.2]}})
 for suffix in ('','_active'):
     elements=[box([0,0,0],[16,3,16],'dark'),box([2,3,2],[14,12,14],'steel'),box([3,12,3],[13,14,13],'steel'),box([6,14,6],[10,16,10],'dark'),box([3,4,1.8],[13,10,2],'panel')]
     model('chemical_reactor'+suffix,elements,{'steel':'steel','dark':'dark','panel':'panel'+suffix})
