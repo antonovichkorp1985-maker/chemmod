@@ -41,7 +41,10 @@ core surface inventory / rule-gate / optional rate-scaling contract is now
 implemented and tested, but no active surface profile is bundled and no
 material-form profile assigns a characterized surface state to the reactor
 catalyst. Therefore these M3 pathways still do not model catalyst surface
-phase, oxidation state, support, adsorbate coverage, or selectivity. See [`catalyst-surface-chemistry.md`](catalyst-surface-chemistry.md)
+phase, oxidation state, support, adsorbate coverage, or selectivity. The absent
+iron scale is an upstream material/ore-processing dependency, not an M3 item:
+only the copper ore/material route currently exists, and the available copper
+ingot does not yet have a defensible surface profile. See [`catalyst-surface-chemistry.md`](catalyst-surface-chemistry.md)
 for the research, evidence, and unclosed implementation steps. Do not present
 this foundation as surface-chemistry acceptance.
 

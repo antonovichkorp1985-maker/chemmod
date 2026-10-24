@@ -19,7 +19,21 @@ Catalytic response is phase- and defect-specific. Work on well-defined oxide fil
 
 Surface-area figures cannot be transplanted between samples. One study of iron oxides produced from hydrous ferric oxide reports BET areas from 272.8 down to 18.3 m²/g as thermal treatment changes the samples; exposed Fe(III) activity per area is more relevant than bulk magnetism for that study's ortho–para H₂ conversion: <https://onlinelibrary.wiley.com/doi/10.1002/ece2.70004>. Another iron-oxide H₂O₂ decomposition study found the largest-area sample was not the most efficient; crystallinity changed the result: <https://pubs.acs.org/doi/10.1021/ja072918x>. These numbers are not a surface-area assignment for game iron scale and do not calibrate M3 acetic-acid synthesis.
 
-### Relevance to the current acetic-acid pathways
+### Roadmap dependency: why there is no iron scale yet
+
+This is a content dependency, not a missing M3 item. The current material catalog contains a ChemMod copper material and native-copper beneficiation; it has **no iron material/form pipeline**. Hematite and magnetite occur as mineral definitions only, not as obtainable ChemMod iron/oxide material batches. `docs/adr/0002-ore-beneficiation-direction.md` deliberately implements the copper branch only. The owner roadmap's M3 B1 line is the first physical reactor; environmental metal oxidation is described in the gas/environment layer, not as a prerequisite output of that reactor.
+
+So the correct sequence is: implement and accept the planned iron-bearing ore/material processing stage, then model controlled iron oxidation/scale formation and its phase/state, then consider that characterized surface for a data-defined reaction. Do not add a free-standing iron-scale item or assume Fe2O3/Fe3O4/FeO surface behavior before those dependencies exist. The absence of iron scale does not block the current M3 prerelease checklist; M3's separate surface-chemistry gap remains that the existing copper catalyst is still represented only by bulk composition, without a validated item-form surface profile.
+
+## Current M3 copper route — research, not yet a calibrated profile
+
+The existing M3 first step is ethanol → acetaldehyde + H2 on a copper catalyst, so copper is the relevant currently available surface material. Research on clean, dry Cu(111)/(110) single-crystal surfaces reports that ethanol dehydrogenation proceeds at steps/kinks, and inducing more surface defects increases ethoxy intermediates and acetaldehyde/H2 production. The experiments used controlled ultrahigh-vacuum surfaces; they do **not** establish a defect density, active area, oxidation state, or rate for ChemMod's ordinary 1 kg copper ingot. Source: <https://www.osti.gov/pages/servlets/purl/1388884>.
+
+Supported Cu/SiO2 catalysts likewise vary in particle size and measured active copper area (reported values in the study range from 0.9 to 2.4 m2 per gram of catalyst), and their support/preparation are specified. Those data cannot be assigned to a pure copper ingot or dust by formula alone: <https://pmc.ncbi.nlm.nih.gov/articles/PMC10394689/>. Other supported-Cu studies report that Cu oxidation state, support, coverage and deactivation alter activity/selectivity, reinforcing that a generic “contains Cu” capability is not a surface model: <https://www.colab.ws/articles/10.1016/j.apcata.2020.117710>.
+
+Accordingly, the current catalyst surface contract is ready for characterized profiles, but no Cu ingot profile or invented defect fraction is being enabled. The next M3 decision is whether a physically prepared/high-area copper form is in scope for this milestone; if not, retain the route for owner testing and keep its surface limitation explicit until the planned material/preparation work supplies a defensible catalyst form.
+
+## Relevance to the current acetic-acid pathways
 
 The M3 direct rule models the net gas-phase transformation of acetaldehyde and oxygen but is not a validated universal oxidation surface. A Pd–Au(111) study specifically used an oxygen-precovered surface; selectivity changed with Pd coverage and temperature: <https://www.osti.gov/pages/biblio/1617152>. Separately, ethanol oxidation on hematite photoanodes favors acetaldehyde, with a larger activation barrier for its further oxidation; those photoelectrochemical conditions cannot be copied to the current heated vial reactor: <https://chemistry-europe.onlinelibrary.wiley.com/doi/10.1002/cssc.202102313>.
 
