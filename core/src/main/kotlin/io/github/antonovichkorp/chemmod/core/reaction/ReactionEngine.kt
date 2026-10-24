@@ -105,6 +105,7 @@ class ReactionEngine(private val ruleSet: ReactionRuleSet) {
         is FormulaPattern -> if (matchesFormula(target, matcher)) listOf(null) else emptyList()
         is BondOrderPattern -> matchingBondProducts(target, matcher, requireNotNull(rule.targetProductBondOrder))
         is BondAdditionPattern -> additionProducts(target, rule, matcher)
+        is AtomTransferPattern -> atomTransferProducts(target, rule, matcher)
     }
 
     /**
@@ -171,6 +172,54 @@ class ReactionEngine(private val ruleSet: ReactionRuleSet) {
             endpointMatches(graph, bond.second, pattern.firstElement, 0)
         if (reversed) add(bond.second)
     }.distinct()
+
+    /**
+     * Incorporates one selected atom from the co-reactant into the matched target graph.
+     * Other donor atoms are not copied; exact whole-reaction balancing verifies that they
+     * are accounted for by the other target/product molecules in the stoichiometry.
+     */
+    private fun atomTransferProducts(
+        target: Molecule,
+        rule: ReactionRule,
+        pattern: AtomTransferPattern,
+    ): List<Molecule> {
+        val graph = target.graph
+        if (pattern.requireNeutral && graph.atoms.any { it.formalCharge != 0 }) return emptyList()
+        val donor = Molecule.fromSMILESlike(rule.coReactantStructures.single()).graph
+        val transferredAtoms = donor.atoms.filter { it.element.symbol == pattern.attachElement }
+
+        return graph.bonds.asSequence()
+            .filter { it.order == pattern.bondOrder }
+            .flatMap { bond ->
+                val firstEndpoints = buildList {
+                    if (endpointMatches(graph, bond.first, pattern.firstElement, pattern.firstMinimumHydrogens) &&
+                        endpointMatches(graph, bond.second, pattern.secondElement, pattern.secondMinimumHydrogens)
+                    ) add(bond.first)
+                    if (endpointMatches(graph, bond.second, pattern.firstElement, pattern.firstMinimumHydrogens) &&
+                        endpointMatches(graph, bond.first, pattern.secondElement, pattern.secondMinimumHydrogens)
+                    ) add(bond.second)
+                }.distinct()
+                transferredAtoms.asSequence().flatMap { donorAtom ->
+                    firstEndpoints.asSequence().map { endpoint ->
+                        val newAtomId = (graph.atoms.maxOfOrNull { it.id } ?: -1) + 1
+                        Molecule.fromGraph(
+                            MoleculeGraph(
+                                atoms = graph.atoms + Atom(
+                                    newAtomId,
+                                    donorAtom.element,
+                                    donorAtom.formalCharge,
+                                    donorAtom.explicitHydrogens,
+                                ),
+                                bonds = graph.bonds + Bond(endpoint, newAtomId, BondOrder.SINGLE),
+                            ),
+                        )
+                    }
+                }
+            }
+            .filter { it.validate().isEmpty() }
+            .distinctBy(Molecule::canonicalKey)
+            .toList()
+    }
 
     private fun matchingBondProducts(
         target: Molecule,

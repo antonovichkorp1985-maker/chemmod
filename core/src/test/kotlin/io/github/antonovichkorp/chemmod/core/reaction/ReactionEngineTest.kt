@@ -16,6 +16,7 @@ class ReactionEngineTest {
         assertTrue(rules.size >= 8, "expected the bundled rule set to keep growing, got ${rules.size}")
         assertTrue(rules.values.any { it.matcher is FormulaPattern }, "formula-level rule types disappeared")
         assertTrue(rules.values.any { it.matcher is BondOrderPattern }, "bond-level rule types disappeared")
+        assertTrue(rules.values.any { it.matcher is AtomTransferPattern }, "atom-transfer rule type disappeared")
 
         // Combustion is one rule per heteroatom class: the matcher is keyed by elements,
         // never by a list of combustible substances.
@@ -119,6 +120,69 @@ class ReactionEngineTest {
     }
 
     @Test
+    fun `aldehyde oxidation inserts one oxygen atom and balances two acetic acid pathways`() {
+        val oxygen = Molecule.fromSMILESlike("O=O")
+        val water = Molecule.fromSMILESlike("O")
+        val oxidationCatalyst = setOf("chemmod:oxidation_metal")
+        val acetaldehyde = Molecule.fromSMILESlike("CC=O")
+        val aceticAcid = Molecule.fromSMILESlike("CC(=O)O")
+
+        val direct = applySingle(
+            acetaldehyde,
+            "chemmod:aldehyde_oxidation",
+            environment(500.0, coReactants = setOf(oxygen), capabilities = oxidationCatalyst),
+        )
+        assertEquals("2 C2H4O + O2 -> 2 C2H4O2", direct.formatEquation())
+        assertEquals(aceticAcid.canonicalKey(), direct.products.first().molecule.canonicalKey())
+        assertTrue(direct.isConserved())
+
+        val hydrate = applySingle(
+            acetaldehyde,
+            "chemmod:carbonyl_hydration",
+            environment(300.0, coReactants = setOf(water)),
+        )
+        assertEquals("C2H4O + H2O -> C2H6O2", hydrate.formatEquation())
+        val hydratedAldehyde = hydrate.products.first().molecule
+        val dehydrogenationRoute = applySingle(
+            hydratedAldehyde,
+            "chemmod:alcohol_dehydrogenation",
+            environment(600.0, catalysts = setOf("chemmod:copper")),
+        )
+        assertEquals("C2H6O2 -> C2H4O2 + H2", dehydrogenationRoute.formatEquation())
+        assertTrue(
+            dehydrogenationRoute.products.any { it.molecule.canonicalKey() == aceticAcid.canonicalKey() },
+            "the hydrate/dehydrogenation route must reach the same structural acetic-acid product",
+        )
+        assertTrue(dehydrogenationRoute.isConserved())
+    }
+
+    @Test
+    fun `aldehyde oxygen transfer does not misclassify ketones and needs catalyst`() {
+        val oxygen = Molecule.fromSMILESlike("O=O")
+        val ketone = Molecule.fromSMILESlike("CC(=O)C")
+        val rule = ReactionRuleId.of("chemmod:aldehyde_oxidation")
+
+        assertTrue(
+            engine.apply(
+                ketone,
+                rule,
+                environment(500.0, coReactants = setOf(oxygen), capabilities = setOf("chemmod:oxidation_metal")),
+            ).isEmpty(),
+        )
+        assertTrue(
+            engine.apply(ketone, rule, environment(500.0, coReactants = setOf(oxygen))).isEmpty(),
+        )
+        assertTrue(
+            engine.apply(
+                Molecule.fromSMILESlike("CC=O"),
+                rule,
+                environment(500.0, coReactants = setOf(oxygen)),
+            ).isEmpty(),
+            "an aldehyde must not oxidize without the declared catalyst capability",
+        )
+    }
+
+    @Test
     fun `missing co reactant catalyst or temperature makes a rule inapplicable`() {
         val ethanol = Molecule.fromSMILESlike("CCO")
         val oxygen = Molecule.fromSMILESlike("O=O")
@@ -162,10 +226,12 @@ class ReactionEngineTest {
         temperatureKelvin: Double,
         catalysts: Set<String> = emptySet(),
         coReactants: Set<Molecule> = emptySet(),
+        capabilities: Set<String> = emptySet(),
     ) = ReactionEnvironment(
         temperatureKelvin = temperatureKelvin,
         pressureKilopascals = 101.325,
         catalystTags = catalysts,
         availableCanonicalKeys = coReactants.map { molecule -> molecule.canonicalKey() }.toSet(),
+        catalystCapabilities = capabilities,
     )
 }

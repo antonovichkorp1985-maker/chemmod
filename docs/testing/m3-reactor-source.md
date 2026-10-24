@@ -292,6 +292,17 @@ slots, new catalysts, food chemistry, or crane/sub-block placement. They extend
 verification of the existing pure-vial M3 boundary. No human operator is assigned
 to these test fixtures, so they do not seed the world's discovery history.
 
+## Multi-step acetic-acid pathway source
+
+The core now documents two data-defined acetaldehyde-to-acetic-acid pathways,
+including an atom-transfer oxidation step and a two-batch hydrate/dehydrogenation
+path. See [m3-acetic-acid-pathways.md](m3-acetic-acid-pathways.md) for balanced
+equations, structural constraints, test coverage and chemistry/calibration
+limitations. `ChemicalReactorCoReactantGameTests` covers the direct oxygen route
+and the alternate two-stage route with physical vials. These headless checks do
+not replace real-pack player runs, chemistry review, or the 100-machine Spark
+profile.
+
 ## M3 test-release and completion gates
 
 `v0.9.0-test.4` remains the original reactor player-test artifact.

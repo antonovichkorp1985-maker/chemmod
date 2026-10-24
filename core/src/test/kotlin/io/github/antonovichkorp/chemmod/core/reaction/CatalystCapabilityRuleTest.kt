@@ -1,6 +1,7 @@
 package io.github.antonovichkorp.chemmod.core.reaction
 
 import io.github.antonovichkorp.chemmod.core.Molecule
+import io.github.antonovichkorp.chemmod.core.catalysis.CatalystModel
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -22,6 +23,11 @@ class CatalystCapabilityRuleTest {
 
     private fun apply(structure: String, ruleId: String, environment: ReactionEnvironment) =
         engine.apply(Molecule.fromSMILESlike(structure), ReactionRuleId.of(ruleId), environment)
+
+    @Test
+    fun `copper earns the oxidation capability from its material composition`() {
+        assertTrue("chemmod:oxidation_metal" in CatalystModel.capabilitiesOfMaterial("chemmod:copper"))
+    }
 
     @Test
     fun `a nitrile becomes an imine over a hydrogenation metal`() {

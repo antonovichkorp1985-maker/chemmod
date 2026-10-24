@@ -31,6 +31,54 @@ public final class ChemicalReactorCoReactantGameTests {
     private ChemicalReactorCoReactantGameTests() {}
 
     @GameTest(template = "chemical_reactor_batch", timeoutTicks = 100)
+    public static void aldehydeOxidationBuildsAceticAcidFromItsGraphAndPhysicalOxygen(GameTestHelper helper) {
+        ChemicalReactorBlockEntity reactor = setup(helper, "CC=O", 1_000_000L);
+        reactor.setItem(1, vial("O=O", 500_000L));
+        net.minecraft.world.item.Item copper = net.minecraft.core.registries.BuiltInRegistries.ITEM.get(
+            net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(ChemMod.MOD_ID, "copper_ingot"));
+        reactor.setItem(5, new ItemStack(copper));
+
+        helper.runAfterDelay(45, () -> {
+            helper.assertTrue(reactor.lastCompletedRule().equals("chemmod:aldehyde_oxidation"),
+                "reactor did not complete the aldehyde oxidation graph rule");
+            helper.assertTrue(VialContentsState.fromStack(reactor.getItem(0)).isEmpty(),
+                "acetaldehyde target was not consumed");
+            helper.assertTrue(VialContentsState.fromStack(reactor.getItem(1)).isEmpty(),
+                "physical oxygen was not consumed");
+            assertPortion(helper, reactor.getItem(3), "CC(=O)O", 1_000_000L);
+            helper.assertTrue(VialContentsState.fromStack(reactor.getItem(4)).isEmpty(),
+                "single-product oxidation filled an unrelated output");
+            helper.assertTrue(reactor.getItem(5).is(copper), "oxidation catalyst was consumed");
+            helper.succeed();
+        });
+    }
+
+    @GameTest(template = "chemical_reactor_batch", timeoutTicks = 120)
+    public static void hydratedAldehydeProvidesAnAlternateMultiStageAcidPathway(GameTestHelper helper) {
+        ChemicalReactorBlockEntity reactor = setup(helper, "CC=O", 1_000_000L);
+        reactor.setItem(1, vial("O", 1_000_000L));
+
+        helper.runAfterDelay(45, () -> {
+            helper.assertTrue(reactor.lastCompletedRule().equals("chemmod:carbonyl_hydration"),
+                "first pathway stage did not hydrate acetaldehyde");
+            assertPortion(helper, reactor.getItem(3), "CC(O)O", 1_000_000L);
+            ItemStack hydratedAldehyde = reactor.removeItem(3, 1);
+            reactor.setItem(0, hydratedAldehyde);
+            reactor.setItem(3, new ItemStack(ChemItems.SUBSTANCE_VIAL.get()));
+            reactor.setItem(5, new ItemStack(net.minecraft.core.registries.BuiltInRegistries.ITEM.get(
+                net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(ChemMod.MOD_ID, "copper_ingot"))));
+        });
+
+        helper.runAfterDelay(90, () -> {
+            helper.assertTrue(reactor.lastCompletedRule().equals("chemmod:alcohol_dehydrogenation"),
+                "second pathway stage did not dehydrogenate the geminal diol");
+            assertPortion(helper, reactor.getItem(3), "CC(=O)O", 1_000_000L);
+            assertPortion(helper, reactor.getItem(4), "[H][H]", 1_000_000L);
+            helper.succeed();
+        });
+    }
+
+    @GameTest(template = "chemical_reactor_batch", timeoutTicks = 100)
     public static void oxygenLimitedBatchPreservesNonDivisibleRemainders(GameTestHelper helper) {
         ChemicalReactorBlockEntity reactor = setup(helper, "CCO", 1_000_001L);
         reactor.setItem(1, vial("O=O", 2_000_002L));

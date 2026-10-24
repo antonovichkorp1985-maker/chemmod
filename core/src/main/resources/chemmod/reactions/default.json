@@ -139,6 +139,33 @@
       "displayDescriptionKey": "reaction.chemmod.alcohol_dehydrogenation.description"
     },
     {
+      "id": "chemmod:aldehyde_oxidation",
+      "matcher": {
+        "kind": "atom_transfer",
+        "firstElement": "C",
+        "secondElement": "O",
+        "bondOrder": "DOUBLE",
+        "firstMinimumHydrogens": 1,
+        "attachElement": "O",
+        "requireNeutral": true
+      },
+      "coReactantStructures": [
+        "O=O"
+      ],
+      "conditions": {
+        "minimumTemperatureKelvin": 423.0,
+        "catalystCapabilities": [
+          "chemmod:oxidation_metal"
+        ]
+      },
+      "displayNameKey": "reaction.chemmod.aldehyde_oxidation",
+      "kinetics": {
+        "preExponentialFactorPerSecond": 300.0,
+        "activationEnergyJoulesPerMole": 53500.0
+      },
+      "displayDescriptionKey": "reaction.chemmod.aldehyde_oxidation.description"
+    },
+    {
       "id": "chemmod:complete_combustion_with_nitrogen",
       "matcher": {
         "kind": "formula",

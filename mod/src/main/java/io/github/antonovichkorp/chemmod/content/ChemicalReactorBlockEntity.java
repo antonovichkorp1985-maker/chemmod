@@ -1,6 +1,7 @@
 package io.github.antonovichkorp.chemmod.content;
 
 import io.github.antonovichkorp.chemmod.core.catalysis.CatalystModel;
+import io.github.antonovichkorp.chemmod.core.reaction.FormulaPattern;
 import io.github.antonovichkorp.chemmod.core.reaction.ReactionEnvironment;
 import io.github.antonovichkorp.chemmod.core.reaction.ReactionKinetics;
 import io.github.antonovichkorp.chemmod.core.reaction.ReactionRule;
@@ -297,7 +298,9 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
     /**
      * Selects a machine operation from the data set. The physical contents are
      * supplied to the core planner; no item or GUI claim can invent a
-     * co-reactant. An ambiguous structural match is deliberately not selected.
+     * co-reactant. Structural graph rules take precedence over broad formula
+     * rules (such as complete combustion); ambiguity among equally specific
+     * structural rules is deliberately not selected.
      */
     private Candidate findCandidate() {
         ReactorInputs inputs = reactorInputs();
@@ -358,7 +361,12 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
     }
 
     private static Candidate uniqueCandidate(List<Candidate> candidates) {
-        return candidates.size() == 1 ? candidates.getFirst() : null;
+        if (candidates.isEmpty()) return null;
+        List<Candidate> structural = candidates.stream()
+            .filter(candidate -> !(candidate.rule().getMatcher() instanceof FormulaPattern))
+            .toList();
+        List<Candidate> preferred = structural.isEmpty() ? candidates : structural;
+        return preferred.size() == 1 ? preferred.getFirst() : null;
     }
 
     private static ReactionEnvironment conditionSatisfyingEnvironment(ReactionRule rule) {

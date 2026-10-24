@@ -91,6 +91,30 @@ data class BondAdditionPattern(
     }
 }
 
+/**
+ * Transfers one atom of a co-reactant onto the first endpoint of a matched target bond,
+ * without transferring any of the donor's other atoms or bonds. This represents selective
+ * atom incorporation (for example aldehyde oxidation with O2) without retaining an O-O bond.
+ */
+data class AtomTransferPattern(
+    val firstElement: String,
+    val secondElement: String,
+    val bondOrder: BondOrder,
+    val attachElement: String,
+    val firstMinimumHydrogens: Int = 0,
+    val secondMinimumHydrogens: Int = 0,
+    val requireNeutral: Boolean = true,
+) : ReactionMatcher {
+    init {
+        require(listOf(firstElement, secondElement, attachElement).all { ELEMENT_SYMBOL_PATTERN.matches(it) }) {
+            "Atom-transfer elements must be symbols"
+        }
+        require(firstMinimumHydrogens >= 0 && secondMinimumHydrogens >= 0) {
+            "Atom-transfer hydrogen requirements cannot be negative"
+        }
+    }
+}
+
 data class ReactionConditions(
     val minimumTemperatureKelvin: Double? = null,
     val maximumTemperatureKelvin: Double? = null,
@@ -177,8 +201,9 @@ data class ReactionRule(
     init {
         val bondMatcher = matcher as? BondOrderPattern
         val additionMatcher = matcher as? BondAdditionPattern
+        val atomTransferMatcher = matcher as? AtomTransferPattern
         require((bondMatcher != null) == (targetProductBondOrder != null)) {
-            "Rule $id must define a target bond transformation exactly when it uses a bond matcher"
+            "Rule $id must define a target bond transformation exactly when it uses a bond-order matcher"
         }
         if (bondMatcher != null) {
             require(targetProductBondOrder != bondMatcher.bondOrder) {
@@ -194,7 +219,18 @@ data class ReactionRule(
                 "Rule $id attaches '${additionMatcher.attachElement}', absent from its co-reactant"
             }
         }
-        require(productStructures.isNotEmpty() || bondMatcher != null || additionMatcher != null) {
+        if (atomTransferMatcher != null) {
+            require(coReactantStructures.size == 1) {
+                "Rule $id transfers an atom from exactly one co-reactant"
+            }
+            val coReactant = Molecule.fromSMILESlike(coReactantStructures.single())
+            require(coReactant.graph.atoms.any { it.element.symbol == atomTransferMatcher.attachElement }) {
+                "Rule $id transfers '${atomTransferMatcher.attachElement}', absent from its co-reactant"
+            }
+        }
+        require(
+            productStructures.isNotEmpty() || bondMatcher != null || additionMatcher != null || atomTransferMatcher != null,
+        ) {
             "Rule $id needs a static product or a transformed target"
         }
         require(displayNameKey.matches(Regex("[a-z][a-z0-9_.-]*(\\.[a-z0-9_.-]+)+"))) {
@@ -314,6 +350,15 @@ private data class ReactionMatcherDocument(
                 requireNotNull(productBondOrder) { "Addition matcher needs productBondOrder" },
             ),
             attachElement = requireNotNull(attachElement) { "Addition matcher needs attachElement" },
+            requireNeutral = requireNeutral,
+        )
+        "atom_transfer" -> AtomTransferPattern(
+            firstElement = requireNotNull(firstElement) { "Atom-transfer matcher needs firstElement" },
+            secondElement = requireNotNull(secondElement) { "Atom-transfer matcher needs secondElement" },
+            bondOrder = parseBondOrder(requireNotNull(bondOrder) { "Atom-transfer matcher needs bondOrder" }),
+            attachElement = requireNotNull(attachElement) { "Atom-transfer matcher needs attachElement" },
+            firstMinimumHydrogens = firstMinimumHydrogens,
+            secondMinimumHydrogens = secondMinimumHydrogens,
             requireNeutral = requireNeutral,
         )
         else -> throw IllegalArgumentException("Unknown reaction matcher kind '$kind'")
