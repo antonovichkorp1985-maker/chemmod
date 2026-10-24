@@ -49,7 +49,15 @@ this foundation as surface-chemistry acceptance.
 
 Core tests assert both balanced routes, the exact acetic-acid graph, atom and
 charge conservation, missing-catalyst refusal, and rejection of ketones by the
-aldehyde matcher. CI run `40134273860` passed on commit `c1ca94ac45e752b6e9be25f281dbf7d0eeab2839`: 50 JUnit classes / 367 tests with zero failures/errors, plus the GameTest harness and both direct/alternate-path reactor tests. The earlier run `40133876566` exposed test timing and empty-input-vial fixture mistakes; both were fixed before the green run.
+aldehyde matcher. Source CI run `40134273860` passed on commit
+`c1ca94ac45e752b6e9be25f281dbf7d0eeab2839`: 50 JUnit classes / 367 tests with
+zero failures/errors, plus the GameTest harness and both direct/alternate-path
+reactor tests. The surface-model continuation at `09aef3e48fc1eb9ba38fcbcf40be4f52396c8549`
+passed run `40135932167`: 51 JUnit classes / 374 tests with zero failures/errors;
+the GameTest harness passed. This confirms the new surface inventory/gate/rate
+plumbing, not that the acetic-acid pathway uses a characterized surface. The
+earlier run `40133876566` exposed test timing and empty-input-vial fixture
+mistakes; both were fixed before the green pathway run.
 
 The matching manual-acceptance artifact is
 `chemmod-m3-manual-acceptance-c1ca94ac45e752b6e9be25f281dbf7d0eeab2839`

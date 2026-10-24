@@ -92,6 +92,11 @@ M3 rules ещё используют старое composition/catalyst-tag ус�
 - `core/src/test/kotlin/.../core/catalysis/CatalystModelTest.kt` — 6 тестов: медь зарабатывает две
   способности, силикат не зарабатывает ничего, способности следуют за контентом материала,
   неизвестный материал не роняет вывод, молекула судится по своему графу.
+- `core/src/test/kotlin/.../core/catalysis/CatalystSurfaceModelTest.kt` — 5 тестов: inventory из площади
+  и массы, site-specific coverage, отказ неизвестного профиля, exact material-form lookup и отсутствие
+  выдуманной активности для пустого bundled dataset.
+- `core/src/test/kotlin/.../core/reaction/ReactionEngineTest.kt` дополнительно проверяет surface-gated
+  rule и нормировку Arrhenius-rate по доступному количеству sites.
 - `core/src/test/kotlin/.../core/reaction/CatalystCapabilityRuleTest.kt` — 5 тестов: нитрил → имин,
   имин → амин, амин → имин, чужая способность не работает, температурный гейт и требование H₂.
 - `mod/src/main/java/.../gametest/ChemicalReactorCatalystGameTests.java` — 2 геймтеста: медный
