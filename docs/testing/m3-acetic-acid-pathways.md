@@ -87,6 +87,7 @@ be required.
    acetic-acid structure rather than a peroxide or an unrelated product.
 2. Run the alternate route in two batches: acetaldehyde + water → geminal-diol
    intermediate, then that intermediate + copper catalyst → acetic acid + H2.
+   Remove the now-empty water vial from the co-reactant slot before stage two.
    Confirm both products, retained remainders and output-vial separation.
 3. Save/reload between batches and repeat after a server restart. Check RU/EN
    rule names/descriptions, two-client observation, and that the discovery view

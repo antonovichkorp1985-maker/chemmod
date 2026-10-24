@@ -160,7 +160,7 @@
       },
       "displayNameKey": "reaction.chemmod.aldehyde_oxidation",
       "kinetics": {
-        "preExponentialFactorPerSecond": 300.0,
+        "preExponentialFactorPerSecond": 900.0,
         "activationEnergyJoulesPerMole": 53500.0
       },
       "displayDescriptionKey": "reaction.chemmod.aldehyde_oxidation.description"

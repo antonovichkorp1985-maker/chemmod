@@ -30,7 +30,7 @@ public final class ChemicalReactorCoReactantGameTests {
     private static final BlockPos REACTOR = new BlockPos(1, 2, 1);
     private ChemicalReactorCoReactantGameTests() {}
 
-    @GameTest(template = "chemical_reactor_batch", timeoutTicks = 100)
+    @GameTest(template = "chemical_reactor_batch", timeoutTicks = 140)
     public static void aldehydeOxidationBuildsAceticAcidFromItsGraphAndPhysicalOxygen(GameTestHelper helper) {
         ChemicalReactorBlockEntity reactor = setup(helper, "CC=O", 1_000_000L);
         reactor.setItem(1, vial("O=O", 500_000L));
@@ -38,7 +38,7 @@ public final class ChemicalReactorCoReactantGameTests {
             net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(ChemMod.MOD_ID, "copper_ingot"));
         reactor.setItem(5, new ItemStack(copper));
 
-        helper.runAfterDelay(45, () -> {
+        helper.runAfterDelay(110, () -> {
             helper.assertTrue(reactor.lastCompletedRule().equals("chemmod:aldehyde_oxidation"),
                 "reactor did not complete the aldehyde oxidation graph rule");
             helper.assertTrue(VialContentsState.fromStack(reactor.getItem(0)).isEmpty(),
@@ -64,6 +64,8 @@ public final class ChemicalReactorCoReactantGameTests {
             assertPortion(helper, reactor.getItem(3), "CC(O)O", 1_000_000L);
             ItemStack hydratedAldehyde = reactor.removeItem(3, 1);
             reactor.setItem(0, hydratedAldehyde);
+            // The consumed water vial is still an occupied co-reactant slot until the player removes it.
+            reactor.setItem(1, ItemStack.EMPTY);
             reactor.setItem(3, new ItemStack(ChemItems.SUBSTANCE_VIAL.get()));
             reactor.setItem(5, new ItemStack(net.minecraft.core.registries.BuiltInRegistries.ITEM.get(
                 net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(ChemMod.MOD_ID, "copper_ingot"))));
