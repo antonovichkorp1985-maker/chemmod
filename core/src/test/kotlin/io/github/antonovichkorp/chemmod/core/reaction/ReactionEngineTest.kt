@@ -57,16 +57,16 @@ class ReactionEngineTest {
 
     @Test
     fun `data rule combusts an unlisted molecular graph with automatic balancing`() {
-        val butanol = Molecule.fromSMILESlike("CCCCO")
-        assertTrue(butanol.validate().isEmpty())
-        assertTrue(butanol.canonicalKey().isNotBlank())
-        assertNotNull(butanol.properties().boilingPointC)
-        assertNotNull(butanol.properties().combustionEnthalpyKilojoulesPerMole)
-        kotlin.test.assertNull(TrivialNameDirectory.bundled().findByCanonicalKey(butanol.canonicalKey()))
+        val butan2ol = Molecule.fromSMILESlike("CC(O)CC")
+        assertTrue(butan2ol.validate().isEmpty())
+        assertTrue(butan2ol.canonicalKey().isNotBlank())
+        assertNotNull(butan2ol.properties().boilingPointC)
+        assertNotNull(butan2ol.properties().combustionEnthalpyKilojoulesPerMole)
+        kotlin.test.assertNull(TrivialNameDirectory.bundled().findByCanonicalKey(butan2ol.canonicalKey()))
 
         val oxygen = Molecule.fromSMILESlike("O=O")
         val outcome = applySingle(
-            butanol,
+            butan2ol,
             "chemmod:complete_combustion",
             environment(temperatureKelvin = 600.0, coReactants = setOf(oxygen)),
         )

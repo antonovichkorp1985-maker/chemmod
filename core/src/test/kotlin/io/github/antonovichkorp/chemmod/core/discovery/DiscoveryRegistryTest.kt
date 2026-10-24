@@ -11,21 +11,21 @@ import kotlin.test.assertTrue
 class DiscoveryRegistryTest {
     @Test
     fun `first synthesis records metadata for an unnamed valid molecule without creating its identity`() {
-        val butanol = Molecule.fromSMILESlike("CCCCO")
+        val butan2ol = Molecule.fromSMILESlike("CC(O)CC")
         val registry = DiscoveryRegistry()
         val first = registry.recordSynthesis(
-            molecule = butanol,
+            molecule = butan2ol,
             discoverer = "player-7",
             discoveredAt = Instant.parse("2026-10-06T18:00:00Z"),
-            trivialName = "бутанол",
+            trivialName = "бутан-2-ол",
         )
 
-        assertTrue(butanol.validate().isEmpty())
-        assertNull(TrivialNameDirectory.bundled().findByCanonicalKey(butanol.canonicalKey()))
-        assertEquals(butanol.canonicalKey(), first.canonicalKey)
+        assertTrue(butan2ol.validate().isEmpty())
+        assertNull(TrivialNameDirectory.bundled().findByCanonicalKey(butan2ol.canonicalKey()))
+        assertEquals(butan2ol.canonicalKey(), first.canonicalKey)
         assertEquals("player-7", first.discoverer)
-        assertEquals("бутанол", first.trivialName)
-        assertEquals(first, registry.find(butanol.canonicalKey()))
+        assertEquals("бутан-2-ол", first.trivialName)
+        assertEquals(first, registry.find(butan2ol.canonicalKey()))
     }
 
     @Test
