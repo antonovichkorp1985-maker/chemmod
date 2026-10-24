@@ -66,3 +66,7 @@ A graph-based environmental reaction planner was added in `20a022b`, but it rema
 3. Keep full CI/GameTests green on subsequent code changes. Latest full run `40132418812` is green; this is automated evidence, not owner acceptance.
 4. Collect completed M2/M3 real-pack checklists and capture the required 100-machine Spark profile for F2.
 5. Only after M0→M3 are accepted in order, continue M4 structural-identity migration, cell-update integration, and C1/C2 world acceptance. Do not create a release until all M0–M4 gates are closed.
+
+### 2026-10-25 status after player-test prerelease
+
+The immutable player-test prerelease `v1.0.1-test.1` targets code commit `a9b6fb632ac82c47b9224e88ca71c6c2d219fb92`; it is not a production release or an M0–M3 acceptance waiver. Follow-up commit `9def513` only clarified the iron-scale material dependency and copper surface evidence. CI run `40137911236` passed on that branch head: 51 JUnit classes / 374 tests, zero failures/errors. No owner real-pack checklist or 100-machine Spark profile has been supplied since the prerelease, so those acceptance gates remain open. Keep the iron route deferred until its planned ore/metallurgy dependency and do not treat this documentation-only CI run as a new gameplay build.
