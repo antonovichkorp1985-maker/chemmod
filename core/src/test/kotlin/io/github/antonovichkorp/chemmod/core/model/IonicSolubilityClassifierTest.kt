@@ -57,6 +57,12 @@ class IonicSolubilityClassifierTest {
     }
 
     @Test
+    fun `bracket parser preserves multivalent ion charges`() {
+        assertEquals(2, Molecule.fromSMILESlike("[Ca+2]").graph.atoms.single().formalCharge)
+        assertEquals(-2, Molecule.fromSMILESlike("[S-2]").graph.atoms.single().formalCharge)
+    }
+
+    @Test
     fun `recognized salt formulae are written cation first and charged atoms add no implicit hydrogen`() {
         assertEquals("NaCl", Molecule.fromSMILESlike("[Cl-].[Na+]").formula())
         assertEquals("CaCl2", Molecule.fromSMILESlike("[Ca+2].[Cl-].[Cl-]").formula())
