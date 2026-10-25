@@ -61,7 +61,30 @@ jobs:
           cache: gradle
       - uses: gradle/actions/setup-gradle@v4
       - name: Test and build the NeoForge jar
-        run: ./scripts/smoke-test.sh
+        shell: bash
+        run: |
+          set -o pipefail
+          set +e
+          ./scripts/smoke-test.sh 2>&1 | tee release-build.log
+          status=${PIPESTATUS[0]}
+          set -e
+          {
+            echo '```text'
+            tail -n 200 release-build.log
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [[ "$status" -ne 0 ]]; then
+            grep -Ei 'error|failed|failure|exception|assert|^e: ' release-build.log \
+              | grep -vE '^(core|core-cli|mod) |^JUnit totals:' \
+              | tail -n 20 | cut -c 1-300 > release-failure-lines.txt || true
+            while IFS= read -r line; do
+              escaped=$(printf '%s' "$line" | sed 's/%/%25/g; s/\r/%0D/g')
+              echo "::error title=Release test diagnostic::$escaped"
+            done < release-failure-lines.txt
+            diagnostic=$(tail -n 40 release-build.log | cut -c 1-300 | sed 's/%/%25/g; s/\r/%0D/g; s/$/%0A/' | tr -d '\n')
+            echo "::error title=Release build failed::$diagnostic"
+          fi
+          exit "$status"
       - name: Publish prerelease
         env:
           GH_TOKEN: ${{ github.token }}
