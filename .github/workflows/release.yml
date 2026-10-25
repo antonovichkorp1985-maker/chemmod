@@ -92,7 +92,7 @@ jobs:
           # metadata contract, never from a hand-edited workflow step.
           release_kind=()
           if [[ "$PRERELEASE" == "true" ]]; then
-            release_kind=(--prerelease --title "ChemMod $RELEASE_TAG — M3 player-test candidate")
+            release_kind=(--prerelease --title "ChemMod $RELEASE_TAG — immutable player-test candidate")
           else
             release_kind=(--latest --title "ChemMod $RELEASE_TAG")
           fi

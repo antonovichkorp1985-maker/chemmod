@@ -1,25 +1,40 @@
-# M4 — graph-identified environmental gas reactions (slice A)
+# M4 — graph-identified environmental gas reactions (test candidate)
 
-**Status:** implementation in progress; not an M4 completion claim. The current implementation slice passed CI run `40191013378` for commit `42db3fa`; this is automated evidence only, not owner acceptance.
-**Authorization:** on 2026-10-25 the owner instructed us to proceed with M4 and defer the real-pack acceptance of M0–M3 until the end of M4. This changes development sequencing only: no milestone is accepted by that instruction.
+**Status:** implementation and test packaging in progress; neither M4 nor M0–M3 is owner-accepted. The owner has now explicitly requested an immutable **player-test prerelease** after this implementation pass. This is not authorization to call milestones accepted or to publish a production release.
 
-## Implemented in this slice
+## Implemented
 
-- New gas-field entries can carry a validated `Molecule` witness. Their field key is `mol:` plus the full canonical graph digest; isomers with the same formula remain separate identities.
-- World persistence writes the full structural witness and canonical key, and rejects a mismatched pair on load. Existing formula-labelled `moles` entries remain loadable and transportable, but they are not guessed into molecular structures and therefore cannot enter a reaction.
-- `GasField` applies the existing `GasCellReactionPlanner` per occupied cell. Matching, reaction conditions, exact balancing and Arrhenius kinetics remain in `ReactionEngine` and its data-defined `ReactionRuleSet`. Plans are calculated before a cell is changed; only one deterministic applicable reaction is committed per cell per update.
-- Added a data-defined hydrogen combustion rule for the M4 C2 case: `2 H2 + O2 -> 2 H2O`. Core tests and NeoForge GameTests passed in CI run `40191013378`, including compile, chlorine transport/tint, graph persistence through the attachment NBT codec, hydrogen combustion from an off-corner fire in the same cell, refusal with no ignition source, and refusal when the fire is two cells away.
-- The world adapter offers a graph-preserving release API. A fire, soul-fire, or lava block anywhere in the loaded 4 m cell supplies the 500 K reaction-condition gate for that update; the GameTest now places supported fire away from the representative corner. This is an ignition trigger mapped to the existing rule threshold, **not** a measured local gas temperature or a world thermal model. Cells never force-load blocks, and scanning cost still needs profiling against the §5 budget.
+- New world-field entries store validated molecular graphs under full canonical graph digests. Same-formula isomers remain distinct. Save data includes a structural witness and rejects key/witness mismatches; legacy formula-only entries remain inert for reactions rather than being guessed into structures.
+- The sparse gas field transports molecular identities and applies existing `environmental` reaction rules through `GasCellReactionPlanner` / `ReactionEngine`; this is not a second reaction engine. The bundled hydrogen rule conserves atoms: `2 H2 + O2 -> 2 H2O`.
+- A world fire, soul fire, or lava in the same loaded 4 m gas cell supplies the 500 K reaction gate. This is an ignition trigger mapped to a rule condition, not a temperature measurement, heat transfer model, or evidence that the mixture is at its LEL.
+- Chlorine's graph is retained through transport; the world GameTest checks settling and composition-derived tint. Sparse diffusion now exchanges all six neighbour directions without processing an undirected pair twice.
+- World gas field is attached to each level and serializes through its codec. CI covers graph persistence and refuses ignition without a source or from a different cell.
+- Added operator-only finite-reference-sample tools for real-pack exercising: `/chem gas release <player> <reference-substance> <moles>` puts a named catalog molecule into that player's current world-field cell; `/chem gas inspect <player>` reports graph witnesses and amounts in that cell. These are explicit test/admin injection and inspection commands, not a tank implementation, leak simulator, arbitrary-graph designer, or release of Stage-B vessel work.
 
-## Current limits / remaining M4 work
+## Explicit limits — not completed by this candidate
 
-- Legacy formula-only entries remain structurally unresolved; preserving them is intentional, because a formula alone does not uniquely define a molecular graph. The existing Stage-B gas-tank/`ClosedVessel` path remains formula-only and is not a graph witness source; this slice does not alter vessel capacity, compatibility, wall strength, or its stored-content model. C2's world GameTest injects graph-identified gases directly into the world field, so real-player sourcing from a tank remains unverified and requires a separately scoped follow-up.
-- Gas transport obtains molecular mass from the graph, while the current Lennard–Jones transport coverage is still queried using the formula string; unknown coverage remains unknown. This does not make formula the reaction identity.
-- The environmental planner commits at most one rule per cell per one-second world update. The cost and ordering need to be profiled before broadening this behavior.
-- C1 chlorine leak and C2 hydrogen ignition still need the full real-pack scenario. GameTests do not establish player-visible rendering, saved-world restart behavior, pack compatibility, or performance.
+- C1 is only a release/transport/settling/visibility test path. `GasToxicity` currently gives mechanism assessments in core but is not connected to player exposure damage/debuffs; no chlorine-mask or filter model is active. A correct dose/exposure rule and its source data must be specified rather than guessed.
+- Sky-visible cells exchange with ambient air. There is no block-based room fan/ventilation machine, and the gas field does not store background air as explicit molecular moles. The test command injects reference gases; it does not model a tank leak.
+- C2 currently verifies balanced in-cell water production after an in-cell fire/lava trigger. It does **not** enforce a validated H2/air LEL/UEL envelope, model a closed-room blast, apply volume-scaled entity damage, or budget block destruction. The current graph-derived Jones approximation is not validated for hydrogen's measured flammability range, so it must not be passed off as an accurate H2 LEL check. The existing Stage-B tank/`ClosedVessel` remains formula-only and unchanged.
+- The 500 K gate is not a measured world temperature. A full ambient-air inventory, local temperature/pressure field, explosion energetics, and source/leak model require separate physical contracts; none are inferred here.
+- The solver runs at 1 Hz and checks world ignition blocks in each occupied cell. The 200-active-cell `<2 ms/tick` target still requires an owner Spark profile on the target pack/hardware.
+- Lennard–Jones transport lookup still has explicit coverage gaps; unknown data is not guessed.
 
-## Acceptance evidence to collect at M4 end
+## CI and owner acceptance
 
-- CI: core tests plus NeoForge GameTests for graph identity, balanced in-cell reaction, persistence and refusal boundaries.
-- Owner run on the actual pack: chlorine release/settling/visibility; hydrogen-plus-oxygen ignition at an actual fire source; inspect save/restart and confirm no duplicate/lost moles. Record any in-pack temperature or fluid interactions as observations, not as proof of a general thermal model.
-- Preserve the separate M0–M3 owner checklists and F2 Spark profile; defer their manual run as the owner requested, but do not mark them accepted until results are supplied.
+- Latest completed code CI before this command addition: run `40208054225` on `b5b55cc` passed, including core tests and NeoForge GameTests. The command addition and current release candidate must pass a fresh CI run before publication.
+- Owner's real-pack test should use the new commands below and record launch, RU/EN commands, chlorine transport/visibility, hydrogen rule output, save/restart, and any logs. An absent chlorine debuff or absent explosion is expected in this slice and must be recorded as a known gap, not as pass for full C1/C2.
+- Full M4 acceptance still requires the separately scoped exposure, ventilation, LEL/explosion, and performance work above plus owner review. M0–M3 real-pack checklists and F2 Spark remain separate open gates; the owner requested to perform those reviews after this M4 implementation pass.
+
+### Minimal world-field test commands
+
+Run as an operator on a disposable copied world. These commands use names from the finite bundled reference directory; `chlorine`, `hydrogen`, and `oxygen` resolve through the existing name aliases.
+
+```text
+/chem gas release @s chlorine 4
+/chem gas inspect @s
+/chem gas release @s hydrogen 2
+/chem gas release @s oxygen 1
+```
+
+The inspect/release feedback reports the cell's minimum block-coordinate origin. In a disposable area, use `originX+1`, `originY`, `originZ+1` for netherrack and `originX+1`, `originY+1`, `originZ+1` for a supported fire, keeping it off the player while inside the same cell. In this build the expected result is that graph-identified H2 and O2 are consumed according to the ordinary balanced rule and H2O appears; do not expect an explosion or treat these quantities as an LEL demonstration. Use a fresh cell without a fire for the refusal check, and another with fire at least one cell away to test locality. Never run these injection tests in a valued world without a backup.

@@ -373,5 +373,11 @@
   "catalyst_surface.chemmod.prepared_cu110.description": "Idealized clean metallic Cu(110) single-crystal coupon. The ~7% effective active-site fraction comes from UHV alcohol-dehydrogenation experiments; the rate model is not a quantitative ambient-pressure turnover-frequency prediction. Area is geometric for a two-sided 0.5 mm coupon, not BET area.",
   "surface_site.chemmod.cu110_step": "Cu(110) step / under-coordinated site",
   "tooltip.chemmod.catalyst.surface.area": "Nominal exposed area: {0} m²",
-  "tooltip.chemmod.catalyst.surface.sites": "Active-site inventory ({0}): {1} mol"
+  "tooltip.chemmod.catalyst.surface.sites": "Active-site inventory ({0}): {1} mol",
+  "command.chemmod.gas.unknown_substance": "Unknown reference substance.",
+  "command.chemmod.gas.invalid_graph": "The reference sample does not contain a valid molecular graph.",
+  "command.chemmod.gas.release.success": "Released {2} mol of {0} ({1}) into {3}’s current gas cell. Cell origin: {4}, {5}, {6}.",
+  "command.chemmod.gas.inspect.empty": "No graph-identified gas is recorded in {0}’s current cell (origin {1}, {2}, {3}).",
+  "command.chemmod.gas.inspect.header": "Graph-identified gases in {0}’s current cell (origin {1}, {2}, {3}):",
+  "command.chemmod.gas.inspect.entry": "{0} [{1}]: {2} mol"
 }
