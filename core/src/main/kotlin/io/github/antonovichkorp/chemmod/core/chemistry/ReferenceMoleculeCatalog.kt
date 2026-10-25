@@ -2,10 +2,13 @@ package io.github.antonovichkorp.chemmod.core.chemistry
 
 import io.github.antonovichkorp.chemmod.core.CommonSubstance
 import io.github.antonovichkorp.chemmod.core.Molecule
+import io.github.antonovichkorp.chemmod.core.model.IonicSolubilityClassifier
 import io.github.antonovichkorp.chemmod.core.model.MoleculeGraph
 
 /** Solubility knowledge shown for a reference sample; unknown is not an insoluble result. */
 enum class CatalogSolubility {
+    SOLUBLE,
+    INSOLUBLE,
     UNKNOWN,
 }
 
@@ -23,7 +26,12 @@ data class ReferenceMoleculeDescriptor(
  * This is deliberately not a generator for arbitrary molecular graphs.
  */
 object ReferenceMoleculeCatalog {
+    private val SOLUBLE_SALT = "soluble-salt"
+    private val INSOLUBLE_SALT = "insoluble-salt"
+
     private val classOrder = listOf(
+        SOLUBLE_SALT,
+        INSOLUBLE_SALT,
         FunctionalGroups.ALKANE,
         FunctionalGroups.CYCLOALKANE,
         FunctionalGroups.ALKENE,
@@ -49,6 +57,22 @@ object ReferenceMoleculeCatalog {
     )
 
     fun describe(graph: MoleculeGraph): ReferenceMoleculeDescriptor {
+        val ionicSalt = IonicSolubilityClassifier.classify(graph)
+        if (ionicSalt != null) {
+            return ReferenceMoleculeDescriptor(
+                classes = listOf(if (ionicSalt.soluble) SOLUBLE_SALT else INSOLUBLE_SALT),
+                longestCarbonChainLength = 0,
+                solubility = if (ionicSalt.soluble) CatalogSolubility.SOLUBLE else CatalogSolubility.INSOLUBLE,
+            )
+        }
+        if (IonicSolubilityClassifier.isChargeSeparatedCompound(graph)) {
+            return ReferenceMoleculeDescriptor(
+                classes = listOf("ionic-compound"),
+                longestCarbonChainLength = 0,
+                solubility = CatalogSolubility.UNKNOWN,
+            )
+        }
+
         val derived = FunctionalGroups.classes(graph).toMutableSet()
         if (derived.any {
                 it in setOf(
@@ -80,8 +104,8 @@ object ReferenceMoleculeCatalog {
         return ReferenceMoleculeDescriptor(
             classes = ordered,
             longestCarbonChainLength = longestCarbonChainLength(graph),
-            // Solubility.isSoluble is a salt-rule API (cation + anion group), not a general
-            // aqueous-solubility predictor. Do not infer values for these molecular references.
+            // Only graph-recognized ionic salt pairs above use the discrete rule model. Neutral
+            // references and unrecognized ion classes remain unknown; do not extrapolate solubility.
             solubility = CatalogSolubility.UNKNOWN,
         )
     }

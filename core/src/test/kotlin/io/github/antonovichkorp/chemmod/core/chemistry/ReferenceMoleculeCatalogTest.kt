@@ -29,6 +29,21 @@ class ReferenceMoleculeCatalogTest {
     }
 
     @Test
+    fun `supported salts sort into rule-derived solubility groups`() {
+        val input = listOf(
+            CommonSubstance("insoluble_salt", "[Ag+].[Cl-]"),
+            CommonSubstance("alkane", "CC"),
+            CommonSubstance("soluble_salt", "[Na+].[Cl-]"),
+        )
+
+        val sorted = ReferenceMoleculeCatalog.sorted(input)
+
+        assertEquals(listOf("soluble_salt", "insoluble_salt", "alkane"), sorted.map { it.canonicalName })
+        assertEquals(listOf("soluble-salt"), ReferenceMoleculeCatalog.describe(graph("[Na+].[Cl-]")).classes)
+        assertEquals(listOf("insoluble-salt"), ReferenceMoleculeCatalog.describe(graph("[Ag+].[Cl-]")).classes)
+    }
+
+    @Test
     fun `finite reference samples sort by graph class then carbon chain length`() {
         val input = listOf(
             CommonSubstance("longer_alkane", "CCCC"),

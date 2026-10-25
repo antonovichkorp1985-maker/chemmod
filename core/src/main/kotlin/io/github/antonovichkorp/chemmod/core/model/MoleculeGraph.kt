@@ -61,16 +61,11 @@ class MoleculeGraph(
 
     fun implicitHydrogens(atomId: Int): Int {
         val atom = atom(atomId)
-        if (atom.element.symbol == "H") return 0
+        // A charged bracket atom is an explicit ion/valence state: its hydrogens, if any,
+        // must be written explicitly. In particular, [Cl-] is chloride, not implicit HCl.
+        if (atom.element.symbol == "H" || atom.formalCharge != 0) return 0
         val occupied = bondOrderSum(atomId) + atom.explicitHydrogens
-        val valences = effectiveValences(atom).filter { it >= occupied }
+        val valences = atom.element.valences.filter { it >= occupied }
         return ((valences.minOrNull() ?: occupied) - occupied).coerceAtLeast(0)
-    }
-
-    private fun effectiveValences(atom: Atom): List<Int> = when {
-        atom.element.symbol == "N" && atom.formalCharge > 0 -> (atom.element.valences + 4).distinct()
-        atom.element.symbol == "O" && atom.formalCharge > 0 -> (atom.element.valences + 3).distinct()
-        atom.element.symbol == "O" && atom.formalCharge < 0 -> (atom.element.valences + 1).distinct()
-        else -> atom.element.valences
     }
 }

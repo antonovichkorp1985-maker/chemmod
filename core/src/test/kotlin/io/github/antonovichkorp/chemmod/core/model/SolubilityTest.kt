@@ -6,8 +6,8 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 /**
- * Solubility by ion class. None of these salts is listed anywhere in the model: each answer comes
- * from the two ions, so a compound nobody enumerated is classified the same way.
+ * Solubility rules are grouped by ion class rather than stored as a row for each salt. These
+ * checks pin the supported cation/anion pairings and the behavior needed by metathesis.
  */
 class SolubilityTest {
     private val table = ElementTable.default()
@@ -21,6 +21,17 @@ class SolubilityTest {
         assertEquals(true, soluble("K", Solubility.AnionGroup.PHOSPHATE))
         assertEquals(true, soluble("Ag", Solubility.AnionGroup.NITRATE))
         assertEquals(true, soluble("Ba", Solubility.AnionGroup.NITRATE))
+    }
+
+    @Test
+    fun `ammonium follows the explicitly stated alkali-like rule`() {
+        val ammonium = Solubility.Cation.Ammonium
+        assertEquals(true, Solubility.isSoluble(ammonium, Solubility.AnionGroup.HALIDE))
+        assertEquals(true, Solubility.isSoluble(ammonium, Solubility.AnionGroup.SULFATE))
+        assertEquals(true, Solubility.isSoluble(ammonium, Solubility.AnionGroup.CARBONATE))
+        assertEquals(true, Solubility.isSoluble(ammonium, Solubility.AnionGroup.PHOSPHATE))
+        assertEquals(true, Solubility.isSoluble(ammonium, Solubility.AnionGroup.SULFIDE))
+        assertEquals(true, Solubility.isSoluble(ammonium, Solubility.AnionGroup.HYDROXIDE))
     }
 
     @Test
