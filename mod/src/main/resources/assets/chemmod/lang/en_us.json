@@ -364,5 +364,6 @@
   "chemistry_class.chemmod.insoluble-salt": "Insoluble salt",
   "chemistry_class.chemmod.ionic-compound": "Ionic compound",
   "tooltip.chemmod.solubility.soluble": "Solubility rule result: soluble (coarse model)",
-  "tooltip.chemmod.solubility.insoluble": "Solubility rule result: insoluble (coarse model)"
+  "tooltip.chemmod.solubility.insoluble": "Solubility rule result: insoluble (coarse model)",
+  "substance.chemmod.ammonium_sulfate": "Ammonium sulfate"
 }

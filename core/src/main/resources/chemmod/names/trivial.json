@@ -115,6 +115,7 @@
     {"canonicalName": "barium_hydroxide", "aliases": ["barium_hydroxide", "barium hydroxide", "гидроксид бария"], "structure": "[Ba+2].[OH-].[OH-]"},
     {"canonicalName": "magnesium_hydroxide", "aliases": ["magnesium_hydroxide", "magnesium hydroxide", "гидроксид магния"], "structure": "[Mg+2].[OH-].[OH-]"},
     {"canonicalName": "iron_ii_hydroxide", "aliases": ["iron_ii_hydroxide", "iron(II) hydroxide", "гидроксид железа(II)"], "structure": "[Fe+2].[OH-].[OH-]"},
-    {"canonicalName": "copper_ii_hydroxide", "aliases": ["copper_ii_hydroxide", "copper(II) hydroxide", "гидроксид меди(II)"], "structure": "[Cu+2].[OH-].[OH-]"}
+    {"canonicalName": "copper_ii_hydroxide", "aliases": ["copper_ii_hydroxide", "copper(II) hydroxide", "гидроксид меди(II)"], "structure": "[Cu+2].[OH-].[OH-]"},
+    {"canonicalName": "ammonium_sulfate", "aliases": ["ammonium_sulfate", "ammonium sulfate", "сульфат аммония"], "structure": "[NH4+].[NH4+].[O-]S(=O)(=O)[O-]"}
   ]
 }

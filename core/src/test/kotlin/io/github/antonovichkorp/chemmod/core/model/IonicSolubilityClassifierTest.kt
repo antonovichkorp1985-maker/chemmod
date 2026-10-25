@@ -41,6 +41,7 @@ class IonicSolubilityClassifierTest {
             "magnesium_hydroxide" to false,
             "iron_ii_hydroxide" to false,
             "copper_ii_hydroxide" to false,
+            "ammonium_sulfate" to true,
         )
 
         expected.forEach { (name, soluble) ->

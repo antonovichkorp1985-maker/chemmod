@@ -364,5 +364,6 @@
   "chemistry_class.chemmod.insoluble-salt": "Нерастворимая соль",
   "chemistry_class.chemmod.ionic-compound": "Ионное соединение",
   "tooltip.chemmod.solubility.soluble": "По правилу растворимости: растворимо (грубая модель)",
-  "tooltip.chemmod.solubility.insoluble": "По правилу растворимости: нерастворимо (грубая модель)"
+  "tooltip.chemmod.solubility.insoluble": "По правилу растворимости: нерастворимо (грубая модель)",
+  "substance.chemmod.ammonium_sulfate": "Сульфат аммония"
 }
