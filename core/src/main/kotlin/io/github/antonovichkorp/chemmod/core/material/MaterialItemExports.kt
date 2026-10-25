@@ -19,6 +19,7 @@ object MaterialItemExports {
         MaterialForm.ROD,
         MaterialForm.WIRE,
         MaterialForm.GEAR,
+        MaterialForm.CATALYST_COUPON,
     )
 
     /**

@@ -365,5 +365,11 @@
   "chemistry_class.chemmod.ionic-compound": "Ionic compound",
   "tooltip.chemmod.solubility.soluble": "Solubility rule result: soluble (coarse model)",
   "tooltip.chemmod.solubility.insoluble": "Solubility rule result: insoluble (coarse model)",
-  "substance.chemmod.ammonium_sulfate": "Ammonium sulfate"
+  "substance.chemmod.ammonium_sulfate": "Ammonium sulfate",
+  "material_form.chemmod.catalyst_coupon": "catalyst coupon",
+  "catalyst_surface.chemmod.prepared_cu110": "Prepared Cu(110) catalytic surface",
+  "catalyst_surface.chemmod.prepared_cu110.description": "Idealized clean metallic Cu(110) single-crystal coupon. The ~7% effective active-site fraction comes from UHV alcohol-dehydrogenation experiments; the rate model is not a quantitative ambient-pressure turnover-frequency prediction. Area is geometric for a two-sided 0.5 mm coupon, not BET area.",
+  "surface_site.chemmod.cu110_step": "Cu(110) step / under-coordinated site",
+  "tooltip.chemmod.catalyst.surface.area": "Nominal exposed area: {0} m²",
+  "tooltip.chemmod.catalyst.surface.sites": "Active-site inventory ({0}): {1} mol"
 }

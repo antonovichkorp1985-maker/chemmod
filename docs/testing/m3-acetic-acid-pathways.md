@@ -33,20 +33,21 @@ both match, the reactor chooses the graph-specific candidate; equally specific
 ambiguous candidates remain refused. This allows selective data-defined
 synthesis to coexist with general combustion without a substance lookup.
 
-The copper material composition earns the existing general
-`chemmod:oxidation_metal` capability, allowing the direct oxidation rule to be
-exercised with an obtainable ChemMod catalyst item. This remains a bulk
-capability abstraction and is not a validated surface mechanism. A separate
-core surface inventory / rule-gate / optional rate-scaling contract is now
-implemented and tested, but no active surface profile is bundled and no
-material-form profile assigns a characterized surface state to the reactor
-catalyst. Therefore these M3 pathways still do not model catalyst surface
-phase, oxidation state, support, adsorbate coverage, or selectivity. The absent
-iron scale is an upstream material/ore-processing dependency, not an M3 item:
-only the copper ore/material route currently exists, and the available copper
-ingot does not yet have a defensible surface profile. See [`catalyst-surface-chemistry.md`](catalyst-surface-chemistry.md)
-for the research, evidence, and unclosed implementation steps. Do not present
-this foundation as surface-chemistry acceptance.
+The copper material composition still supplies the general
+`chemmod:oxidation_metal` capability used by the direct oxidation rule. That is
+a bulk-composition abstraction, not validated evidence that an ordinary copper
+ingot catalyzes acetaldehyde oxidation. A separate prepared Cu(110) coupon
+profile now exists for the ethanol-dehydrogenation rule only: its UHV-derived
+step-site evidence, idealized geometric area, and ambient-reactor limitations
+are documented in [`catalyst-surface-chemistry.md`](catalyst-surface-chemistry.md).
+Those data do **not** validate the direct oxidation or hydrate/dehydrogenation
+pathway's selectivity or catalyst surface mechanism. The acetic-acid rules still
+do not model catalyst phase, oxidation state, support, adsorbate coverage, or
+selectivity, and their catalyst abstraction needs separate evidence and owner
+review. The absent iron scale remains an upstream material/ore-processing
+dependency; do not create it early. This new coupon also has no acquisition or
+preparation route yet. Do not present either old pathway abstraction or the
+coupon as completed surface-chemistry acceptance.
 
 ## Automated evidence
 
@@ -100,17 +101,12 @@ single-product selectivity. That model boundary must be presented honestly in
 the owner real-pack review; further calibration or environmental/phase work may
 be required.
 
-## Owner real-pack checks for this source build
+## Owner review and real-pack checks
 
-1. Install the exact same new build on server and clients. In a reactor with
-   heat, insert acetaldehyde, the balanced oxygen amount, a ChemMod copper ingot,
-   and empty product vial(s). Confirm the selected rule is aldehyde oxidation,
-   oxygen is physically consumed at the exact ratio, and the output is the
-   acetic-acid structure rather than a peroxide or an unrelated product.
-2. Run the alternate route in two batches: acetaldehyde + water → geminal-diol
-   intermediate, then that intermediate + copper catalyst → acetic acid + H2.
-   Remove the now-empty water vial from the co-reactant slot before stage two.
-   Confirm both products, retained remainders and output-vial separation.
+These probes describe the older reaction-rule abstraction; they are **not** evidence that an ordinary copper ingot is an experimentally supported catalyst. The new Cu(110) coupon profile is scoped to ethanol dehydrogenation and cannot be substituted as evidence for either acetic-acid route. Hold catalyst-dependent acceptance of these pathways until their catalyst surface, phase, conditions, and selectivity are reviewed and the rules are backed by an appropriate model.
+
+1. Review the direct aldehyde-oxidation rule's generic `oxidation_metal` capability before running it as a chemistry acceptance test. Do not report a successful copper-ingot run as proof of catalytic validity.
+2. The alternate hydrate/dehydrogenation route likewise needs a separately justified catalyst/model. Until then, treat the two batches as structural-rule probes only, not owner-confirmed synthesis chemistry.
 3. Save/reload between batches and repeat after a server restart. Check RU/EN
    rule names/descriptions, two-client observation, and that the discovery view
    reports product facts without changing who first synthesized each molecule.

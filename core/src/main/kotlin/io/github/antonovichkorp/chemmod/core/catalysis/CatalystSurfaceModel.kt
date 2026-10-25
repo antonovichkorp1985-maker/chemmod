@@ -1,15 +1,37 @@
 package io.github.antonovichkorp.chemmod.core.catalysis
 
 import java.io.InputStream
+import kotlin.math.sqrt
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
 private val SURFACE_ID_PATTERN = Regex("[a-z][a-z0-9_.-]*:[a-z0-9_./-]+")
+private val TRANSLATION_KEY_PATTERN = Regex("[a-z][a-z0-9_.-]*(\\.[a-z0-9_.-]+)+")
+
+/** Supported low-index facets of an FCC crystal, with atoms per geometric surface area. */
+@Serializable
+enum class FccSurfaceFacet {
+    FCC_100,
+    FCC_110,
+    FCC_111;
+
+    fun atomicSitesPerSquareMeter(latticeParameterMeters: Double): Double {
+        require(latticeParameterMeters.isFinite() && latticeParameterMeters > 0.0) {
+            "FCC lattice parameter must be finite and positive"
+        }
+        val aSquared = latticeParameterMeters * latticeParameterMeters
+        return when (this) {
+            FCC_100 -> 2.0 / aSquared
+            FCC_110 -> sqrt(2.0) / aSquared
+            FCC_111 -> 4.0 / (sqrt(3.0) * aSquared)
+        }
+    }
+}
 
 /**
- * A characterized catalyst sample, not a guess based on its bulk element list. Surface phase,
- * BET area, and active-site density are explicit because all three vary with preparation and
- * reaction. The site densities are moles of a named site per square metre of characterized area.
+ * A characterized catalyst sample, not a guess based on its bulk element list. The sample's
+ * nominal exposed area is tied to its defined physical form; active-site density is derived from
+ * the crystal facet's atomic density and a measured/estimated active-site fraction.
  */
 data class CatalystSurfaceProfile(
     val id: String,
@@ -17,7 +39,12 @@ data class CatalystSurfaceProfile(
     val formName: String,
     val phaseId: String,
     val specificSurfaceAreaSquareMetersPerGram: Double,
-    val activeSiteMolesPerSquareMeter: Map<String, Double>,
+    val facet: FccSurfaceFacet,
+    val latticeParameterMeters: Double,
+    val activeSiteFractions: Map<String, Double>,
+    val siteDisplayNameKeys: Map<String, String>,
+    val displayNameKey: String,
+    val displayDescriptionKey: String,
     val evidence: String,
 ) {
     init {
@@ -26,13 +53,35 @@ data class CatalystSurfaceProfile(
         require(formName.matches(Regex("[A-Z][A-Z_]*"))) { "Surface material form must be uppercase" }
         require(SURFACE_ID_PATTERN.matches(phaseId)) { "Surface phase ID must use namespace:path" }
         require(specificSurfaceAreaSquareMetersPerGram.isFinite() && specificSurfaceAreaSquareMetersPerGram > 0.0) {
-            "Specific surface area must be finite and positive"
+            "Specific exposed area must be finite and positive"
         }
-        require(activeSiteMolesPerSquareMeter.isNotEmpty()) { "A surface profile needs at least one active-site type" }
-        require(activeSiteMolesPerSquareMeter.all { (site, density) ->
-            SURFACE_ID_PATTERN.matches(site) && density.isFinite() && density > 0.0
-        }) { "Active-site densities need namespaced IDs and finite positive values" }
+        require(latticeParameterMeters.isFinite() && latticeParameterMeters > 0.0) {
+            "Crystal lattice parameter must be finite and positive"
+        }
+        require(activeSiteFractions.isNotEmpty()) { "A surface profile needs at least one active-site type" }
+        require(activeSiteFractions.all { (site, fraction) ->
+            SURFACE_ID_PATTERN.matches(site) && fraction.isFinite() && fraction > 0.0 && fraction <= 1.0
+        } && activeSiteFractions.values.sum() <= 1.0 + FRACTION_TOLERANCE) {
+            "Active-site fractions must be finite, positive, at most one, and not overlap"
+        }
+        require(siteDisplayNameKeys.keys == activeSiteFractions.keys &&
+            siteDisplayNameKeys.values.all(TRANSLATION_KEY_PATTERN::matches)
+        ) { "Each active-site type needs a localized display-name key" }
+        require(TRANSLATION_KEY_PATTERN.matches(displayNameKey) &&
+            TRANSLATION_KEY_PATTERN.matches(displayDescriptionKey)
+        ) { "Surface profile needs localized name and description keys" }
         require(evidence.isNotBlank()) { "Surface profile needs traceable evidence" }
+    }
+
+    /** Surface atom density times experimentally supported active fraction, converted to mol/m². */
+    fun activeSiteMolesPerSquareMeter(siteType: String): Double {
+        val fraction = activeSiteFractions[siteType] ?: return 0.0
+        return facet.atomicSitesPerSquareMeter(latticeParameterMeters) * fraction / AVOGADRO_CONSTANT
+    }
+
+    companion object {
+        private const val FRACTION_TOLERANCE = 1e-12
+        private const val AVOGADRO_CONSTANT = 6.02214076e23
     }
 }
 
@@ -44,8 +93,8 @@ data class CatalystSurfaceInventory(
 
 /**
  * Quantitative bridge from a characterized catalyst specimen to the reaction environment.
- * No surface area, phase, defect density, or adsorption behavior is inferred from elemental
- * composition. Missing profiles therefore mean no modeled surface sites, never a bulk-metal guess.
+ * No surface area, phase, facet, defect density, or adsorption behavior is inferred from bulk
+ * elemental composition. Missing profiles therefore mean no modeled surface sites.
  */
 class CatalystSurfaceModel(profiles: List<CatalystSurfaceProfile>) {
     private val byId = profiles.associateBy { it.id }
@@ -66,16 +115,16 @@ class CatalystSurfaceModel(profiles: List<CatalystSurfaceProfile>) {
             SURFACE_ID_PATTERN.matches(site) && fraction.isFinite() && fraction in 0.0..1.0
         }) { "Surface occupancy fractions must be finite values from zero to one" }
         val profile = requireNotNull(byId[profileId]) { "Unknown catalyst surface profile '$profileId'" }
-        require(occupiedFractions.keys.all { it in profile.activeSiteMolesPerSquareMeter }) {
+        require(occupiedFractions.keys.all { it in profile.activeSiteFractions }) {
             "Occupancy was supplied for a site not present in surface profile '$profileId'"
         }
 
-        // micrograms -> grams; BET area is specific area (m²/g); site density is mol/m².
+        // Material batches are stored in micrograms: 1 g = 1,000,000 micrograms.
         val massGrams = catalystMassMicrograms / MICROGRAMS_PER_GRAM
         val area = massGrams * profile.specificSurfaceAreaSquareMetersPerGram
-        val sites = profile.activeSiteMolesPerSquareMeter.mapValues { (site, density) ->
+        val sites = profile.activeSiteFractions.keys.associateWith { site ->
             val unoccupied = 1.0 - (occupiedFractions[site] ?: 0.0)
-            area * density * unoccupied
+            area * profile.activeSiteMolesPerSquareMeter(site) * unoccupied
         }
         return CatalystSurfaceInventory(area, sites)
     }
@@ -92,11 +141,14 @@ class CatalystSurfaceModel(profiles: List<CatalystSurfaceProfile>) {
         return inventory(profile.id, primaryMassMicrograms, occupiedFractions).accessibleSiteMoles
     }
 
+    fun profileForMaterialForm(materialId: String, formName: String): CatalystSurfaceProfile? =
+        byMaterialForm[materialId to formName]
+
     fun profile(id: String): CatalystSurfaceProfile? = byId[id]
 
     companion object {
         const val CURRENT_SCHEMA = 1
-        private const val MICROGRAMS_PER_GRAM = 1_000_000_000.0
+        private const val MICROGRAMS_PER_GRAM = 1_000_000.0
 
         private val BUNDLED: CatalystSurfaceModel by lazy {
             val stream = CatalystSurfaceModel::class.java.getResourceAsStream("/chemmod/catalysis/surfaces.json")
@@ -133,7 +185,12 @@ private data class CatalystSurfaceProfileDocument(
     val formName: String,
     val phaseId: String,
     val specificSurfaceAreaSquareMetersPerGram: Double,
-    val activeSiteMolesPerSquareMeter: Map<String, Double>,
+    val facet: FccSurfaceFacet,
+    val latticeParameterMeters: Double,
+    val activeSiteFractions: Map<String, Double>,
+    val siteDisplayNameKeys: Map<String, String>,
+    val displayNameKey: String,
+    val displayDescriptionKey: String,
     val evidence: String,
 ) {
     fun toDomain() = CatalystSurfaceProfile(
@@ -142,7 +199,12 @@ private data class CatalystSurfaceProfileDocument(
         formName,
         phaseId,
         specificSurfaceAreaSquareMetersPerGram,
-        activeSiteMolesPerSquareMeter,
+        facet,
+        latticeParameterMeters,
+        activeSiteFractions,
+        siteDisplayNameKeys,
+        displayNameKey,
+        displayDescriptionKey,
         evidence,
     )
 }

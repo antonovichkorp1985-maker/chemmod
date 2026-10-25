@@ -9,6 +9,7 @@ import kotlin.test.assertTrue
 
 class ReactionEngineTest {
     private val engine = ReactionEngine.bundled()
+    private val copper110Sites = mapOf("chemmod:cu110_step_site" to 5.631149772978659e-10)
 
     @Test
     fun `bundled content supplies data-defined reaction rules for every covered element class`() {
@@ -36,8 +37,27 @@ class ReactionEngineTest {
 
         val ethanolRule = ReactionRuleSet.bundled().rule(ReactionRuleId.of("chemmod:alcohol_dehydrogenation"))
         val kinetics = assertNotNull(ethanolRule.kinetics)
-        assertTrue(kinetics.ratePerSecond(750.0) > kinetics.ratePerSecond(600.0))
-        assertTrue(kinetics.ratePerSecond(600.0) > 0.0)
+        assertTrue(kinetics.ratePerSecond(750.0, copper110Sites) > kinetics.ratePerSecond(600.0, copper110Sites))
+        assertTrue(kinetics.ratePerSecond(600.0, copper110Sites) > 0.0)
+        assertEquals(0.0, kinetics.ratePerSecond(600.0), 1e-12)
+    }
+
+    @Test
+    fun `bundled ethanol dehydrogenation requires copper capability and characterized Cu110 sites`() {
+        val ethanol = Molecule.fromSMILESlike("CCO")
+        val rule = ReactionRuleId.of("chemmod:alcohol_dehydrogenation")
+        val copperCapability = setOf("chemmod:dehydrogenation_metal")
+
+        assertTrue(engine.apply(ethanol, rule, environment(600.0, capabilities = copperCapability)).isEmpty())
+        assertTrue(engine.apply(ethanol, rule, environment(600.0, catalystSurfaceSiteMoles = copper110Sites)).isEmpty())
+        assertEquals(
+            1,
+            engine.apply(
+                ethanol,
+                rule,
+                environment(600.0, capabilities = copperCapability, catalystSurfaceSiteMoles = copper110Sites),
+            ).size,
+        )
     }
 
     @Test
@@ -119,7 +139,11 @@ class ReactionEngineTest {
         val oxidation = applySingle(
             Molecule.fromSMILESlike("CCO"),
             "chemmod:alcohol_dehydrogenation",
-            environment(temperatureKelvin = 600.0, catalysts = setOf("chemmod:copper")),
+            environment(
+                temperatureKelvin = 600.0,
+                capabilities = setOf("chemmod:dehydrogenation_metal"),
+                catalystSurfaceSiteMoles = copper110Sites,
+            ),
         )
 
         assertEquals("C2H4O + H2 -> C2H6O", reduction.formatEquation())
@@ -161,7 +185,11 @@ class ReactionEngineTest {
         val dehydrogenationRoute = applySingle(
             hydratedAldehyde,
             "chemmod:alcohol_dehydrogenation",
-            environment(600.0, catalysts = setOf("chemmod:copper")),
+            environment(
+                600.0,
+                capabilities = setOf("chemmod:dehydrogenation_metal"),
+                catalystSurfaceSiteMoles = copper110Sites,
+            ),
         )
         assertEquals("C2H6O2 -> C2H4O2 + H2", dehydrogenationRoute.formatEquation())
         assertTrue(
@@ -296,11 +324,13 @@ class ReactionEngineTest {
         catalysts: Set<String> = emptySet(),
         coReactants: Set<Molecule> = emptySet(),
         capabilities: Set<String> = emptySet(),
+        catalystSurfaceSiteMoles: Map<String, Double> = emptyMap(),
     ) = ReactionEnvironment(
         temperatureKelvin = temperatureKelvin,
         pressureKilopascals = 101.325,
         catalystTags = catalysts,
         availableCanonicalKeys = coReactants.map { molecule -> molecule.canonicalKey() }.toSet(),
         catalystCapabilities = capabilities,
+        catalystSurfaceSiteMoles = catalystSurfaceSiteMoles,
     )
 }

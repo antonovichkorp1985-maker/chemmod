@@ -8,8 +8,7 @@
 > `v0.9.0-test.3`: that artifact has no reactor and remains the M2
 > vial/mixing prerelease.
 
-This is a player path. Do not use `/chem`, an item-giving command, an internal
-CLI, a save editor, or a synthetic test item to replace it.
+This is a player path for a **new candidate build containing the Cu(110) coupon**. The published test.5/test.6 prereleases predate that profile and must not be treated as evidence for it. Do not use `/chem`, an item-giving command, an internal CLI, a save editor, or a synthetic test item to replace it. The coupon's in-game acquisition/preparation route is intentionally deferred; creative is only for obtaining the reference item during this test.
 
 ## Setup
 
@@ -21,8 +20,9 @@ CLI, a save editor, or a synthetic test item to replace it.
    directories and verify its SHA-256 value before testing. Do not substitute
    the published `v0.9.0-test.3` JAR: it has no reactor.
 3. In a creative test world obtain: one Chemical Reactor, one blast furnace (or
-   another supported heat source), fuel, one copper ingot, one 100% ethanol
-   vial, and two empty laboratory vials.
+   another supported heat source), fuel, one `copper_catalyst_coupon`, one
+   `copper_ingot` for the negative control, one 100% ethanol vial, and two empty
+   laboratory vials.
 4. Place and ignite the blast furnace. Place the Chemical Reactor directly on
    top of it. It must be visibly lit before the reactor can satisfy its heat
    condition.
@@ -31,7 +31,7 @@ CLI, a save editor, or a synthetic test item to replace it.
 The first M3 line is deliberately physical and small:
 
 ```text
-pure ethanol vial + copper catalyst + heat
+pure ethanol vial + prepared Cu(110) catalyst coupon + heat
   → acetaldehyde vial + hydrogen vial
 ```
 
@@ -39,7 +39,8 @@ pure ethanol vial + copper catalyst + heat
 
 1. Open the reactor by right-clicking it.
 2. Insert the ethanol vial into **Target**.
-3. Insert one copper ingot into **Cat.**.
+3. Insert one prepared copper catalyst coupon into **Cat.**. An ordinary ingot
+   is deliberately not a substitute for this characterized surface.
 4. Insert one empty laboratory vial into each **Products** slot.
 5. Do not insert a co-reactant for this particular route.
 6. Check the UI: it must identify **Alcohol dehydrogenation**, show its rule
@@ -48,7 +49,7 @@ pure ethanol vial + copper catalyst + heat
 7. Wait for the server-synchronized progress bar to reach the end. It advances
    once per second and is faster with a hotter valid source according to the
    rule's Arrhenius parameters.
-8. Verify that the original ethanol vial becomes empty, the copper ingot remains,
+8. Verify that the original ethanol vial becomes empty, the coupon remains,
    and the two product slots contain separate vials with formulas `C2H4O` and
    `H2`. Their amounts must be exact and must not be merged into one mixture.
 
@@ -59,8 +60,10 @@ is consumed**.
 
 - No heat source below the reactor: the UI names the physical alcohol rule and
   reports that heat is required; progress stays at zero.
-- No copper catalyst: the UI names the rule and reports that its catalyst is
-  required; progress stays at zero.
+- No catalyst: the UI names the rule and reports that its catalyst is required;
+  progress stays at zero.
+- Ordinary copper ingot in **Cat.**: the UI reports the missing characterized
+  surface/site requirement; progress stays at zero and ethanol is unchanged.
 - A filled or non-vial product slot: the UI reports that empty product vials are
   required; neither source vial changes.
 - A mixture or impure vial in an input: the reactor rejects it rather than
@@ -86,10 +89,11 @@ is consumed**.
 ## Automated guard and release gate
 
 JDK-21 CI also runs required headless GameTests for the physical
-ethanol + copper + heated-blast-furnace route and its refusal/slot-change
-boundaries. They assert that the target is consumed, copper remains, and
-`C2H4O`/`H2` are created as two separate vials; missing heat/copper, an
-analytically impure ethanol vial, or an explicit ethanol/water mixture leaves
+ethanol + prepared Cu(110) coupon + heated-blast-furnace route and its
+refusal/slot-change boundaries. They assert that the target is consumed, the
+coupon remains, and `C2H4O`/`H2` are created as two separate vials; missing
+heat/coupon, an ordinary uncharacterized copper ingot, an analytically impure
+ethanol vial, or an explicit ethanol/water mixture leaves
 all input/output contents untouched; and a deliberately slow lit-furnace batch
 proves that removing an output vial clears progress without consuming ethanol
 or producing a partial result. These regression tests contain no player
@@ -249,8 +253,8 @@ internal fixtures/adapters, but viewing/placement must not call it.
 
 The menu placement predicate now validates a one-item copy of the source stack:
 vanilla then splits it to the slot capacity of one. This fixes rejecting a stack
-of empty vials or copper before it could be split. The machine itself still
-requires exactly one vial/catalyst per occupied slot.
+of empty vials or catalyst coupons before it could be split. The machine itself
+still requires exactly one vial/catalyst per occupied slot.
 
 Three headless tests exercise real server `clicked`/`quickMoveStack` paths:
 viewer/placement/rejected/personal-inventory actions preserve attribution;
@@ -261,7 +265,9 @@ not seed the shared discovery history. They are not two actual client sessions.
 
 Manual checks on matching new client/server builds:
 - Shift-click a stack of empty vials: one enters each output, the rest stay yours.
-- Insert copper from a stack; verify one ingot in the catalyst slot and no loss.
+- Insert a prepared catalyst coupon from a stack; verify exactly one coupon in
+  the catalyst slot and no loss. Repeat with an ordinary ingot and confirm the
+  ethanol surface-site gate refuses it without consuming ethanol.
 - Let player A supply a batch and player B open the screen before it starts;
   after a genuinely first synthesis, its discovery must belong to A, not B.
 - Let B edit a partial batch: it must cancel, and a later first synthesis from

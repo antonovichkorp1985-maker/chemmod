@@ -217,6 +217,8 @@ public final class ChemItems {
         long massMicrograms = switch (spec.getFormName()) {
             case "NUGGET" -> 125_000_000L;
             case "BLOCK" -> CopperStorageBlockEntity.MASS_MICROGRAMS;
+            // A coupon is a one-gram reference sample; it is not a kilogram ingot alias.
+            case "CATALYST_COUPON" -> 1_000_000L;
             default -> 1_000_000_000L;
         };
         return new MaterialBatchContents(spec.getMaterialId(), spec.getFormName(), massMicrograms);

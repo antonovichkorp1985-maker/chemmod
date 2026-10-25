@@ -68,7 +68,7 @@ public final class ChemicalReactorCoReactantGameTests {
             reactor.setItem(1, ItemStack.EMPTY);
             reactor.setItem(3, new ItemStack(ChemItems.SUBSTANCE_VIAL.get()));
             reactor.setItem(5, new ItemStack(net.minecraft.core.registries.BuiltInRegistries.ITEM.get(
-                net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(ChemMod.MOD_ID, "copper_ingot"))));
+                net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(ChemMod.MOD_ID, "copper_catalyst_coupon"))));
         });
 
         helper.runAfterDelay(90, () -> {
