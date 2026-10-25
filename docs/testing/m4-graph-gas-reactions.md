@@ -9,7 +9,7 @@
 - World persistence writes the full structural witness and canonical key, and rejects a mismatched pair on load. Existing formula-labelled `moles` entries remain loadable and transportable, but they are not guessed into molecular structures and therefore cannot enter a reaction.
 - `GasField` applies the existing `GasCellReactionPlanner` per occupied cell. Matching, reaction conditions, exact balancing and Arrhenius kinetics remain in `ReactionEngine` and its data-defined `ReactionRuleSet`. Plans are calculated before a cell is changed; only one deterministic applicable reaction is committed per cell per update.
 - Added a data-defined hydrogen combustion rule for the M4 C2 case: `2 H2 + O2 -> 2 H2O`. Core tests and NeoForge GameTests passed in CI run `40177644791`, including compile, chlorine transport/tint, graph persistence and hydrogen combustion in the world adapter.
-- The world adapter offers a graph-preserving release API. A fire, soul-fire, or lava block at a cell's representative block supplies the 500 K reaction-condition gate for that update. This is an ignition trigger mapped to the existing rule threshold, **not** a measured local gas temperature or a world thermal model.
+- The world adapter offers a graph-preserving release API. A fire, soul-fire, or lava block anywhere in the loaded 4 m cell supplies the 500 K reaction-condition gate for that update; the GameTest now places supported fire away from the representative corner. This is an ignition trigger mapped to the existing rule threshold, **not** a measured local gas temperature or a world thermal model. Cells never force-load blocks, and scanning cost still needs profiling against the §5 budget.
 
 ## Current limits / remaining M4 work
 

@@ -132,11 +132,7 @@ public final class WorldGasField {
             GasField.DEFAULT_BUOYANT_DRIFT_METRES_PER_SECOND);
 
         field.applyEnvironmentalReactions(seconds, (cell, contents) -> {
-            BlockPos ignitionPosition = representativeBlock(cell);
-            if (!level.isLoaded(ignitionPosition)) return null;
-            var state = level.getBlockState(ignitionPosition);
-            boolean ignited = state.is(Blocks.FIRE) || state.is(Blocks.SOUL_FIRE) || state.is(Blocks.LAVA);
-            if (!ignited) return null;
+            if (!hasIgnitionSource(level, cell)) return null;
 
             double totalMoles = contents.stream().mapToDouble(GasMolecularAmount::getMoles).sum();
             if (totalMoles <= 0.0) return null;
@@ -144,6 +140,29 @@ public final class WorldGasField {
                 IGNITED_CELL_TEMPERATURE_KELVIN / (CELL_SIZE_METRES * CELL_SIZE_METRES * CELL_SIZE_METRES * 1000.0);
             return new ReactionEnvironment(IGNITED_CELL_TEMPERATURE_KELVIN, pressureKilopascals);
         });
+    }
+
+    /**
+     * A cell reacts when any loaded block in its 4 m cube is an ignition source. Checking only the
+     * minimum-corner representative made ordinary player-placed fires elsewhere in the same cell
+     * chemically invisible. Stop at the first source and never force-load a neighbouring chunk.
+     */
+    private static boolean hasIgnitionSource(Level level, GasCell cell) {
+        BlockPos corner = representativeBlock(cell);
+        int size = (int) CELL_SIZE_METRES;
+        for (int dx = 0; dx < size; dx++) {
+            for (int dy = 0; dy < size; dy++) {
+                for (int dz = 0; dz < size; dz++) {
+                    BlockPos pos = corner.offset(dx, dy, dz);
+                    if (!level.isLoaded(pos)) continue;
+                    var state = level.getBlockState(pos);
+                    if (state.is(Blocks.FIRE) || state.is(Blocks.SOUL_FIRE) || state.is(Blocks.LAVA)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     /** The block at the minimum corner of a cell; cell coordinates are in cells, not blocks. */

@@ -110,11 +110,11 @@ public class WorldGasFieldGameTests {
         Molecule oxygen = Molecule.Companion.fromSMILESlike("O=O");
         gas.releaseMolecules(pos, Map.of(hydrogen, 2.0, oxygen, 1.0));
         GasCell cell = gas.cellOf(pos);
-        BlockPos ignition = WorldGasField.representativeBlock(cell);
+        BlockPos ignition = WorldGasField.representativeBlock(cell).offset(1, 0, 1);
         helper.getLevel().setBlock(ignition.below(), Blocks.NETHERRACK.defaultBlockState(), 3);
         helper.getLevel().setBlock(ignition, Blocks.FIRE.defaultBlockState(), 3);
         helper.assertTrue(helper.getLevel().getBlockState(ignition).is(Blocks.FIRE),
-            "the GameTest did not retain the supported ignition fire");
+            "the GameTest did not retain the supported in-cell ignition fire");
 
         gas.advance(helper.getLevel(), 1.0);
         var contents = gas.molecularContentsIn(cell);
