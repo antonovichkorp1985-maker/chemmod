@@ -66,10 +66,12 @@ public final class ChemicalReferenceBookItem extends Item {
     }
 
     private static void printReport(Player player, ReferenceBookReport report) {
+        String canonicalName = report.getCanonicalName();
+        Component displayName = canonicalName == null
+            ? Component.translatable("substance.chemmod.reaction_derived")
+            : Component.translatable("substance.chemmod." + canonicalName);
         player.displayClientMessage(Component.translatable(
-            "message.chemmod.reference.header",
-            Component.translatable("substance.chemmod." + report.getCanonicalName()),
-            report.getFormula()), false);
+            "message.chemmod.reference.header", displayName, report.getFormula()), false);
         player.displayClientMessage(Component.translatable(
             "message.chemmod.reference.model", report.getPropertyModel()), false);
         player.displayClientMessage(Component.translatable(

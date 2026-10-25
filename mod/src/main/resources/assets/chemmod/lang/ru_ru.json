@@ -410,5 +410,7 @@
   "property_flag.chemmod.coordinate_bond_acceptor": "Есть акцепторный центр координационной связи",
   "property_flag.chemmod.bent_geometry": "Обнаружена угловая геометрия молекулы",
   "tooltip.chemmod.reference_book.usage": "Используйте с приседанием, держа заполненную эталонную колбу в другой руке, чтобы прочитать модельные свойства.",
-  "tooltip.chemmod.reference_book.scope": "Только конечный каталог; признаки модели не являются оценкой безопасности."
+  "tooltip.chemmod.reference_book.scope": "Отчёт только по веществам, участвующим в заданных реакциях; признаки модели не являются оценкой безопасности.",
+  "substance.chemmod.reaction_derived": "Вещество из реакции",
+  "substance.chemmod.reaction_derived_with_formula": "Вещество из реакции: %s"
 }

@@ -110,7 +110,7 @@ object ReferenceMoleculeCatalog {
         )
     }
 
-    /** Sorts class-first, then by graph-derived chain length, then by stable sample ID. */
+    /** Sorts named references class-first, then by graph-derived chain length and stable name. */
     fun sorted(samples: List<CommonSubstance>): List<CommonSubstance> = samples
         .map { sample ->
             val molecule = Molecule.fromSMILESlike(sample.structure)
@@ -123,6 +123,24 @@ object ReferenceMoleculeCatalog {
             }
                 .thenBy { (_, descriptor, _) -> descriptor.longestCarbonChainLength }
                 .thenBy { (sample, _, _) -> sample.canonicalName }
+                .thenBy { (_, _, key) -> key },
+        )
+        .map { it.first }
+
+    /** Sorts rule-derived species by graph class, carbon-chain length, formula and canonical identity. */
+    fun sortedMolecules(molecules: List<Molecule>): List<Molecule> = molecules
+        .distinctBy(Molecule::canonicalKey)
+        .map { molecule ->
+            val descriptor = describe(molecule.graph)
+            Triple(molecule, descriptor, molecule.canonicalKey())
+        }
+        .sortedWith(
+            compareBy<Triple<Molecule, ReferenceMoleculeDescriptor, String>> { (_, descriptor, _) ->
+                descriptor.classes.firstOrNull()?.let(classOrder::indexOf)?.takeIf { it >= 0 }
+                    ?: classOrder.size
+            }
+                .thenBy { (_, descriptor, _) -> descriptor.longestCarbonChainLength }
+                .thenBy { (molecule, _, _) -> molecule.formula() }
                 .thenBy { (_, _, key) -> key },
         )
         .map { it.first }

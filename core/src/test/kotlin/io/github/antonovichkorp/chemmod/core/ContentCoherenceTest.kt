@@ -1,5 +1,6 @@
 package io.github.antonovichkorp.chemmod.core
 
+import io.github.antonovichkorp.chemmod.core.chemistry.ReactionSpeciesCatalog
 import io.github.antonovichkorp.chemmod.core.material.MaterialCatalog
 import io.github.antonovichkorp.chemmod.core.model.ElementTable
 import io.github.antonovichkorp.chemmod.core.naming.TrivialNameDirectory
@@ -140,8 +141,8 @@ class ContentCoherenceTest {
 
     @Test
     fun `creative reference set covers bundled rule species and M3 pathway intermediates`() {
-        val sampleKeys = CommonSubstances.all()
-            .map { Molecule.fromSMILESlike(it.structure).canonicalKey() }
+        val sampleKeys = ReactionSpeciesCatalog.all()
+            .map(Molecule::canonicalKey)
             .toSet()
         val explicitRuleSpecies = ReactionRuleSet.bundled().rules.values.flatMap { rule ->
             rule.coReactantStructures + rule.productStructures
@@ -154,9 +155,12 @@ class ContentCoherenceTest {
         val acetaldehyde = CommonSubstances.findByStructure("CC=O")
         val hydrate = CommonSubstances.findByStructure("CC(O)O")
         val aceticAcid = CommonSubstances.findByStructure("CC(=O)O")
-        assertNotNull(acetaldehyde, "M3's acetaldehyde intermediate needs a creative sample")
-        assertNotNull(hydrate, "M3's gem-diol intermediate needs a creative sample distinct from ethylene glycol")
-        assertNotNull(aceticAcid, "M3's acetic-acid product needs a creative sample")
+        assertNotNull(acetaldehyde, "M3's acetaldehyde intermediate needs a directory alias")
+        assertNotNull(hydrate, "M3's gem-diol intermediate needs a directory alias distinct from ethylene glycol")
+        assertNotNull(aceticAcid, "M3's acetic-acid product needs a directory alias")
+        assertTrue(Molecule.fromSMILESlike(acetaldehyde.structure).canonicalKey() in sampleKeys)
+        assertTrue(Molecule.fromSMILESlike(hydrate.structure).canonicalKey() in sampleKeys)
+        assertTrue(Molecule.fromSMILESlike(aceticAcid.structure).canonicalKey() in sampleKeys)
         assertTrue(
             hydrate.canonicalName != CommonSubstances.find("ethylene_glycol")?.canonicalName,
             "acetaldehyde hydrate must not be conflated with ethylene glycol",

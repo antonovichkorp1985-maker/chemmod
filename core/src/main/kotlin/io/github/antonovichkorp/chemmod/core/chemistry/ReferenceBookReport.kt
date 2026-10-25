@@ -5,7 +5,8 @@ import io.github.antonovichkorp.chemmod.core.Molecule
 
 /** A snapshot of properties the current models actually return for one finite catalog sample. */
 data class ReferenceBookReport(
-    val canonicalName: String,
+    /** Null for a valid rule-generated structure without a bundled trivial-name alias. */
+    val canonicalName: String?,
     val formula: String,
     val molarMassGramsPerMole: Double,
     val boilingPointCelsius: Double?,
@@ -19,18 +20,19 @@ data class ReferenceBookReport(
 )
 
 /**
- * Builds reference-book data only for the owner's finite named project catalog. Values come from
- * the same graph-derived property/catalog models used elsewhere; no substance-specific overrides
- * or classifications are introduced here.
+ * Builds reference-book data only for finite participants of the authored reaction network.
+ * Values come from the same graph-derived property/catalog models used elsewhere; no
+ * substance-specific overrides or classifications are introduced here.
  */
 object ReferenceBookReports {
     fun forReference(molecule: Molecule): ReferenceBookReport? {
-        val reference = CommonSubstances.findByCanonicalKey(molecule.canonicalKey()) ?: return null
+        if (!ReactionSpeciesCatalog.contains(molecule.canonicalKey())) return null
+        val reference = CommonSubstances.findByCanonicalKey(molecule.canonicalKey())
         val properties = molecule.properties()
         val descriptor = ReferenceMoleculeCatalog.describe(molecule.graph)
         val solubility = descriptor.solubility.takeUnless { it == CatalogSolubility.UNKNOWN }
         return ReferenceBookReport(
-            canonicalName = reference.canonicalName,
+            canonicalName = reference?.canonicalName,
             formula = molecule.formula(),
             molarMassGramsPerMole = properties.molarMass,
             boilingPointCelsius = properties.boilingPointC,

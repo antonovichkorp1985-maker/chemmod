@@ -3,6 +3,7 @@ package io.github.antonovichkorp.chemmod.core.chemistry
 import io.github.antonovichkorp.chemmod.core.Molecule
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -22,18 +23,27 @@ class ReferenceBookReportTest {
     }
 
     @Test
-    fun `unknown solubility is omitted while supported ionic result is retained`() {
+    fun `unknown solubility is omitted and unrelated solubility fixtures stay out of the book`() {
         val water = ReferenceBookReports.forReference(Molecule.fromSMILESlike("O"))
-        val salt = ReferenceBookReports.forReference(Molecule.fromSMILESlike("[Na+].[Cl-]"))
+        val salt = Molecule.fromSMILESlike("[Na+].[Cl-]")
 
         assertNotNull(water)
         assertNull(water.solubility)
-        assertNotNull(salt)
-        assertEquals(CatalogSolubility.SOLUBLE, salt.solubility)
+        assertEquals(CatalogSolubility.SOLUBLE, ReferenceMoleculeCatalog.describe(salt.graph).solubility)
+        assertNull(ReferenceBookReports.forReference(salt))
     }
 
     @Test
-    fun `book reports do not extend beyond the finite reference catalog`() {
-        assertNull(ReferenceBookReports.forReference(Molecule.fromSMILESlike("CC(C)O")))
+    fun `book reports cover rule participants and exclude unrelated structures`() {
+        val reactionSpecies = ReactionSpeciesCatalog.all().map(Molecule::canonicalKey).toSet()
+        val expectedParticipants = listOf("CCO", "O=O", "O=C=O", "O")
+            .map { Molecule.fromSMILESlike(it).canonicalKey() }
+        assertTrue(expectedParticipants.all { it in reactionSpecies })
+
+        val unrelated = Molecule.fromSMILESlike("C1CCCCCCCCCCC1")
+        assertNull(ReferenceBookReports.forReference(unrelated))
+        val testOnlySalt = Molecule.fromSMILESlike("[Na+].[Cl-]")
+        assertFalse(testOnlySalt.canonicalKey() in reactionSpecies,
+            "a named solubility fixture with no bundled reaction must not become a creative sample")
     }
 }

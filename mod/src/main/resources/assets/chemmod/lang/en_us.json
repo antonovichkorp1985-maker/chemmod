@@ -410,5 +410,7 @@
   "property_flag.chemmod.coordinate_bond_acceptor": "Coordinate-bond acceptor site present",
   "property_flag.chemmod.bent_geometry": "Bent molecular geometry detected",
   "tooltip.chemmod.reference_book.usage": "Sneak-use while holding a filled reference vial in the other hand to read its modeled properties.",
-  "tooltip.chemmod.reference_book.scope": "Reads only the finite reference catalog; model flags are not a safety assessment."
+  "tooltip.chemmod.reference_book.scope": "Reports only substances participating in authored reactions; model flags are not a safety assessment.",
+  "substance.chemmod.reaction_derived": "Reaction-derived species",
+  "substance.chemmod.reaction_derived_with_formula": "Reaction-derived substance: %s"
 }
