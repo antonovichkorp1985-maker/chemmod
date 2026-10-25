@@ -9,6 +9,7 @@ import io.github.antonovichkorp.chemmod.gas.WorldGasField;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.nbt.NbtOps;
 import net.minecraft.world.level.block.Blocks;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 
@@ -86,7 +87,9 @@ public class WorldGasFieldGameTests {
         GasCell cell = gas.cellOf(pos);
         var before = gas.molecularContentsIn(cell);
 
-        WorldGasField restored = WorldGasField.fromTag(gas.toTag());
+        var ops = helper.getLevel().registryAccess().createSerializationContext(NbtOps.INSTANCE);
+        var encoded = WorldGasField.CODEC.encodeStart(ops, gas).getOrThrow();
+        WorldGasField restored = WorldGasField.CODEC.parse(ops, encoded).getOrThrow();
         var after = restored.molecularContentsIn(cell);
 
         helper.assertTrue(ethanol.formula().equals(dimethylEther.formula()),
