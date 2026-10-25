@@ -111,14 +111,18 @@ public class WorldGasFieldGameTests {
         gas.releaseMolecules(pos, Map.of(hydrogen, 2.0, oxygen, 1.0));
         GasCell cell = gas.cellOf(pos);
         BlockPos ignition = WorldGasField.representativeBlock(cell);
+        helper.getLevel().setBlock(ignition.below(), Blocks.NETHERRACK.defaultBlockState(), 3);
         helper.getLevel().setBlock(ignition, Blocks.FIRE.defaultBlockState(), 3);
+        helper.assertTrue(helper.getLevel().getBlockState(ignition).is(Blocks.FIRE),
+            "the GameTest did not retain the supported ignition fire");
 
         gas.advance(helper.getLevel(), 1.0);
         var contents = gas.molecularContentsIn(cell);
 
         helper.assertTrue(contents.stream().anyMatch(amount -> amount.getMolecule().formula().equals("H2O")
                 && amount.getMoles() > 0.0),
-            "world ignition did not execute the data-defined hydrogen + oxygen reaction");
+            "world ignition did not execute the data-defined hydrogen + oxygen reaction; contents: " +
+                contents.stream().map(amount -> amount.getMolecule().formula() + "=" + amount.getMoles()).toList());
         helper.assertTrue(contents.stream().allMatch(amount -> !amount.getMolecule().formula().equals("H2O")
                 || amount.getMolecule().validate().isEmpty()),
             "the environmental reaction created an invalid molecular graph");
