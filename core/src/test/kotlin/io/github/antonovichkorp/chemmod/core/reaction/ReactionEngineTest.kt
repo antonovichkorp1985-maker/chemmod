@@ -19,13 +19,12 @@ class ReactionEngineTest {
         assertTrue(rules.values.any { it.matcher is BondOrderPattern }, "bond-level rule types disappeared")
         assertTrue(rules.values.any { it.matcher is AtomTransferPattern }, "atom-transfer rule type disappeared")
 
-        // Combustion is one rule per heteroatom class: the matcher is keyed by elements,
-        // never by a list of combustible substances.
+        // Combustion rules are keyed by required element classes, never by a list of fuel substances.
         val covered = rules.values
             .filter { it.coReactantStructures == listOf("O=O") }
             .mapNotNull { rule -> (rule.matcher as? FormulaPattern)?.requiredElements?.sorted()?.joinToString("+") }
             .toSet()
-        assertEquals(setOf("C", "C+Cl", "C+N", "C+S"), covered)
+        assertEquals(setOf("C", "H", "C+Cl", "C+N", "C+S"), covered)
     }
 
     @Test

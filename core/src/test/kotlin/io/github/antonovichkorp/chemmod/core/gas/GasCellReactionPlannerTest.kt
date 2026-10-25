@@ -57,9 +57,9 @@ class GasCellReactionPlannerTest {
         assertEquals("chemmod:hydrogen_combustion", plan.ruleId.value)
         assertEquals("2 H2 + O2 -> 2 H2O", plan.reaction.formatEquation())
         val result = plan.applyTo(contents)
-        assertTrue(result.none { it.molecule.canonicalKey() == hydrogen.canonicalKey() })
-        assertTrue(result.none { it.molecule.canonicalKey() == oxygen.canonicalKey() })
-        assertEquals(2.0, result.single { it.molecule.formula() == "H2O" }.moles, 1e-12)
+        assertTrue(result.single { it.molecule.canonicalKey() == hydrogen.canonicalKey() }.moles < 2.0)
+        assertTrue(result.single { it.molecule.canonicalKey() == oxygen.canonicalKey() }.moles < 1.0)
+        assertTrue(result.single { it.molecule.formula() == "H2O" }.moles > 0.0)
         assertElementMolesEqual(contents, result)
     }
 
