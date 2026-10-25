@@ -332,15 +332,22 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
             .filter(rule -> presentTags.containsAll(rule.getConditions().getCatalystTags()))
             .filter(rule -> presentCapabilities.containsAll(rule.getConditions().getCatalystCapabilities()))
             .toList();
-        List<ReactionRule> consideredRules = catalystCompatibleRules.isEmpty()
-            ? TIMED_RULES
-            : catalystCompatibleRules;
-
-        List<Candidate> candidates = new ArrayList<>();
-        for (ReactionRule rule : consideredRules) {
-            candidates.addAll(candidates(inputs, rule, conditionSatisfyingEnvironment(rule)));
+        List<Candidate> catalystCompatibleCandidates = new ArrayList<>();
+        for (ReactionRule rule : catalystCompatibleRules) {
+            catalystCompatibleCandidates.addAll(candidates(inputs, rule, conditionSatisfyingEnvironment(rule)));
         }
-        return uniqueCandidate(candidates);
+        Candidate compatibleCandidate = uniqueCandidate(catalystCompatibleCandidates);
+        if (compatibleCandidate != null) return compatibleCandidate;
+
+        // If the currently present catalyst rules out every graph match, use the
+        // condition-satisfying fallback to name the chemistry that is waiting for
+        // a catalyst rather than reporting that no reaction exists.
+        if (catalystCompatibleRules.size() == TIMED_RULES.size()) return null;
+        List<Candidate> allCandidates = new ArrayList<>();
+        for (ReactionRule rule : TIMED_RULES) {
+            allCandidates.addAll(candidates(inputs, rule, conditionSatisfyingEnvironment(rule)));
+        }
+        return uniqueCandidate(allCandidates);
     }
 
     private ReactorInputs reactorInputs() {
