@@ -130,6 +130,24 @@ public class WorldGasFieldGameTests {
     }
 
     @GameTest(template = "chemical_reactor_batch", timeoutTicks = 60)
+    public static void hydrogenAndOxygenDoNotReactInTheWorldWithoutAnIgnitionSource(GameTestHelper helper) {
+        WorldGasField gas = helper.getLevel().getData(ChemAttachments.GAS_FIELD.get());
+        BlockPos pos = helper.absolutePos(HERE.above(12));
+        Molecule hydrogen = Molecule.Companion.fromSMILESlike("[H][H]");
+        Molecule oxygen = Molecule.Companion.fromSMILESlike("O=O");
+        gas.releaseMolecules(pos, Map.of(hydrogen, 2.0, oxygen, 1.0));
+
+        gas.advance(helper.getLevel(), 1.0);
+
+        boolean waterProduced = gas.occupiedCells().stream()
+            .flatMap(cell -> gas.molecularContentsIn(cell).stream())
+            .anyMatch(amount -> amount.getMolecule().formula().equals("H2O"));
+        helper.assertTrue(!waterProduced,
+            "ambient hydrogen and oxygen reacted without a fire, soul fire, or lava block in their cell");
+        helper.succeed();
+    }
+
+    @GameTest(template = "chemical_reactor_batch", timeoutTicks = 60)
     public static void theWorldGasFieldSurvivesASaveRoundTrip(GameTestHelper helper) {
         WorldGasField gas = helper.getLevel().getData(ChemAttachments.GAS_FIELD.get());
         BlockPos pos = helper.absolutePos(HERE.above(16));
