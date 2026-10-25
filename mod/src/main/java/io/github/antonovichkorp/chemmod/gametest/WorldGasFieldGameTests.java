@@ -130,6 +130,28 @@ public class WorldGasFieldGameTests {
     }
 
     @GameTest(template = "chemical_reactor_batch", timeoutTicks = 60)
+    public static void aFireInAnotherGasCellDoesNotIgniteThisCell(GameTestHelper helper) {
+        WorldGasField gas = helper.getLevel().getData(ChemAttachments.GAS_FIELD.get());
+        BlockPos pos = helper.absolutePos(HERE.above(12));
+        Molecule hydrogen = Molecule.Companion.fromSMILESlike("[H][H]");
+        Molecule oxygen = Molecule.Companion.fromSMILESlike("O=O");
+        gas.releaseMolecules(pos, Map.of(hydrogen, 2.0, oxygen, 1.0));
+        GasCell cell = gas.cellOf(pos);
+        BlockPos ignition = WorldGasField.representativeBlock(cell).offset(8, 0, 0);
+        helper.getLevel().setBlock(ignition.below(), Blocks.NETHERRACK.defaultBlockState(), 3);
+        helper.getLevel().setBlock(ignition, Blocks.FIRE.defaultBlockState(), 3);
+
+        gas.advance(helper.getLevel(), 1.0);
+
+        boolean waterProduced = gas.occupiedCells().stream()
+            .flatMap(occupied -> gas.molecularContentsIn(occupied).stream())
+            .anyMatch(amount -> amount.getMolecule().formula().equals("H2O"));
+        helper.assertTrue(!waterProduced,
+            "ignition outside the hydrogen/oxygen cell triggered its reaction");
+        helper.succeed();
+    }
+
+    @GameTest(template = "chemical_reactor_batch", timeoutTicks = 60)
     public static void hydrogenAndOxygenDoNotReactInTheWorldWithoutAnIgnitionSource(GameTestHelper helper) {
         WorldGasField gas = helper.getLevel().getData(ChemAttachments.GAS_FIELD.get());
         BlockPos pos = helper.absolutePos(HERE.above(12));
