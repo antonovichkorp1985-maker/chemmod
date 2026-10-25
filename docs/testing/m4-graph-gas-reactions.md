@@ -1,6 +1,6 @@
 # M4 — graph-identified environmental gas reactions (slice A)
 
-**Status:** implementation in progress; not an M4 completion claim. The current implementation slice passed CI run `40188077254` for commit `e7420b1`; this is automated evidence only, not owner acceptance.
+**Status:** implementation in progress; not an M4 completion claim. The current implementation slice passed CI run `40188555916` for commit `0b30ccf`; this is automated evidence only, not owner acceptance.
 **Authorization:** on 2026-10-25 the owner instructed us to proceed with M4 and defer the real-pack acceptance of M0–M3 until the end of M4. This changes development sequencing only: no milestone is accepted by that instruction.
 
 ## Implemented in this slice
@@ -8,7 +8,7 @@
 - New gas-field entries can carry a validated `Molecule` witness. Their field key is `mol:` plus the full canonical graph digest; isomers with the same formula remain separate identities.
 - World persistence writes the full structural witness and canonical key, and rejects a mismatched pair on load. Existing formula-labelled `moles` entries remain loadable and transportable, but they are not guessed into molecular structures and therefore cannot enter a reaction.
 - `GasField` applies the existing `GasCellReactionPlanner` per occupied cell. Matching, reaction conditions, exact balancing and Arrhenius kinetics remain in `ReactionEngine` and its data-defined `ReactionRuleSet`. Plans are calculated before a cell is changed; only one deterministic applicable reaction is committed per cell per update.
-- Added a data-defined hydrogen combustion rule for the M4 C2 case: `2 H2 + O2 -> 2 H2O`. Core tests and NeoForge GameTests passed in CI run `40188077254`, including compile, chlorine transport/tint, graph persistence and hydrogen combustion from a fire away from the cell's representative corner.
+- Added a data-defined hydrogen combustion rule for the M4 C2 case: `2 H2 + O2 -> 2 H2O`. Core tests and NeoForge GameTests passed in CI run `40188555916`, including compile, chlorine transport/tint, graph persistence, hydrogen combustion from a fire away from the cell's representative corner, and refusal to react in a cell with no ignition source.
 - The world adapter offers a graph-preserving release API. A fire, soul-fire, or lava block anywhere in the loaded 4 m cell supplies the 500 K reaction-condition gate for that update; the GameTest now places supported fire away from the representative corner. This is an ignition trigger mapped to the existing rule threshold, **not** a measured local gas temperature or a world thermal model. Cells never force-load blocks, and scanning cost still needs profiling against the §5 budget.
 
 ## Current limits / remaining M4 work
