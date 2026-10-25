@@ -94,12 +94,12 @@ class IonicSolubilityClassifierTest {
 
     @Test
     fun `unsupported ion groups remain unknown rather than borrowing a halide rule`() {
-        val chlorate = Molecule.fromSMILESlike("[Na+].[O-]Cl(=O)=O")
+        val hypochlorite = Molecule.fromSMILESlike("[Na+].[O-]Cl")
 
-        assertTrue(chlorate.validate().isEmpty())
-        assertNull(IonicSolubilityClassifier.classify(chlorate.graph))
-        assertTrue(IonicSolubilityClassifier.isChargeSeparatedCompound(chlorate.graph))
-        assertEquals(listOf("ionic-compound"), ReferenceMoleculeCatalog.describe(chlorate.graph).classes)
-        assertEquals(CatalogSolubility.UNKNOWN, ReferenceMoleculeCatalog.describe(chlorate.graph).solubility)
+        assertTrue(hypochlorite.validate().isEmpty())
+        assertNull(IonicSolubilityClassifier.classify(hypochlorite.graph))
+        assertTrue(IonicSolubilityClassifier.isChargeSeparatedCompound(hypochlorite.graph))
+        assertEquals(listOf("ionic-compound"), ReferenceMoleculeCatalog.describe(hypochlorite.graph).classes)
+        assertEquals(CatalogSolubility.UNKNOWN, ReferenceMoleculeCatalog.describe(hypochlorite.graph).solubility)
     }
 }
