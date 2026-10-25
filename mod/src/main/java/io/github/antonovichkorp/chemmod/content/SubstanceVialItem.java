@@ -245,9 +245,11 @@ public final class SubstanceVialItem extends Item {
                         catalogDescriptor.getLongestCarbonChainLength()
                     ).withStyle(ChatFormatting.DARK_AQUA));
                 }
-                tooltip.add(Component.translatable(
-                    "tooltip.chemmod.solubility." + catalogDescriptor.getSolubility().name().toLowerCase(Locale.ROOT)
-                ).withStyle(ChatFormatting.DARK_GRAY));
+                if (catalogDescriptor.getSolubility() != io.github.antonovichkorp.chemmod.core.chemistry.CatalogSolubility.UNKNOWN) {
+                    tooltip.add(Component.translatable(
+                        "tooltip.chemmod.solubility." + catalogDescriptor.getSolubility().name().toLowerCase(Locale.ROOT)
+                    ).withStyle(ChatFormatting.DARK_GRAY));
+                }
             }
             if (flag.isAdvanced()) {
                 tooltip.add(Component.translatable("tooltip.chemmod.schema", contents.schemaVersion())

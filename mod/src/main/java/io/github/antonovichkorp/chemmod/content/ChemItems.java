@@ -36,6 +36,11 @@ public final class ChemItems {
         () -> new SteelFlaskItem(new Item.Properties().stacksTo(1))
     );
 
+    public static final DeferredHolder<Item, ChemicalReferenceBookItem> REFERENCE_BOOK = ITEMS.register(
+        "chemical_reference_book",
+        () -> new ChemicalReferenceBookItem(new Item.Properties().stacksTo(1))
+    );
+
     public static final DeferredHolder<Item, BlockItem> NATIVE_COPPER_ORE = ITEMS.register(
         "native_copper_ore",
         () -> new BlockItem(ChemBlocks.NATIVE_COPPER_ORE.get(), new Item.Properties())
@@ -145,6 +150,7 @@ public final class ChemItems {
             .displayItems((parameters, output) -> {
                 output.accept(new ItemStack(SUBSTANCE_VIAL.get()));
                 output.accept(new ItemStack(STEEL_FLASK.get()));
+                output.accept(new ItemStack(REFERENCE_BOOK.get()));
                 // One generic vial item carries each finite named reference sample; arbitrary
                 // valid molecular graphs are not enumerable as separate creative entries.
                 ReferenceMoleculeCatalog.INSTANCE.sorted(CommonSubstances.INSTANCE.all())
