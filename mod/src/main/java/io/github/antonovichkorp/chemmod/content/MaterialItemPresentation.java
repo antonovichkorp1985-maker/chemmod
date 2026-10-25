@@ -69,7 +69,11 @@ final class MaterialItemPresentation {
         CatalystSurfaceModel surfaceModel = CatalystSurfaceModel.bundled();
         CatalystSurfaceProfile surfaceProfile = surfaceModel.profileForMaterialForm(batch.materialId(), batch.form());
         if (surfaceProfile != null) {
-            var inventory = surfaceModel.inventory(surfaceProfile.getId(), batch.primaryMassMicrograms());
+            var inventory = surfaceModel.inventory(
+                surfaceProfile.getId(),
+                batch.primaryMassMicrograms(),
+                java.util.Map.of()
+            );
             tooltip.add(Component.translatable(surfaceProfile.getDisplayNameKey()).withStyle(ChatFormatting.AQUA));
             tooltip.add(Component.translatable(
                 "tooltip.chemmod.catalyst.surface.area",
