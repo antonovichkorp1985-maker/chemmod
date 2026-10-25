@@ -321,8 +321,23 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
     private Candidate findPotentialCandidate() {
         ReactorInputs inputs = reactorInputs();
         if (inputs == null) return null;
+
+        // Use the catalyst's capabilities/tags to disambiguate rules that could
+        // otherwise match the same molecular graph. The candidate environment
+        // still supplies the rule's required surface inventory so the diagnostic
+        // can report a missing characterized site below.
+        java.util.Set<String> presentTags = catalystTags();
+        java.util.Set<String> presentCapabilities = catalystCapabilities();
+        List<ReactionRule> catalystCompatibleRules = TIMED_RULES.stream()
+            .filter(rule -> presentTags.containsAll(rule.getConditions().getCatalystTags()))
+            .filter(rule -> presentCapabilities.containsAll(rule.getConditions().getCatalystCapabilities()))
+            .toList();
+        List<ReactionRule> consideredRules = catalystCompatibleRules.isEmpty()
+            ? TIMED_RULES
+            : catalystCompatibleRules;
+
         List<Candidate> candidates = new ArrayList<>();
-        for (ReactionRule rule : TIMED_RULES) {
+        for (ReactionRule rule : consideredRules) {
             candidates.addAll(candidates(inputs, rule, conditionSatisfyingEnvironment(rule)));
         }
         return uniqueCandidate(candidates);

@@ -219,7 +219,7 @@ public final class DiscoveryGameTests {
     private static void supplyBatch(ChemicalReactorBlockEntity reactor) {
         reactor.setItem(ChemicalReactorBlockEntity.TARGET_SLOT, vial("CCO"));
         reactor.setItem(ChemicalReactorBlockEntity.CATALYST_SLOT, new ItemStack(BuiltInRegistries.ITEM.get(
-            ResourceLocation.fromNamespaceAndPath(ChemMod.MOD_ID, "copper_ingot"))));
+            ResourceLocation.fromNamespaceAndPath(ChemMod.MOD_ID, "copper_catalyst_coupon"))));
         reactor.setItem(ChemicalReactorBlockEntity.OUTPUT_FIRST_SLOT, emptyVial());
         reactor.setItem(ChemicalReactorBlockEntity.OUTPUT_SECOND_SLOT, emptyVial());
     }
