@@ -57,6 +57,27 @@ class GasFieldPhysicsTest {
     }
 
     @Test
+    fun `a sparse concentration gradient diffuses symmetrically in all six directions`() {
+        val field = GasField(cellSizeMetres = 1.0)
+        val origin = GasCell(0, 0, 0)
+        field.addMoles(origin, "Cl2", 1.0)
+        val properties = Props(air, mapOf("Cl2" to 0.1))
+
+        field.advance(1.0, properties, buoyantDriftMetresPerSecond = 0.0)
+
+        val neighbours = listOf(
+            GasCell(1, 0, 0), GasCell(-1, 0, 0),
+            GasCell(0, 1, 0), GasCell(0, -1, 0),
+            GasCell(0, 0, 1), GasCell(0, 0, -1),
+        )
+        neighbours.forEach { neighbour ->
+            assertEquals(0.1, field.molesOf(neighbour, "Cl2"), 1e-12, "diffusion was directionally biased at $neighbour")
+        }
+        assertEquals(0.4, field.molesOf(origin, "Cl2"), 1e-12)
+        assertEquals(1.0, field.totalMoles("Cl2"), 1e-12)
+    }
+
+    @Test
     fun `a closed field conserves every species to within trace pruning`() {
         val field = GasField(cellSizeMetres = 1.0)
         field.addMoles(GasCell(0, 0, 0), "Cl2", 3.0)

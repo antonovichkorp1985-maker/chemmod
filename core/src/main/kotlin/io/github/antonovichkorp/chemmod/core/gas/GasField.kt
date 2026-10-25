@@ -319,10 +319,17 @@ class GasField(val cellSizeMetres: Double = DEFAULT_CELL_SIZE_METRES) {
 
     private fun diffuse(species: String, exchange: Double) {
         if (exchange <= 0.0) return
-        val deltas = HashMap<GasCell, Double>()
+        val deltas = linkedMapOf<GasCell, Double>()
         for ((cell, contents) in cells) {
             val n = contents[species] ?: continue
+            if (n <= TRACE_MOLES) continue
             workUnits++
+
+            // Each unordered neighbour pair is handled exactly once. The positive half-neighbours
+            // are owned by this cell; for a negative half-neighbour, this cell owns the edge only
+            // when that neighbour has no trace-significant amount of this species. Without the
+            // second loop, a sparse field has no map entry to visit on the empty side of the source,
+            // so diffusion occurs only toward +x/+y/+z.
             for (offset in HALF_NEIGHBOURS) {
                 val neighbour = GasCell(cell.x + offset.x, cell.y + offset.y, cell.z + offset.z)
                 val flux = exchange * (n - molesOf(neighbour, species))
@@ -330,6 +337,16 @@ class GasField(val cellSizeMetres: Double = DEFAULT_CELL_SIZE_METRES) {
                 workUnits++
                 deltas[cell] = (deltas[cell] ?: 0.0) - flux
                 deltas[neighbour] = (deltas[neighbour] ?: 0.0) + flux
+            }
+            for (offset in HALF_NEIGHBOURS) {
+                val neighbour = GasCell(cell.x - offset.x, cell.y - offset.y, cell.z - offset.z)
+                val neighbourMoles = molesOf(neighbour, species)
+                if (neighbourMoles > TRACE_MOLES) continue
+                val flux = exchange * (neighbourMoles - n)
+                if (flux == 0.0) continue
+                workUnits++
+                deltas[neighbour] = (deltas[neighbour] ?: 0.0) - flux
+                deltas[cell] = (deltas[cell] ?: 0.0) + flux
             }
         }
         applyDeltas(species, deltas)
