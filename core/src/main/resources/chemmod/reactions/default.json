@@ -35,6 +35,28 @@
       "environmental": true
     },
     {
+      "id": "chemmod:hydrogen_combustion",
+      "matcher": {
+        "kind": "formula",
+        "allowedElements": ["H", "O"],
+        "requiredElements": ["H"],
+        "requireNeutral": true,
+        "requirePositiveOxygenDemand": true
+      },
+      "coReactantStructures": ["O=O"],
+      "productStructures": ["O"],
+      "conditions": {
+        "minimumTemperatureKelvin": 500.0
+      },
+      "displayNameKey": "reaction.chemmod.hydrogen_combustion",
+      "kinetics": {
+        "preExponentialFactorPerSecond": 1000.0,
+        "activationEnergyJoulesPerMole": 35000.0
+      },
+      "displayDescriptionKey": "reaction.chemmod.hydrogen_combustion.description",
+      "environmental": true
+    },
+    {
       "id": "chemmod:alkene_hydrogenation",
       "matcher": {
         "kind": "bond_order",

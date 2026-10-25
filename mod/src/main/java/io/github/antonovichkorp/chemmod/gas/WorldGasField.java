@@ -1,13 +1,18 @@
 package io.github.antonovichkorp.chemmod.gas;
 
 import com.mojang.serialization.Codec;
+import io.github.antonovichkorp.chemmod.core.Molecule;
 import io.github.antonovichkorp.chemmod.core.gas.GasCell;
 import io.github.antonovichkorp.chemmod.core.gas.GasField;
+import io.github.antonovichkorp.chemmod.core.gas.GasMolecularAmount;
+import io.github.antonovichkorp.chemmod.core.gas.GasPhase;
+import io.github.antonovichkorp.chemmod.core.reaction.ReactionEnvironment;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
 
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -28,6 +33,8 @@ public final class WorldGasField {
     /** Bench cell of §5 of the plan, in metres; a Minecraft block is one metre. */
     public static final double CELL_SIZE_METRES = 4.0;
     public static final double AMBIENT_TEMPERATURE_KELVIN = 293.15;
+    /** Effective reaction gate supplied only when the cell contains a real fire/lava block. */
+    private static final double IGNITED_CELL_TEMPERATURE_KELVIN = 500.0;
 
     /** Air exchange rate per second for a cell that can see the sky. */
     public static final double OPEN_AIR_EXCHANGES_PER_SECOND = 0.25;
@@ -54,20 +61,50 @@ public final class WorldGasField {
         }
     }
 
+    /** Structure-preserving release API for pipes, vessels and future molecular sources. */
+    public void releaseMolecules(BlockPos pos, Map<Molecule, Double> molesByMolecule) {
+        GasCell cell = cellOf(pos);
+        for (Map.Entry<Molecule, Double> entry : molesByMolecule.entrySet()) {
+            if (entry.getValue() > 0.0) field.addMoles(cell, entry.getKey(), entry.getValue());
+        }
+    }
+
     public double molesAt(BlockPos pos, String species) {
         return field.molesOf(cellOf(pos), species);
     }
 
-    /** Species present at a position - what a sensor block or the renderer reads. */
-    public Set<String> speciesAt(BlockPos pos) {
-        return field.speciesIn(cellOf(pos));
+    public double molesAt(BlockPos pos, Molecule molecule) {
+        return field.molesOf(cellOf(pos), molecule);
     }
 
-    /** Contents of one cell by species, in moles - what the renderer and the toxicology read. */
+    /** Display formulas present at a position; chemistry must use molecularContentsIn instead. */
+    public Set<String> speciesAt(BlockPos pos) {
+        GasCell cell = cellOf(pos);
+        Set<String> displaySpecies = new LinkedHashSet<>();
+        for (String species : field.speciesIn(cell)) {
+            if (!species.startsWith("mol:")) displaySpecies.add(species);
+        }
+        for (GasMolecularAmount amount : field.molecularContents(cell)) {
+            displaySpecies.add(amount.getMolecule().formula());
+        }
+        return displaySpecies;
+    }
+
+    /** Contents of one cell by display formula, for rendering only; identity remains graph-keyed. */
     public Map<String, Double> contentsIn(GasCell cell) {
         Map<String, Double> contents = new LinkedHashMap<>();
-        for (String species : field.speciesIn(cell)) contents.put(species, field.molesOf(cell, species));
+        for (String species : field.speciesIn(cell)) {
+            if (!species.startsWith("mol:")) contents.put(species, field.molesOf(cell, species));
+        }
+        for (GasMolecularAmount amount : field.molecularContents(cell)) {
+            contents.merge(amount.getMolecule().formula(), amount.getMoles(), Double::sum);
+        }
         return contents;
+    }
+
+    /** Graph-identified cell composition, used by chemistry and structural persistence. */
+    public java.util.List<GasMolecularAmount> molecularContentsIn(GasCell cell) {
+        return field.molecularContents(cell);
     }
 
     /** Total moles of every species at a position, for readouts and rendering. */
@@ -93,6 +130,20 @@ public final class WorldGasField {
             OPEN_AIR_EXCHANGES_PER_SECOND,
             (cell, species) -> 0.0,
             GasField.DEFAULT_BUOYANT_DRIFT_METRES_PER_SECOND);
+
+        field.applyEnvironmentalReactions(seconds, (cell, contents) -> {
+            BlockPos ignitionPosition = representativeBlock(cell);
+            if (!level.isLoaded(ignitionPosition)) return null;
+            var state = level.getBlockState(ignitionPosition);
+            boolean ignited = state.is(Blocks.FIRE) || state.is(Blocks.SOUL_FIRE) || state.is(Blocks.LAVA);
+            if (!ignited) return null;
+
+            double totalMoles = contents.stream().mapToDouble(GasMolecularAmount::getMoles).sum();
+            if (totalMoles <= 0.0) return null;
+            double pressureKilopascals = totalMoles * GasPhase.UNIVERSAL_GAS_CONSTANT *
+                IGNITED_CELL_TEMPERATURE_KELVIN / (CELL_SIZE_METRES * CELL_SIZE_METRES * CELL_SIZE_METRES * 1000.0);
+            return new ReactionEnvironment(IGNITED_CELL_TEMPERATURE_KELVIN, pressureKilopascals);
+        });
     }
 
     /** The block at the minimum corner of a cell; cell coordinates are in cells, not blocks. */
@@ -117,9 +168,24 @@ public final class WorldGasField {
             entry.putInt("x", cell.getX());
             entry.putInt("y", cell.getY());
             entry.putInt("z", cell.getZ());
+
+            // Legacy formula labels remain loadable as inert identities; new molecular entries
+            // persist an explicit structural witness and its full canonical graph key.
             CompoundTag moles = new CompoundTag();
-            for (String name : species) moles.putDouble(name, field.molesOf(cell, name));
+            for (String name : species) {
+                if (!name.startsWith("mol:")) moles.putDouble(name, field.molesOf(cell, name));
+            }
             entry.put("moles", moles);
+
+            ListTag molecularMoles = new ListTag();
+            for (GasMolecularAmount amount : field.molecularContents(cell)) {
+                CompoundTag molecular = new CompoundTag();
+                molecular.putString("key", GasField.identityKey(amount.getMolecule()));
+                molecular.putString("witness", amount.getMolecule().structuralWitness());
+                molecular.putDouble("moles", amount.getMoles());
+                molecularMoles.add(molecular);
+            }
+            entry.put("molecular_moles", molecularMoles);
             cells.add(entry);
         }
         root.put("cells", cells);
@@ -136,6 +202,18 @@ public final class WorldGasField {
             for (String name : moles.getAllKeys()) {
                 double amount = moles.getDouble(name);
                 if (amount > 0.0) gas.field.addMoles(cell, name, amount);
+            }
+
+            ListTag molecularMoles = entry.getList("molecular_moles", Tag.TAG_COMPOUND);
+            for (int j = 0; j < molecularMoles.size(); j++) {
+                CompoundTag molecular = molecularMoles.getCompound(j);
+                Molecule graph = Molecule.Companion.fromSMILESlike(molecular.getString("witness"));
+                String storedKey = molecular.getString("key");
+                if (!GasField.identityKey(graph).equals(storedKey)) {
+                    throw new IllegalArgumentException("Gas molecular witness does not match its canonical key");
+                }
+                double amount = molecular.getDouble("moles");
+                if (amount > 0.0) gas.field.addMoles(cell, graph, amount);
             }
         }
         return gas;

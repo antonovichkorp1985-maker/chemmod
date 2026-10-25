@@ -282,7 +282,7 @@ class ReactionEngine(private val ruleSet: ReactionRuleSet) {
         if (!formula.keys.all { it in pattern.allowedElements }) return false
         if (!pattern.requiredElements.all { formula.getOrDefault(it, 0) > 0 }) return false
         if (!pattern.requirePositiveOxygenDemand) return true
-        val carbon = formula["C"] ?: return false
+        val carbon = formula["C"] ?: 0
         val hydrogen = formula["H"] ?: 0
         val oxygen = formula["O"] ?: 0
         return 4 * carbon + hydrogen - 2 * oxygen > 0

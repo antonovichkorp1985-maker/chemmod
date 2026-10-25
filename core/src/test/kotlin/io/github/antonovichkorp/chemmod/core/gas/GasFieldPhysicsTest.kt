@@ -1,5 +1,6 @@
 package io.github.antonovichkorp.chemmod.core.gas
 
+import io.github.antonovichkorp.chemmod.core.Molecule
 import kotlin.math.abs
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -18,6 +19,10 @@ class GasFieldPhysicsTest {
             molarMass[species] ?: error("no molar mass for $species")
 
         override fun diffusionSquareMetersPerSecond(species: String): Double? = diffusion[species]
+
+        override fun molarMassGramsPerMole(species: Molecule): Double = species.molarMass()
+
+        override fun diffusionSquareMetersPerSecond(species: Molecule): Double? = diffusion[species.formula()]
     }
 
     private val air = mapOf(

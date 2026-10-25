@@ -1,5 +1,7 @@
 package io.github.antonovichkorp.chemmod.core.gas
 
+import io.github.antonovichkorp.chemmod.core.Molecule
+import io.github.antonovichkorp.chemmod.core.reaction.ReactionEnvironment
 import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.math.exp
@@ -14,10 +16,17 @@ data class GasCell(val x: Int, val y: Int, val z: Int)
  * and an unknown coefficient must not be silently read as a small one.
  */
 interface GasFieldProperties {
+    /** Legacy display/formula identity, retained for already-created non-structural field entries. */
     fun molarMassGramsPerMole(species: String): Double
 
-    /** Binary diffusion coefficient against air in m²/s, or null when the species is not covered. */
+    /** Binary diffusion coefficient against air, or null when the model has no coverage. */
     fun diffusionSquareMetersPerSecond(species: String): Double?
+
+    /** Structure-preserving properties for new field entries. */
+    fun molarMassGramsPerMole(species: Molecule): Double
+
+    /** Structure-preserving transport lookup; unsupported structures remain explicitly unknown. */
+    fun diffusionSquareMetersPerSecond(species: Molecule): Double?
 }
 
 /**
@@ -28,6 +37,11 @@ interface GasFieldProperties {
 interface GasFieldOccupancyListener {
     fun speciesEntered(cell: GasCell, species: String)
     fun speciesLeft(cell: GasCell, species: String)
+}
+
+/** Supplies physical conditions for the existing data-defined reaction engine at one gas cell. */
+fun interface GasCellReactionEnvironmentProvider {
+    fun environment(cell: GasCell, contents: List<GasMolecularAmount>): ReactionEnvironment?
 }
 
 /**
@@ -56,12 +70,16 @@ interface GasFieldOccupancyListener {
  * conserves every species exactly; ventilation and sinks remove monotonically. Both properties are
  * asserted in tests.
  *
- * [workUnits] counts the per-cell-per-species visits, which is the honest budget measure: the
- * plan's <2 ms per tick for 200 cells is a statement about work scaling with occupied cells, not
- * about a particular machine's clock.
+ * [workUnits] counts cell/species visits in transport and reaction evaluation. It is a scaling
+ * proxy, not a timing claim: the plan's <2 ms per tick for 200 cells still requires profiling on
+ * the target pack and hardware.
  */
 class GasField(val cellSizeMetres: Double = DEFAULT_CELL_SIZE_METRES) {
     companion object {
+        /** Stable, collision-resistant key for a molecular gas identity. */
+        @JvmStatic
+        fun identityKey(molecule: Molecule): String = "mol:${molecule.canonicalKey()}"
+
         /** Bench cell of §5: 4 m, refined locally down to a block, 16 m as the far LOD. */
         const val DEFAULT_CELL_SIZE_METRES = 4.0
 
@@ -86,9 +104,11 @@ class GasField(val cellSizeMetres: Double = DEFAULT_CELL_SIZE_METRES) {
     }
 
     private val cells = linkedMapOf<GasCell, MutableMap<String, Double>>()
+    /** Structural witnesses keyed by the full canonical digest; formulas are never identity. */
+    private val molecularWitnesses = linkedMapOf<String, Molecule>()
     private val listeners = mutableListOf<GasFieldOccupancyListener>()
 
-    /** Per-cell-per-species visits performed by [advance]; the budget proxy described above. */
+    /** Cell/species visits in transport plus environmental-reaction steps; a budget proxy, not milliseconds. */
     var workUnits: Long = 0
         private set
 
@@ -102,16 +122,36 @@ class GasField(val cellSizeMetres: Double = DEFAULT_CELL_SIZE_METRES) {
 
     // ---------------------------------------------------------------- state
 
+    /** Add a legacy formula-labelled quantity. This path cannot participate in graph reactions. */
     fun addMoles(cell: GasCell, species: String, amount: Double) {
-        require(amount >= 0.0) { "Cannot remove moles through addMoles" }
+        require(species.isNotBlank()) { "Gas identity cannot be blank" }
+        require(amount.isFinite() && amount >= 0.0) { "Gas amount must be finite and non-negative" }
         if (amount == 0.0) return
-        val contents = cells.getOrPut(cell) { linkedMapOf() }
-        val before = contents[species] ?: 0.0
-        contents[species] = before + amount
-        if (before <= TRACE_MOLES && before + amount > TRACE_MOLES) announce(cell, species, entered = true)
+        addMolesByIdentity(cell, species, amount)
+    }
+
+    /** Add a graph-identified gas quantity; isomers remain separate even when their formula matches. */
+    fun addMoles(cell: GasCell, molecule: Molecule, amount: Double) {
+        require(molecule.validate().isEmpty()) { "Gas species must be a valid molecular graph" }
+        require(amount.isFinite() && amount >= 0.0) { "Gas amount must be finite and non-negative" }
+        if (amount == 0.0) return
+        val key = identityKey(molecule)
+        molecularWitnesses[key]?.let { existing ->
+            require(existing.canonicalKey() == molecule.canonicalKey()) { "Molecular identity collision" }
+        }
+        molecularWitnesses[key] = molecule
+        addMolesByIdentity(cell, key, amount)
     }
 
     fun molesOf(cell: GasCell, species: String): Double = cells[cell]?.get(species) ?: 0.0
+
+    fun molesOf(cell: GasCell, molecule: Molecule): Double = molesOf(cell, identityKey(molecule))
+
+    /** Graph-aware contents only. Unresolved legacy formula entries are deliberately excluded. */
+    fun molecularContents(cell: GasCell): List<GasMolecularAmount> = cells[cell].orEmpty()
+        .mapNotNull { (key, amount) -> molecularWitnesses[key]?.let { GasMolecularAmount(it, amount) } }
+        .filter { it.moles > TRACE_MOLES }
+        .sortedBy { it.molecule.canonicalKey() }
 
     fun speciesIn(cell: GasCell): Set<String> =
         cells[cell]?.filterValues { it > TRACE_MOLES }?.keys ?: emptySet()
@@ -124,6 +164,45 @@ class GasField(val cellSizeMetres: Double = DEFAULT_CELL_SIZE_METRES) {
     fun totalMoles(species: String): Double = molesOfSpecies(species)
 
     fun totalMoles(): Double = cells.values.sumOf { contents -> contents.values.sum() }
+
+    /**
+     * Apply at most one applicable ordinary environmental reaction per occupied cell. Only graph-
+     * identified entries are considered; legacy formula labels are preserved but never guessed into
+     * molecular structures. Every plan is balanced by the shared ReactionEngine and committed to a
+     * cell only after the complete replacement composition has been calculated.
+     */
+    @JvmOverloads
+    fun applyEnvironmentalReactions(
+        seconds: Double,
+        environmentProvider: GasCellReactionEnvironmentProvider,
+        planner: GasCellReactionPlanner = GasCellReactionPlanner(),
+    ): Map<GasCell, GasCellReactionPlan> {
+        require(seconds.isFinite() && seconds > 0.0) { "Reaction step must be finite and positive" }
+        val plans = linkedMapOf<GasCell, GasCellReactionPlan>()
+        for (cell in occupiedCells().sortedWith(compareBy<GasCell> { it.x }.thenBy { it.y }.thenBy { it.z })) {
+            workUnits++
+            val before = molecularContents(cell)
+            if (before.isEmpty()) continue
+            workUnits += before.size
+            val environment = environmentProvider.environment(cell, before) ?: continue
+            val plan = planner.plan(before, environment, seconds) ?: continue
+            val after = plan.applyTo(before)
+            val afterByKey = after.associateBy { identityKey(it.molecule) }
+            val beforeKeys = before.mapTo(linkedSetOf()) { identityKey(it.molecule) }
+
+            before.forEach { amount ->
+                val key = identityKey(amount.molecule)
+                setMoles(cell, key, afterByKey[key]?.moles ?: 0.0)
+            }
+            after.filter { identityKey(it.molecule) !in beforeKeys }.forEach { amount ->
+                val key = identityKey(amount.molecule)
+                molecularWitnesses[key] = amount.molecule
+                setMoles(cell, key, amount.moles)
+            }
+            plans[cell] = plan
+        }
+        return plans
+    }
 
     // ------------------------------------------------------------------ LOD
 
@@ -180,7 +259,12 @@ class GasField(val cellSizeMetres: Double = DEFAULT_CELL_SIZE_METRES) {
             workUnits++
 
             // 1. Diffusion by concentration gradient, sub-stepped to stay inside the stability limit.
-            val diffusion = properties.diffusionSquareMetersPerSecond(species)
+            val molecule = molecularWitnesses[species]
+            val diffusion = if (molecule == null) {
+                properties.diffusionSquareMetersPerSecond(species)
+            } else {
+                properties.diffusionSquareMetersPerSecond(molecule)
+            }
             if (diffusion != null && diffusion > 0.0) {
                 val k = diffusion * seconds / (cellSizeMetres * cellSizeMetres)
                 val subSteps = if (k <= MAX_EXPLICIT_EXCHANGE) 1 else ceil(k / MAX_EXPLICIT_EXCHANGE).toInt()
@@ -189,7 +273,12 @@ class GasField(val cellSizeMetres: Double = DEFAULT_CELL_SIZE_METRES) {
             }
 
             // 2. Vertical buoyancy bias: denser than air settles, lighter rises.
-            val ratio = GasPhase.buoyancyRelativeToAir(properties.molarMassGramsPerMole(species))
+            val molarMass = if (molecule == null) {
+                properties.molarMassGramsPerMole(species)
+            } else {
+                properties.molarMassGramsPerMole(molecule)
+            }
+            val ratio = GasPhase.buoyancyRelativeToAir(molarMass)
             if (ratio != 1.0 && buoyantDriftMetresPerSecond > 0.0) {
                 val fraction = buoyantDriftMetresPerSecond * abs(ratio - 1.0) * seconds / cellSizeMetres
                 drift(species, fraction.coerceAtMost(0.5), rises = ratio < 1.0)
@@ -207,6 +296,26 @@ class GasField(val cellSizeMetres: Double = DEFAULT_CELL_SIZE_METRES) {
     }
 
     // ----------------------------------------------------------- mechanisms
+
+    private fun addMolesByIdentity(cell: GasCell, species: String, amount: Double) {
+        val contents = cells.getOrPut(cell) { linkedMapOf() }
+        val before = contents[species] ?: 0.0
+        contents[species] = before + amount
+        if (before <= TRACE_MOLES && before + amount > TRACE_MOLES) announce(cell, species, entered = true)
+    }
+
+    private fun setMoles(cell: GasCell, species: String, amount: Double) {
+        val contents = cells.getOrPut(cell) { linkedMapOf() }
+        val before = contents[species] ?: 0.0
+        if (amount > TRACE_MOLES) {
+            contents[species] = amount
+            if (before <= TRACE_MOLES) announce(cell, species, entered = true)
+        } else {
+            contents.remove(species)
+            if (before > TRACE_MOLES) announce(cell, species, entered = false)
+        }
+        if (contents.isEmpty()) cells.remove(cell)
+    }
 
     private fun diffuse(species: String, exchange: Double) {
         if (exchange <= 0.0) return

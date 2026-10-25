@@ -46,6 +46,24 @@ class GasCellReactionPlannerTest {
     }
 
     @Test
+    fun `hydrogen ignition uses a balanced ordinary environmental rule`() {
+        val hydrogen = molecule("[H][H]")
+        val oxygen = molecule("O=O")
+        val contents = listOf(GasMolecularAmount(hydrogen, 2.0), GasMolecularAmount(oxygen, 1.0))
+
+        val plan = planner.plan(contents, environment(contents, temperatureKelvin = 600.0), 1.0)
+
+        assertNotNull(plan)
+        assertEquals("chemmod:hydrogen_combustion", plan.ruleId.value)
+        assertEquals("2 H2 + O2 -> 2 H2O", plan.reaction.formatEquation())
+        val result = plan.applyTo(contents)
+        assertTrue(result.none { it.molecule.canonicalKey() == hydrogen.canonicalKey() })
+        assertTrue(result.none { it.molecule.canonicalKey() == oxygen.canonicalKey() })
+        assertEquals(2.0, result.single { it.molecule.formula() == "H2O" }.moles, 1e-12)
+        assertElementMolesEqual(contents, result)
+    }
+
+    @Test
     fun `environmental rule waits for its ordinary temperature condition`() {
         val contents = listOf(GasMolecularAmount(methane, 1.0), GasMolecularAmount(oxygen, 2.0))
         assertNull(planner.plan(contents, environment(contents, temperatureKelvin = 499.999), 1.0))
