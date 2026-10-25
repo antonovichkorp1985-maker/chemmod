@@ -138,9 +138,9 @@ public final class ChemicalReactorGameTests {
                 "uncharacterized copper ingot accumulated surface-dependent progress");
             helper.assertTrue(reactor.getItem(ChemicalReactorBlockEntity.CATALYST_SLOT).is(ordinaryIngot.getItem()),
                 "uncharacterized copper ingot was consumed");
-            helper.assertTrue(ChemicalReactorBlockEntity.statusComponent(reactor.menuData().get(1))
-                    .equals(Component.translatable("reactor_status.chemmod.needs_catalyst")),
-                "reactor did not report missing characterized active sites");
+            Component actualStatus = ChemicalReactorBlockEntity.statusComponent(reactor.menuData().get(1));
+            helper.assertTrue(actualStatus.equals(Component.translatable("reactor_status.chemmod.needs_catalyst")),
+                "reactor did not report missing characterized active sites; actual status: " + actualStatus.getString());
             helper.succeed();
         });
     }
