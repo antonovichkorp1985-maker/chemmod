@@ -30,6 +30,12 @@ class BoilingPointModelTest {
     private fun boiling(structure: String): Double? =
         engine.predict(referenceMolecule(structure).graph).boilingPointC
 
+    private fun boilingDirect(structure: String): Double? =
+        engine.predict(Molecule.fromSMILESlike(structure).graph).boilingPointC
+
+    private fun basisDirect(structure: String): String =
+        engine.predict(Molecule.fromSMILESlike(structure).graph).boilingPointBasis
+
     private fun basis(structure: String): String =
         engine.predict(referenceMolecule(structure).graph).boilingPointBasis
 
@@ -64,12 +70,44 @@ class BoilingPointModelTest {
     }
 
     @Test
-    fun `alcohols rise with the chain and with their hydrogen-bond network`() {
-        assertNear(64.3, boiling("CO")!!)
-        assertNear(83.7, boiling("CCO")!!)
-        assertNear(101.2, boiling("CCCO")!!)
-        assertNear(117.3, boiling("CCCCO")!!)
-        assertEquals("hydroxyl-family+hydrogen-bond-network", basis("CCO"))
+    fun `monohydric alcohol graph model tracks measured homologous series`() {
+        // NIST Chemistry WebBook normal-boiling measurements: methanol 337.69 K, ethanol
+        // 351.44 K, 1-propanol 370.26 K, 1-butanol 390.75 K, 1-pentanol 410.9 K,
+        // and 1-hexanol 430.5 K. These six homologues constrain one structure-based rule.
+        assertNear(64.54, boilingDirect("CO")!!, 0.1)
+        assertNear(78.29, boilingDirect("CCO")!!, 0.2)
+        assertNear(97.11, boilingDirect("CCCO")!!, 0.35)
+        assertNear(117.60, boilingDirect("CCCCO")!!, 0.1)
+        assertNear(137.75, boilingDirect("CCCCCO")!!, 0.2)
+        assertNear(157.35, boilingDirect("CCCCCCO")!!, 0.15)
+        assertEquals("monohydric-alcohol-structure+dispersion+association", basis("CCO"))
+    }
+
+    @Test
+    fun `alcohol graph descriptors separate hydroxyl shielding and carbon branching`() {
+        assertNear(82.27, boilingDirect("CC(O)C")!!, 0.1)       // 2-propanol
+        assertNear(99.51, boilingDirect("CCC(O)C")!!, 0.4)     // 2-butanol
+        assertNear(107.75, boilingDirect("CC(C)CO")!!, 1.0)   // 2-methyl-1-propanol
+        assertNear(82.45, boilingDirect("CC(C)(C)O")!!, 0.2)  // 2-methyl-2-propanol
+        assertEquals(1, FunctionalGroups.hydroxylCarbonSubstitution(Molecule.fromSMILESlike("CC(O)C").graph))
+        assertEquals(2, FunctionalGroups.hydroxylCarbonSubstitution(Molecule.fromSMILESlike("CC(C)(C)O").graph))
+        assertEquals(
+            1,
+            FunctionalGroups.carbonBranchPointsOutsideHydroxylCentres(
+                Molecule.fromSMILESlike("CC(C)CO").graph,
+            ),
+        )
+    }
+
+    @Test
+    fun `monohydric alcohol model refuses structures outside its measured family`() {
+        assertNull(boilingDirect("C1CCCCC1O")) // cyclic
+        assertEquals(
+            "no-model:monohydric-alcohol-fit-covers-C1-C6-saturated-acyclic-C-H-O",
+            basisDirect("C1CCCCC1O"),
+        )
+        assertNull(boilingDirect("C=CCO")) // unsaturated
+        assertNull(boilingDirect("CCCCCCCO")) // outside the C1-C6 calibration domain
     }
 
     @Test

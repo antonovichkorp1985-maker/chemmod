@@ -204,6 +204,43 @@ object FunctionalGroups {
     }
 
     /**
+     * Count how many carbon neighbours beyond a primary alcohol centre are attached to the
+     * hydroxyl-bearing carbon. Primary alcohols (and methanol) contribute zero, secondary centres
+     * one, tertiary centres two. This is a graph-derived steric descriptor, not an alcohol list.
+     */
+    fun hydroxylCarbonSubstitution(graph: MoleculeGraph): Int =
+        groups(graph).asSequence()
+            .filter { it.kind == HYDROXYL }
+            .mapNotNull { hydroxyl ->
+                graph.neighbors(hydroxyl.atomId)
+                    .firstOrNull { it.first.element.symbol == "C" }
+                    ?.first?.id
+            }
+            .sumOf { carbonId ->
+                (graph.neighbors(carbonId).count { it.first.element.symbol == "C" } - 1).coerceAtLeast(0)
+            }
+
+    /**
+     * Saturated carbon branch points away from hydroxyl-bearing carbons. Excluding the OH centre
+     * keeps alcohol steric shielding separate from carbon-skeleton compactness.
+     */
+    fun carbonBranchPointsOutsideHydroxylCentres(graph: MoleculeGraph): Int {
+        val hydroxylCentres = groups(graph).asSequence()
+            .filter { it.kind == HYDROXYL }
+            .mapNotNull { hydroxyl ->
+                graph.neighbors(hydroxyl.atomId)
+                    .firstOrNull { it.first.element.symbol == "C" }
+                    ?.first?.id
+            }
+            .toSet()
+        return graph.atoms.count { atom ->
+            atom.element.symbol == "C" && atom.id !in hydroxylCentres &&
+                graph.bondsOf(atom.id).all { it.order == BondOrder.SINGLE } &&
+                graph.neighbors(atom.id).count { it.first.element.symbol == "C" } >= 3
+        }
+    }
+
+    /**
      * Cycle-basis rank: bonds - atoms + components. One for cyclohexane, two for naphthalene,
      * zero for anything acyclic. Shared with the boiling-point model so a ring means one thing.
      */

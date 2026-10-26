@@ -16,7 +16,7 @@ class MoleculeTest {
         assertTrue(ethanol.validate().isEmpty())
         assertEquals("C2H6O", ethanol.formula())
         assertNear(46.069, ethanol.molarMass(), 0.01)
-        assertNear(83.7, ethanol.properties().boilingPointC!!, 0.1)
+        assertNear(78.29, ethanol.properties().boilingPointC!!, 0.2)
     }
 
     @Test
@@ -35,7 +35,7 @@ class MoleculeTest {
 
         assertEquals("C2H6O", dimethylEther.formula())
         assertNotEquals(ethanol.canonicalKey(), dimethylEther.canonicalKey())
-        assertNear(83.7, ethanol.properties().boilingPointC!!, 0.1)
+        assertNear(78.29, ethanol.properties().boilingPointC!!, 0.2)
         // The ether has its own branch now; before that it borrowed the hydrocarbon dispersion
         // term and missed experiment by 16 K.
         assertNear(-25.5, dimethylEther.properties().boilingPointC!!, 0.5)

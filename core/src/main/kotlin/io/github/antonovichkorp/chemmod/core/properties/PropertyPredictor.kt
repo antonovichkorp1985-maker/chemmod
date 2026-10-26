@@ -125,8 +125,10 @@ class PropertyEngine(private val rules: PropertyRuleSet) {
      * Dispersion plus the interactions the graph actually has:
      *
      *  * a calibration anchor, reported as such, for substances the model cannot derive yet;
-     *  * alcohols and polyols: dispersion plus the hydrogen-bond network, so ethylene glycol and
-     *    glycerol boil higher because of the donor and acceptor sites they carry;
+     *  * saturated acyclic monohydric alcohols: dispersion, carbon count, hydrogen-bond-site
+     *    density, OH-centre shielding and carbon-skeleton branching, all derived from the graph;
+     *  * polyols: the older dispersion plus hydrogen-bond-network branch; its glycol residual is
+     *    documented as open rather than treated as accepted;
      *  * amines: dispersion plus one term per hydrogen the nitrogen can donate, which is what
      *    orders the three C4H11N isomers (RMS 4.4 K);
      *  * ketones and aldehydes, ethers: dispersion plus ring and aromaticity corrections
@@ -157,11 +159,37 @@ class PropertyEngine(private val rules: PropertyRuleSet) {
             classes.none { it in FunctionalGroups.OXYGEN_CLASSES_BEYOND_HYDROXYL }
         if (hydroxylFamily) {
             val network = hydrogenBonds.networkKilojoulesPerMole(graph)
+            val hydroxylCount = FunctionalGroups.groups(graph).count { it.kind == FunctionalGroups.HYDROXYL }
+            if (hydroxylCount == 1) {
+                val carbonCount = formula["C"] ?: 0
+                val supportedElements = graph.atoms.all { it.element.symbol in setOf("C", "H", "O") }
+                val saturatedAcyclic = graph.bonds.all { it.order == BondOrder.SINGLE } &&
+                    FunctionalGroups.cycleRank(graph) == 0
+                val hydroxylSubstitution = FunctionalGroups.hydroxylCarbonSubstitution(graph)
+                val skeletonBranchPoints = FunctionalGroups.carbonBranchPointsOutsideHydroxylCentres(graph)
+                if (carbonCount !in 1..6 || !supportedElements || !saturatedAcyclic ||
+                    hydroxylSubstitution > 2 || skeletonBranchPoints > 1
+                ) {
+                    return BoilingEstimate(null, "no-model:monohydric-alcohol-fit-covers-C1-C6-saturated-acyclic-C-H-O")
+                }
+                return BoilingEstimate(
+                    rules.boiling.monohydricAlcoholBaseCelsius +
+                        rules.boiling.monohydricAlcoholDispersionCelsius * dispersion +
+                        rules.boiling.monohydricAlcoholCarbonCelsius * carbonCount +
+                        rules.boiling.monohydricAlcoholHydrogenBondDensityCelsiusPerKilojoulePerCarbon *
+                        network / carbonCount +
+                        rules.boiling.monohydricAlcoholHydroxylSubstitutionCelsius * hydroxylSubstitution +
+                        rules.boiling.monohydricAlcoholHydroxylSubstitutionPerCarbonCelsius *
+                        hydroxylSubstitution * carbonCount +
+                        rules.boiling.monohydricAlcoholBranchPointCelsius * skeletonBranchPoints,
+                    "monohydric-alcohol-structure+dispersion+association",
+                )
+            }
             return BoilingEstimate(
                 rules.boiling.hydroxylBaseCelsius +
                     rules.boiling.hydroxylDispersionCelsius * dispersion +
                     rules.boiling.hydrogenBondCelsiusPerKilojoulePerMole * network,
-                "hydroxyl-family+hydrogen-bond-network",
+                "polyol-family+hydrogen-bond-network",
             )
         }
         val rings = FunctionalGroups.cycleRank(graph)
