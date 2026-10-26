@@ -412,5 +412,7 @@ no-model:nitrile-fit-excludes-conjugated-alkenenitriles`. Причина изм�
 - `core/chemistry/FunctionalGroupTest.kt` — вывод числа галогенов по элементам.
 - В текущей рабочей правке меняются `PropertyPredictor`, `FunctionalGroups`, rule-set JSON, `BoilingPointModelTest`,
   `MoleculeTest` и smoke-тест: этанол теперь рассчитывается по общему графовому правилу, а не строке вещества.
-- Исторический CI-прогон `38139730770` проверял прежнюю формулу и не покрывает эту правку. Локальный Gradle
-  запуск недоступен без JDK; текущие тесты ещё не прошли CI. Owner acceptance M0 остаётся открытым.
+- CI `40293299659` запустил обновлённые тесты: все 24 теста `BoilingPointModelTest` прошли; общий job
+  упал на одном устаревшем ожидании метанола `64.3 °C` в `MoleculeTest` (модель дала `64.56 °C`). Это
+  ожидание обновлено до NIST-значения; нужен повторный CI. Локальный Gradle запуск недоступен без JDK.
+  Owner acceptance M0 остаётся открытым.

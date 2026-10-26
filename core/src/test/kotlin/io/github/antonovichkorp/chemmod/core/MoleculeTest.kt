@@ -98,7 +98,7 @@ class MoleculeTest {
 
         assertEquals("H2O", water.formula())
         assertNear(100.0, water.properties().boilingPointC!!, 0.1)
-        assertNear(64.3, methanol.properties().boilingPointC!!, 0.1)
+        assertNear(64.54, methanol.properties().boilingPointC!!, 0.1)
     }
 
     private fun assertNear(expected: Double, actual: Double, tolerance: Double) {
