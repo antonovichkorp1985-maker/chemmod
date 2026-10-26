@@ -125,8 +125,9 @@ class PropertyEngine(private val rules: PropertyRuleSet) {
      * Dispersion plus the interactions the graph actually has:
      *
      *  * a calibration anchor, reported as such, for substances the model cannot derive yet;
-     *  * saturated acyclic monohydric alcohols: dispersion, carbon count, hydrogen-bond-site
-     *    density, OH-centre shielding and carbon-skeleton branching, all derived from the graph;
+ *  * saturated acyclic monohydric alcohols: dispersion, carbon count, hydrogen-bond-site
+ *    density, OH-centre shielding, skeleton branching and (for linear secondary C5-C6) OH-arm
+ *    length imbalance, all derived from the graph;
      *  * polyols: the older dispersion plus hydrogen-bond-network branch; its glycol residual is
      *    documented as open rather than treated as accepted;
      *  * amines: dispersion plus one term per hydrogen the nitrogen can donate, which is what
@@ -172,6 +173,38 @@ class PropertyEngine(private val rules: PropertyRuleSet) {
                 ) {
                     return BoilingEstimate(null, "no-model:monohydric-alcohol-fit-covers-C1-C6-saturated-acyclic-C-H-O")
                 }
+                val distalBranchPoints = FunctionalGroups.carbonBranchPointsDistalToHydroxylCentres(graph)
+                val linearSecondaryC5C6 = hydroxylSubstitution == 1 &&
+                    carbonCount in 5..6 && skeletonBranchPoints == 0
+                if (hydroxylSubstitution == 0 && carbonCount == 6 && distalBranchPoints > 0) {
+                    // C6 primary distal-branch holdouts still miss by up to 2.15 K. Keep this
+                    // structural subgroup refused until the branch-position dependence is fitted.
+                    return BoilingEstimate(null, "no-model:monohydric-alcohol-distal-branch-C6-not-validated")
+                }
+                if (hydroxylSubstitution > 0 && carbonCount > 4 && !linearSecondaryC5C6) {
+                    // C5-C6 tertiary and branched secondary holdouts miss by up to 9.6 K. Do not
+                    // extrapolate the C3-C4 substitution fit into these unresolved topologies.
+                    return BoilingEstimate(
+                        null,
+                        "no-model:monohydric-alcohol-fit-excludes-branched-or-tertiary-C5-C6",
+                    )
+                }
+                val longSecondaryCorrection = if (linearSecondaryC5C6) {
+                    rules.boiling.monohydricAlcoholLongSecondaryBaseCelsius +
+                        rules.boiling.monohydricAlcoholArmImbalanceCelsiusPerCarbon *
+                        FunctionalGroups.hydroxylCarbonArmLengthImbalance(graph)
+                } else {
+                    0.0
+                }
+                val basis = when {
+                    linearSecondaryC5C6 ->
+                        "monohydric-alcohol-structure+dispersion+association+OH-arm-topology"
+                    distalBranchPoints > 0 ->
+                        "monohydric-alcohol-structure+dispersion+association+branch-distance"
+                    skeletonBranchPoints > 0 ->
+                        "monohydric-alcohol-structure+dispersion+association+branching"
+                    else -> "monohydric-alcohol-structure+dispersion+association"
+                }
                 return BoilingEstimate(
                     rules.boiling.monohydricAlcoholBaseCelsius +
                         rules.boiling.monohydricAlcoholDispersionCelsius * dispersion +
@@ -181,8 +214,10 @@ class PropertyEngine(private val rules: PropertyRuleSet) {
                         rules.boiling.monohydricAlcoholHydroxylSubstitutionCelsius * hydroxylSubstitution +
                         rules.boiling.monohydricAlcoholHydroxylSubstitutionPerCarbonCelsius *
                         hydroxylSubstitution * carbonCount +
-                        rules.boiling.monohydricAlcoholBranchPointCelsius * skeletonBranchPoints,
-                    "monohydric-alcohol-structure+dispersion+association",
+                        rules.boiling.monohydricAlcoholBranchPointCelsius * skeletonBranchPoints +
+                        rules.boiling.monohydricAlcoholDistalBranchPointCelsius * distalBranchPoints +
+                        longSecondaryCorrection,
+                    basis,
                 )
             }
             return BoilingEstimate(

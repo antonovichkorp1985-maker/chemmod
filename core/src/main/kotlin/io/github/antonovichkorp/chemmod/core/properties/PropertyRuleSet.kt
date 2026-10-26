@@ -115,6 +115,11 @@ data class BoilingRuleSet(
     val monohydricAlcoholHydroxylSubstitutionPerCarbonCelsius: Double,
     /** Carbon-skeleton branch penalty excluding the OH-bearing carbon. */
     val monohydricAlcoholBranchPointCelsius: Double,
+    /** Smaller additional penalty for a branch point at least two C-C bonds from OH. */
+    val monohydricAlcoholDistalBranchPointCelsius: Double,
+    /** Long-secondary C5-C6 baseline correction and per-carbon-arm length imbalance. */
+    val monohydricAlcoholLongSecondaryBaseCelsius: Double,
+    val monohydricAlcoholArmImbalanceCelsiusPerCarbon: Double,
     val hydrogenBondCelsiusPerKilojoulePerMole: Double,
     /**
      * Amines: dispersion plus one term per hydrogen the nitrogen can donate, which is what
@@ -209,6 +214,11 @@ private data class BoilingRuleSetDocument(
     val monohydricAlcoholHydroxylSubstitutionPerCarbonCelsius: Double,
     /** Carbon-skeleton branch penalty excluding the OH-bearing carbon. */
     val monohydricAlcoholBranchPointCelsius: Double,
+    /** Smaller additional penalty for a branch point at least two C-C bonds from OH. */
+    val monohydricAlcoholDistalBranchPointCelsius: Double,
+    /** Long-secondary C5-C6 baseline correction and per-carbon-arm length imbalance. */
+    val monohydricAlcoholLongSecondaryBaseCelsius: Double,
+    val monohydricAlcoholArmImbalanceCelsiusPerCarbon: Double,
     val hydrogenBondCelsiusPerKilojoulePerMole: Double,
     val amineBaseCelsius: Double,
     val amineDispersionCelsius: Double,
@@ -243,6 +253,9 @@ private data class BoilingRuleSetDocument(
             monohydricAlcoholHydroxylSubstitutionCelsius,
             monohydricAlcoholHydroxylSubstitutionPerCarbonCelsius,
             monohydricAlcoholBranchPointCelsius,
+            monohydricAlcoholDistalBranchPointCelsius,
+            monohydricAlcoholLongSecondaryBaseCelsius,
+            monohydricAlcoholArmImbalanceCelsiusPerCarbon,
             hydrogenBondCelsiusPerKilojoulePerMole,
             amineDispersionCelsius,
             amineHydrogenBondDonorCelsius,
@@ -258,6 +271,12 @@ private data class BoilingRuleSetDocument(
         require(monohydricAlcoholDispersionCelsius > 0.0 && monohydricAlcoholCarbonCelsius > 0.0 &&
             monohydricAlcoholHydrogenBondDensityCelsiusPerKilojoulePerCarbon > 0.0
         ) { "Alcohol dispersion, carbon skeleton and association density contributions must be positive" }
+        require(monohydricAlcoholDistalBranchPointCelsius >= 0.0 &&
+            monohydricAlcoholBranchPointCelsius + monohydricAlcoholDistalBranchPointCelsius <= 0.0
+        ) { "A distal skeleton branch still lowers boiling point, but less than a proximal branch" }
+        require(monohydricAlcoholLongSecondaryBaseCelsius <= 0.0 &&
+            monohydricAlcoholArmImbalanceCelsiusPerCarbon > 0.0
+        ) { "Long-secondary alcohol correction and arm-asymmetry direction must match their measured family" }
         require(monohydricAlcoholHydroxylSubstitutionCelsius <= 0.0 &&
             monohydricAlcoholHydroxylSubstitutionPerCarbonCelsius <= 0.0 &&
             monohydricAlcoholBranchPointCelsius <= 0.0
@@ -297,6 +316,9 @@ private data class BoilingRuleSetDocument(
             monohydricAlcoholHydroxylSubstitutionPerCarbonCelsius =
                 monohydricAlcoholHydroxylSubstitutionPerCarbonCelsius,
             monohydricAlcoholBranchPointCelsius = monohydricAlcoholBranchPointCelsius,
+            monohydricAlcoholDistalBranchPointCelsius = monohydricAlcoholDistalBranchPointCelsius,
+            monohydricAlcoholLongSecondaryBaseCelsius = monohydricAlcoholLongSecondaryBaseCelsius,
+            monohydricAlcoholArmImbalanceCelsiusPerCarbon = monohydricAlcoholArmImbalanceCelsiusPerCarbon,
             hydrogenBondCelsiusPerKilojoulePerMole = hydrogenBondCelsiusPerKilojoulePerMole,
             amineBaseCelsius = amineBaseCelsius,
             amineDispersionCelsius = amineDispersionCelsius,

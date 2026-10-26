@@ -87,7 +87,7 @@ class BoilingPointModelTest {
     fun `alcohol graph descriptors separate hydroxyl shielding and carbon branching`() {
         assertNear(82.27, boilingDirect("CC(O)C")!!, 0.1)       // 2-propanol
         assertNear(99.51, boilingDirect("CCC(O)C")!!, 0.4)     // 2-butanol
-        assertNear(107.75, boilingDirect("CC(C)CO")!!, 1.0)   // 2-methyl-1-propanol
+        assertNear(107.65, boilingDirect("CC(C)CO")!!, 0.6)   // 2-methyl-1-propanol; NIST AVG
         assertNear(82.45, boilingDirect("CC(C)(C)O")!!, 0.2)  // 2-methyl-2-propanol
         assertEquals(1, FunctionalGroups.hydroxylCarbonSubstitution(Molecule.fromSMILESlike("CC(O)C").graph))
         assertEquals(2, FunctionalGroups.hydroxylCarbonSubstitution(Molecule.fromSMILESlike("CC(C)(C)O").graph))
@@ -100,6 +100,49 @@ class BoilingPointModelTest {
     }
 
     @Test
+    fun `branch distance separates primary alcohol isomers and predicts a C6 holdout`() {
+        // Fit proximal/distal penalties on C4 isobutanol and C5 2-/3-methyl-1-butanol.
+        // 2-methyl-1-pentanol is the C6 holdout: NIST 421 ± 2 K, predicted residual +0.29 K.
+        assertNear(107.65, boilingDirect("CC(C)CO")!!, 0.6)       // isobutanol, NIST AVG 380.8 ± 0.9 K
+        assertNear(128.85, boilingDirect("CCC(C)CO")!!, 0.6)    // 2-methyl-1-butanol, fit
+        assertNear(130.85, boilingDirect("CC(C)CCO")!!, 0.05)   // 3-methyl-1-butanol, fit
+        assertNear(147.85, boilingDirect("CCCC(C)CO")!!, 0.5)   // 2-methyl-1-pentanol, holdout
+        assertEquals(
+            "monohydric-alcohol-structure+dispersion+association+branch-distance",
+            basisDirect("CC(C)CCO"),
+        )
+        assertEquals(
+            1,
+            FunctionalGroups.carbonBranchPointsDistalToHydroxylCentres(
+                Molecule.fromSMILESlike("CC(C)CCO").graph,
+            ),
+        )
+        assertEquals(
+            0,
+            FunctionalGroups.carbonBranchPointsDistalToHydroxylCentres(
+                Molecule.fromSMILESlike("CCC(C)CO").graph,
+            ),
+        )
+    }
+
+    @Test
+    fun `unvalidated primary C6 distal branch topologies are refused`() {
+        // Both received 150.70 C from the binary proximal/distal rule, but NIST reports 152.85 C
+        // (3-methyl-1-pentanol, 426 ± 2 K) and 149.85 C (4-methyl-1-pentanol, 423 ± 4 K).
+        // This unresolved position effect is not hidden behind a widened tolerance.
+        listOf("CCC(C)CCO", "CC(C)CCCO").forEach { structure ->
+            assertEquals(1, FunctionalGroups.carbonBranchPointsDistalToHydroxylCentres(
+                Molecule.fromSMILESlike(structure).graph,
+            ))
+            assertNull(boilingDirect(structure), structure)
+            assertEquals(
+                "no-model:monohydric-alcohol-distal-branch-C6-not-validated",
+                basisDirect(structure),
+            )
+        }
+    }
+
+    @Test
     fun `monohydric alcohol model refuses structures outside its measured family`() {
         assertNull(boilingDirect("C1CCCCC1O")) // cyclic
         assertEquals(
@@ -108,6 +151,44 @@ class BoilingPointModelTest {
         )
         assertNull(boilingDirect("C=CCO")) // unsaturated
         assertNull(boilingDirect("CCCCCCCO")) // outside the C1-C6 calibration domain
+    }
+
+    @Test
+    fun `linear secondary C5 fit predicts the independent C6 positional-isomer holdout`() {
+        // Fit the graph-derived long-secondary correction on NIST C5 data: 2-pentanol 392 K,
+        // 3-pentanol 388 K. Then validate it, without refitting, on C6: 2-hexanol 411 K and
+        // 3-hexanol 407 K. The C6 errors are both +0.37 K; the NIST averages carry ±2–3 K.
+        assertNear(118.85, boilingDirect("CC(O)CCC")!!, 0.05)  // 2-pentanol, fit point
+        assertNear(114.85, boilingDirect("CCC(O)CC")!!, 0.05)  // 3-pentanol, fit point
+        assertNear(137.85, boilingDirect("CC(O)CCCC")!!, 0.5)  // 2-hexanol, holdout
+        assertNear(133.85, boilingDirect("CCC(O)CCC")!!, 0.5)  // 3-hexanol, holdout
+        assertEquals(
+            "monohydric-alcohol-structure+dispersion+association+OH-arm-topology",
+            basisDirect("CCC(O)CCC"),
+        )
+        assertEquals(2, FunctionalGroups.hydroxylCarbonArmLengthImbalance(Molecule.fromSMILESlike("CC(O)CCC").graph))
+        assertEquals(0, FunctionalGroups.hydroxylCarbonArmLengthImbalance(Molecule.fromSMILESlike("CCC(O)CC").graph))
+        assertEquals(3, FunctionalGroups.hydroxylCarbonArmLengthImbalance(Molecule.fromSMILESlike("CC(O)CCCC").graph))
+        assertEquals(1, FunctionalGroups.hydroxylCarbonArmLengthImbalance(Molecule.fromSMILESlike("CCC(O)CCC").graph))
+    }
+
+    @Test
+    fun `branched or tertiary OH-substituted C5-C6 alcohols remain refused`() {
+        // Under the old fit, 2-methyl-2-butanol missed its NIST point by 4.6 K and
+        // 2-methyl-2-pentanol by 9.6 K. The linear-secondary correction does not validate those
+        // topologies, so they and a branched secondary alcohol must not inherit its number.
+        val unsupportedStructures = listOf(
+            "CC(O)(C)CC",   // 2-methyl-2-butanol
+            "CC(O)(C)CCC",  // 2-methyl-2-pentanol
+            "CC(O)C(C)C",   // branched secondary C5 alcohol
+        )
+        unsupportedStructures.forEach { structure ->
+            assertNull(boilingDirect(structure), structure)
+            assertEquals(
+                "no-model:monohydric-alcohol-fit-excludes-branched-or-tertiary-C5-C6",
+                basisDirect(structure),
+            )
+        }
     }
 
     @Test
