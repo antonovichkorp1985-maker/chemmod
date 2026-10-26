@@ -19,6 +19,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 /** Operator-only finite-catalog tools for exercising and inspecting the world gas field. */
@@ -86,10 +87,20 @@ public final class ChemGasCommands {
         }
         source.sendSuccess(() -> Component.translatable("command.chemmod.gas.inspect.header", target.getDisplayName(),
             origin.getX(), origin.getY(), origin.getZ()), false);
+        Map<String, Double> composition = gas.atmosphereCompositionAt(target.blockPosition());
+        double oxygenPercent = composition.getOrDefault("O2", 0.0) * 100.0;
+        String formattedOxygenPercent = String.format(Locale.ROOT, "%.2f", oxygenPercent);
+        source.sendSuccess(() -> Component.translatable(
+            "command.chemmod.gas.inspect.oxygen", formattedOxygenPercent), false);
         for (GasMolecularAmount amount : contents) {
+            String formula = amount.getMolecule().formula();
+            double fraction = composition.getOrDefault(formula, 0.0);
+            String volumePercent = String.format(Locale.ROOT, "%.3f", fraction * 100.0);
+            String partsPerMillion = String.format(Locale.ROOT, "%.1f", fraction * 1_000_000.0);
             source.sendSuccess(() -> Component.translatable(
                 "command.chemmod.gas.inspect.entry",
-                amount.getMolecule().formula(), amount.getMolecule().structuralWitness(), amount.getMoles()), false);
+                formula, amount.getMolecule().structuralWitness(), amount.getMoles(),
+                volumePercent, partsPerMillion), false);
         }
         return contents.size();
     }

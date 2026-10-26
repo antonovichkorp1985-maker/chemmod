@@ -2,6 +2,7 @@ package io.github.antonovichkorp.chemmod.gas;
 
 import com.mojang.serialization.Codec;
 import io.github.antonovichkorp.chemmod.core.Molecule;
+import io.github.antonovichkorp.chemmod.core.gas.GasAtmosphere;
 import io.github.antonovichkorp.chemmod.core.gas.GasCell;
 import io.github.antonovichkorp.chemmod.core.gas.GasField;
 import io.github.antonovichkorp.chemmod.core.gas.GasMolecularAmount;
@@ -105,6 +106,17 @@ public final class WorldGasField {
     /** Graph-identified cell composition, used by chemistry and structural persistence. */
     public java.util.List<GasMolecularAmount> molecularContentsIn(GasCell cell) {
         return field.molecularContents(cell);
+    }
+
+    /**
+     * Dry-air reference mixture plus the cell's actual gas inventory, for concentration readouts.
+     * The background is calculated rather than stored in the sparse field.
+     */
+    public Map<String, Double> atmosphereCompositionAt(BlockPos pos) {
+        return GasAtmosphere.moleFractions(
+            contentsIn(cellOf(pos)),
+            CELL_SIZE_METRES * CELL_SIZE_METRES * CELL_SIZE_METRES,
+            AMBIENT_TEMPERATURE_KELVIN);
     }
 
     /** Total moles of every species at a position, for readouts and rendering. */
