@@ -116,7 +116,8 @@ public final class WorldGasField {
         return GasAtmosphere.moleFractions(
             contentsIn(cellOf(pos)),
             CELL_SIZE_METRES * CELL_SIZE_METRES * CELL_SIZE_METRES,
-            AMBIENT_TEMPERATURE_KELVIN);
+            AMBIENT_TEMPERATURE_KELVIN,
+            GasAtmosphere.STANDARD_PRESSURE_PASCALS);
     }
 
     /** Total moles of every species at a position, for readouts and rendering. */
