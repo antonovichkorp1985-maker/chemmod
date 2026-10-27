@@ -11,11 +11,12 @@
 - World gas field is attached to each level and serializes through its codec. CI covers graph persistence and refuses ignition without a source or from a different cell.
 - Added operator-only finite-reference-sample tools for real-pack exercising: `/chem gas release <player> <reference-substance> <moles>` puts a named catalog molecule into that player's current world-field cell; `/chem gas inspect <player>` reports graph witnesses, moles, ideal-gas volume fraction/ppm against a dry-air reference inventory, and the resulting oxygen fraction. This is a concentration diagnostic, not a toxic-dose verdict. These are explicit test/admin injection and inspection commands, not a tank implementation, leak simulator, arbitrary-graph designer, or release of Stage-B vessel work.
 - The server now checks each player's dry-air-relative oxygen fraction once per gas-field step. Below the existing 19.5% oxygen-deficient-atmosphere boundary, it applies a brief vanilla Weakness effect as a gameplay warning; normal dry air does not trigger it. A world GameTest covers both sides of the boundary. This is not a chlorine dose model, health-damage model, or protective-equipment simulation.
+- Added a redstone-powered gas exhaust block. When powered, it applies the existing first-order sink mechanism to every tracked gas in its coarse 4 m cell, independent of molecular identity; this models an exhaust boundary rather than a selective sorbent. The block is craftable and its active state is visible. A GameTest verifies removal without relying on the sky-vent path.
 
 ## Explicit limits — not completed by this candidate
 
 - C1 remains incomplete. The player effect currently covers only oxygen displacement below the established 19.5% boundary. `/chem gas inspect` estimates concentrations against a fixed-volume dry standard-air inventory; humidity, pressure-regulated room displacement, cumulative exposure, and localized weather are not modeled. No chlorine exposure effect, health damage, mask, or filter is active. A chemical-specific dose/exposure rule and its source data must be specified rather than guessed.
-- Sky-visible cells exchange with ambient air. There is no block-based room fan/ventilation machine, and the gas field does not store background air as explicit molecular moles. The test command injects reference gases; it does not model a tank leak.
+- Sky-visible cells exchange with ambient air. The powered exhaust is cell-local and removes all tracked species to an implicit outside reservoir; it has no duct network, measured fan curve, or pressure-regulated replacement-air flow. The gas field does not store background air as explicit molecular moles, and this block is not a selective chemical scrubber or replaceable filter. The test command injects reference gases; it does not model a tank leak.
 - C2 currently verifies balanced in-cell water production after an in-cell fire/lava trigger. It does **not** enforce a validated H2/air LEL/UEL envelope, model a closed-room blast, apply volume-scaled entity damage, or budget block destruction. The current graph-derived Jones approximation is not validated for hydrogen's measured flammability range, so it must not be passed off as an accurate H2 LEL check. The existing Stage-B tank/`ClosedVessel` remains formula-only and unchanged.
 - The 500 K gate is not a measured world temperature. A full ambient-air inventory, local temperature/pressure field, explosion energetics, and source/leak model require separate physical contracts; none are inferred here.
 - The solver runs at 1 Hz and checks world ignition blocks in each occupied cell. The 200-active-cell `<2 ms/tick` target still requires an owner Spark profile on the target pack/hardware.
@@ -25,7 +26,7 @@
 
 - GitHub CI run `40424603260` passed on `ca2d7e7`, including the full build, core tests, world GameTests, checksum generation, and CI artifact upload. `GasAtmosphereTest` has 4 tests. Earlier CI runs caught and corrected the Java/Kotlin default-argument bridge mismatch and an invalid GameTest mock-player call. The Release workflow was skipped; no release was created.
 - The `/chem gas release` and `/chem gas inspect` commands below exercise and report graph identity and dry-air-relative concentrations. The integrated real-pack review is scheduled after M0–M4 implementation is complete; the diagnostic does not claim chlorine exposure effects or an explosion model.
-- Remaining M4 implementation scope includes exposure effects, block-based ventilation/scrubbing, a validated LEL/explosion envelope, and target-pack performance profiling. The integrated M0–M4 real-pack review is scheduled after this implementation work is complete; F2 profiling remains an engineering task to include in that pass.
+- Remaining M4 implementation scope includes validated chemical-specific exposure effects and protective equipment, a measured/ducted ventilation and selective-scrubbing model, a validated LEL/explosion envelope, and target-pack performance profiling. The integrated M0–M4 real-pack review is scheduled after this implementation work is complete; F2 profiling remains an engineering task to include in that pass.
 
 ### Minimal world-field test commands
 
@@ -38,4 +39,13 @@ Run as an operator on a disposable copied world. These commands use names from t
 /chem gas release @s oxygen 1
 ```
 
-The inspect/release feedback reports the cell's minimum block-coordinate origin. In a disposable area, use `originX+1`, `originY`, `originZ+1` for netherrack and `originX+1`, `originY+1`, `originZ+1` for a supported fire, keeping it off the player while inside the same cell. In this build the expected result is that graph-identified H2 and O2 are consumed according to the ordinary balanced rule and H2O appears; do not expect an explosion or treat these quantities as an LEL demonstration. Use a fresh cell without a fire for the refusal check, and another with fire at least one cell away to test locality. Never run these injection tests in a valued world without a backup.
+For an exhaust check, use a separate covered cell and inject CO₂. Substitute numeric block coordinates for the expressions below (Minecraft commands do not evaluate coordinate arithmetic); place the exhaust and adjacent redstone block inside that same 4 m cell:
+
+```text
+/chem gas release @s carbon_dioxide 100
+/setblock <originX+1> <originY+1> <originZ+1> chemmod:gas_exhaust
+/setblock <originX+2> <originY+1> <originZ+1> minecraft:redstone_block
+/chem gas inspect @s
+```
+
+Wait several gas-field steps and inspect again; the modeled CO₂ amount should decline. This block removes all tracked gases to an implicit outside boundary, so it is not a selective filter. The inspect/release feedback reports the cell's minimum block-coordinate origin. In a disposable area, use `originX+1`, `originY`, `originZ+1` for netherrack and `originX+1`, `originY+1`, `originZ+1` for a supported fire, keeping it off the player while inside the same cell. In this build the expected result is that graph-identified H2 and O2 are consumed according to the ordinary balanced rule and H2O appears; do not expect an explosion or treat these quantities as an LEL demonstration. Use a fresh cell without a fire for the refusal check, and another with fire at least one cell away to test locality. Never run these injection tests in a valued world without a backup.

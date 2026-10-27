@@ -71,6 +71,11 @@ public final class ChemItems {
         () -> new BlockItem(ChemBlocks.GAS_TANK.get(), new Item.Properties())
     );
 
+    public static final DeferredHolder<Item, BlockItem> GAS_EXHAUST = ITEMS.register(
+        "gas_exhaust",
+        () -> new BlockItem(ChemBlocks.GAS_EXHAUST.get(), new Item.Properties())
+    );
+
     public static final DeferredHolder<Item, BlockItem> ORE_WASHER = ITEMS.register(
         "ore_washer",
         () -> new BlockItem(ChemBlocks.ORE_WASHER.get(), new Item.Properties())
@@ -163,6 +168,7 @@ public final class ChemItems {
                 output.accept(new ItemStack(NATIVE_COPPER_ORE.get()));
                 output.accept(copperStorageBlockStack(CopperStorageBlockEntity.defaultBatch()));
                 output.accept(new ItemStack(STONE_MORTAR.get()));
+                output.accept(new ItemStack(GAS_EXHAUST.get()));
                 output.accept(new ItemStack(ORE_WASHER.get()));
                 output.accept(new ItemStack(ORE_SEPARATOR.get()));
                 output.accept(new ItemStack(REFRACTORY_FURNACE.get()));

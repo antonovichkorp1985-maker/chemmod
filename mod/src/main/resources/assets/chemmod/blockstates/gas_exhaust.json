@@ -1,0 +1,6 @@
+{
+  "variants": {
+    "powered=false": { "model": "chemmod:block/gas_exhaust_off" },
+    "powered=true": { "model": "chemmod:block/gas_exhaust_on" }
+  }
+}

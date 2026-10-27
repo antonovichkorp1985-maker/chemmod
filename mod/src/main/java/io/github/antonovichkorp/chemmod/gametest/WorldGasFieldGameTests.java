@@ -4,6 +4,8 @@ import io.github.antonovichkorp.chemmod.ChemMod;
 import io.github.antonovichkorp.chemmod.core.Molecule;
 import io.github.antonovichkorp.chemmod.core.gas.GasCell;
 import io.github.antonovichkorp.chemmod.core.gas.GasMolecularAmount;
+import io.github.antonovichkorp.chemmod.content.ChemBlocks;
+import io.github.antonovichkorp.chemmod.content.GasExhaustBlock;
 import io.github.antonovichkorp.chemmod.gas.ChemAttachments;
 import io.github.antonovichkorp.chemmod.gas.GasExposureEffects;
 import io.github.antonovichkorp.chemmod.gas.WorldGasField;
@@ -62,6 +64,33 @@ public class WorldGasFieldGameTests {
             "oxygen-deficient air did not activate the living-entity warning");
         helper.assertTrue(entity.hasEffect(net.minecraft.world.effect.MobEffects.WEAKNESS),
             "oxygen-deficient air did not apply the short Weakness warning effect");
+        helper.succeed();
+    }
+
+    @GameTest(template = "chemical_reactor_batch", timeoutTicks = 60)
+    public static void poweredExhaustRemovesGasFromItsCoarseWorldCell(GameTestHelper helper) {
+        WorldGasField gas = helper.getLevel().getData(ChemAttachments.GAS_FIELD.get());
+        BlockPos pos = helper.absolutePos(HERE);
+        gas.release(pos, Map.of("CO2", 100.0));
+        GasCell cell = gas.cellOf(pos);
+        BlockPos corner = WorldGasField.representativeBlock(cell);
+        helper.getLevel().setBlock(corner.above(), Blocks.STONE.defaultBlockState(), 3);
+        BlockPos ventPos = corner.offset(1, 0, 1);
+        helper.getLevel().setBlock(ventPos, ChemBlocks.GAS_EXHAUST.get().defaultBlockState(), 3);
+        helper.getLevel().setBlock(ventPos.above(), Blocks.REDSTONE_BLOCK.defaultBlockState(), 3);
+        helper.assertTrue(helper.getLevel().getBlockState(ventPos).getValue(GasExhaustBlock.POWERED),
+            "the exhaust did not detect adjacent redstone power");
+        helper.assertTrue(!helper.getLevel().canSeeSky(corner),
+            "the exhaust test cell is still open to the sky, so powered extraction is ambiguous");
+
+        double before = gas.field().totalMoles("CO2");
+        gas.advance(helper.getLevel(), 1.0);
+        double after = gas.field().totalMoles("CO2");
+
+        helper.assertTrue(after < before,
+            "the powered exhaust did not remove gas from the world-field boundary");
+        helper.assertTrue(after > 0.0,
+            "one coarse-cell exhaust step removed the entire gas inventory");
         helper.succeed();
     }
 
