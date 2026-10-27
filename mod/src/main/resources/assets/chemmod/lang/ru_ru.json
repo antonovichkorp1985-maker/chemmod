@@ -258,7 +258,6 @@
   "substance.chemmod.methylamine": "Метиламин",
   "substance.chemmod.acetonitrile": "Ацетонитрил",
   "block.chemmod.gas_tank": "Газовый бак",
-  "block.chemmod.gas_exhaust": "Газовая вытяжка с редстоун-питанием",
   "message.chemmod.gas_tank.readout": "Давление в баке %s кПа, температура %s K",
   "substance.chemmod.bromobenzene": "Бромбензол",
   "substance.chemmod.carbon_tetrachloride": "Тетрахлорметан",

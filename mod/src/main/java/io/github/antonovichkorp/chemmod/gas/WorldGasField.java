@@ -8,8 +8,6 @@ import io.github.antonovichkorp.chemmod.core.gas.GasField;
 import io.github.antonovichkorp.chemmod.core.gas.GasMolecularAmount;
 import io.github.antonovichkorp.chemmod.core.gas.GasPhase;
 import io.github.antonovichkorp.chemmod.core.reaction.ReactionEnvironment;
-import io.github.antonovichkorp.chemmod.content.ChemBlocks;
-import io.github.antonovichkorp.chemmod.content.GasExhaustBlock;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -27,9 +25,10 @@ import java.util.Set;
  * saved with the world.
  *
  * <p>This is the piece that turns the core solver into something a player can act on. Gas released
- * into it stays in the world instead of vanishing with the block that held it; it diffuses and
- * settles by density. A cell that can see the sky exchanges with the atmosphere, while a powered
- * exhaust block creates a coarse-cell boundary sink. Both decisions come from world state.
+ * into it stays in the world instead of vanishing with the block that held it; it diffuses, it
+ * settles by density, and a cell that can see the sky ventilates to the atmosphere. Ventilation is
+ * decided from the world rather than configured, because "is this open to the outside" is a fact
+ * about the terrain and not a parameter.
  */
 public final class WorldGasField {
     /** Bench cell of §5 of the plan, in metres; a Minecraft block is one metre. */
@@ -40,8 +39,6 @@ public final class WorldGasField {
 
     /** Air exchange rate per second for a cell that can see the sky. */
     public static final double OPEN_AIR_EXCHANGES_PER_SECOND = 0.25;
-    /** Coarse-cell exhaust removal coefficient; a gameplay-scale boundary condition, not an ACH claim. */
-    public static final double POWERED_EXHAUST_REMOVAL_PER_SECOND = 0.02;
 
     public static final Codec<WorldGasField> CODEC =
         CompoundTag.CODEC.xmap(WorldGasField::fromTag, WorldGasField::toTag);
@@ -132,13 +129,10 @@ public final class WorldGasField {
     }
 
     /**
-     * Advance the field. A cell exchanges with the sky when its representative block is loaded and
-     * can see the sky; powered exhaust blocks remove gas from their own coarse cell. Unloaded blocks
-     * are ignored rather than force-loaded.
+     * Advance the field. A cell ventilates when its representative block is loaded and can see the
+     * sky; unloaded cells are left alone rather than assumed open.
      */
     public void advance(Level level, double seconds) {
-        GasCellWorldFeatures worldFeatures = scanCellFeatures(level);
-        Set<GasCell> exhaustedCells = worldFeatures.poweredExhaustCells();
         field.advance(
             seconds,
             properties,
@@ -147,11 +141,11 @@ public final class WorldGasField {
                 return level.isLoaded(pos) && level.canSeeSky(pos);
             },
             OPEN_AIR_EXCHANGES_PER_SECOND,
-            (cell, species) -> exhaustedCells.contains(cell) ? POWERED_EXHAUST_REMOVAL_PER_SECOND : 0.0,
+            (cell, species) -> 0.0,
             GasField.DEFAULT_BUOYANT_DRIFT_METRES_PER_SECOND);
 
         field.applyEnvironmentalReactions(seconds, (cell, contents) -> {
-            if (!worldFeatures.ignitedCells().contains(cell)) return null;
+            if (!hasIgnitionSource(level, cell)) return null;
 
             double totalMoles = contents.stream().mapToDouble(GasMolecularAmount::getMoles).sum();
             if (totalMoles <= 0.0) return null;
@@ -162,41 +156,26 @@ public final class WorldGasField {
     }
 
     /**
-     * Scan each occupied cell once for its world-side controls. The same scan finds powered exhaust
-     * boundaries and supported ignition blocks, while never force-loading any part of a cell.
+     * A cell reacts when any loaded block in its 4 m cube is an ignition source. Checking only the
+     * minimum-corner representative made ordinary player-placed fires elsewhere in the same cell
+     * chemically invisible. Stop at the first source and never force-load a neighbouring chunk.
      */
-    private GasCellWorldFeatures scanCellFeatures(Level level) {
-        Set<GasCell> exhausted = new LinkedHashSet<>();
-        Set<GasCell> ignited = new LinkedHashSet<>();
+    private static boolean hasIgnitionSource(Level level, GasCell cell) {
+        BlockPos corner = representativeBlock(cell);
         int size = (int) CELL_SIZE_METRES;
-        for (GasCell cell : field.occupiedCells()) {
-            BlockPos corner = representativeBlock(cell);
-            boolean foundExhaust = false;
-            boolean foundIgnition = false;
-            for (int dx = 0; dx < size && !(foundExhaust && foundIgnition); dx++) {
-                for (int dy = 0; dy < size && !(foundExhaust && foundIgnition); dy++) {
-                    for (int dz = 0; dz < size; dz++) {
-                        BlockPos pos = corner.offset(dx, dy, dz);
-                        if (!level.isLoaded(pos)) continue;
-                        var state = level.getBlockState(pos);
-                        if (!foundExhaust && state.is(ChemBlocks.GAS_EXHAUST.get()) &&
-                                state.getValue(GasExhaustBlock.POWERED)) {
-                            exhausted.add(cell);
-                            foundExhaust = true;
-                        }
-                        if (!foundIgnition && (state.is(Blocks.FIRE) || state.is(Blocks.SOUL_FIRE) ||
-                                state.is(Blocks.LAVA))) {
-                            ignited.add(cell);
-                            foundIgnition = true;
-                        }
+        for (int dx = 0; dx < size; dx++) {
+            for (int dy = 0; dy < size; dy++) {
+                for (int dz = 0; dz < size; dz++) {
+                    BlockPos pos = corner.offset(dx, dy, dz);
+                    if (!level.isLoaded(pos)) continue;
+                    var state = level.getBlockState(pos);
+                    if (state.is(Blocks.FIRE) || state.is(Blocks.SOUL_FIRE) || state.is(Blocks.LAVA)) {
+                        return true;
                     }
                 }
             }
         }
-        return new GasCellWorldFeatures(exhausted, ignited);
-    }
-
-    private record GasCellWorldFeatures(Set<GasCell> poweredExhaustCells, Set<GasCell> ignitedCells) {
+        return false;
     }
 
     /** The block at the minimum corner of a cell; cell coordinates are in cells, not blocks. */

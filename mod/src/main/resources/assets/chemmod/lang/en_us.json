@@ -258,7 +258,6 @@
   "substance.chemmod.methylamine": "Ch5n",
   "substance.chemmod.acetonitrile": "C2h3n",
   "block.chemmod.gas_tank": "Gas Tank",
-  "block.chemmod.gas_exhaust": "Powered Gas Exhaust",
   "message.chemmod.gas_tank.readout": "Tank pressure %s kPa, temperature %s K",
   "substance.chemmod.bromobenzene": "Bromobenzene",
   "substance.chemmod.carbon_tetrachloride": "Carbon tetrachloride",
