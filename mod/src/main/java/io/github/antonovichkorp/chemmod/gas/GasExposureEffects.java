@@ -2,9 +2,9 @@ package io.github.antonovichkorp.chemmod.gas;
 
 import io.github.antonovichkorp.chemmod.core.gas.GasToxicity;
 import net.minecraft.core.BlockPos;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.LivingEntity;
 
 /**
  * Maps the one currently supported acute atmosphere hazard to a vanilla player effect.
@@ -18,12 +18,12 @@ public final class GasExposureEffects {
     /** Reapply once per gas-field step; the short duration clears promptly after leaving the cell. */
     private static final int EFFECT_DURATION_TICKS = 40;
 
-    public static boolean applyOxygenDeficiency(ServerPlayer player, WorldGasField gas, BlockPos pos) {
+    public static boolean applyOxygenDeficiency(LivingEntity entity, WorldGasField gas, BlockPos pos) {
         double oxygenFraction = gas.atmosphereCompositionAt(pos).getOrDefault("O2", 0.0);
         if (!Double.isFinite(oxygenFraction) || oxygenFraction >= GasToxicity.SAFE_OXYGEN_FRACTION) {
             return false;
         }
-        player.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, EFFECT_DURATION_TICKS, 0));
+        entity.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, EFFECT_DURATION_TICKS, 0));
         return true;
     }
 

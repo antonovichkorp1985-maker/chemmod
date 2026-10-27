@@ -11,6 +11,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.NbtOps;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.block.Blocks;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 
@@ -41,15 +42,14 @@ public class WorldGasFieldGameTests {
     }
 
     @GameTest(template = "chemical_reactor_batch", timeoutTicks = 60)
-    public static void oxygenDeficiencyAppliesAPlayerWarningEffect(GameTestHelper helper) {
+    public static void oxygenDeficiencyAppliesAWarningEffect(GameTestHelper helper) {
         WorldGasField gas = helper.getLevel().getData(ChemAttachments.GAS_FIELD.get());
         BlockPos pos = helper.absolutePos(HERE);
-        var player = helper.makeMockPlayer();
-        player.setPos(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
+        var entity = helper.spawn(EntityType.ZOMBIE, HERE);
 
-        helper.assertTrue(!GasExposureEffects.applyOxygenDeficiency(player, gas, pos),
+        helper.assertTrue(!GasExposureEffects.applyOxygenDeficiency(entity, gas, pos),
             "normal dry air was classified as oxygen deficient");
-        helper.assertTrue(!player.hasEffect(net.minecraft.world.effect.MobEffects.WEAKNESS),
+        helper.assertTrue(!entity.hasEffect(net.minecraft.world.effect.MobEffects.WEAKNESS),
             "normal dry air applied the oxygen-deficiency warning");
 
         // One 4 m cell holds about 2,660 mol of dry air at 293.15 K and 1 atm;
@@ -58,9 +58,9 @@ public class WorldGasFieldGameTests {
         double oxygenFraction = gas.atmosphereCompositionAt(pos).getOrDefault("O2", 0.0);
         helper.assertTrue(oxygenFraction < 0.195,
             "the test mixture did not cross the oxygen-deficient-atmosphere boundary");
-        helper.assertTrue(GasExposureEffects.applyOxygenDeficiency(player, gas, pos),
-            "oxygen-deficient air did not activate the player warning");
-        helper.assertTrue(player.hasEffect(net.minecraft.world.effect.MobEffects.WEAKNESS),
+        helper.assertTrue(GasExposureEffects.applyOxygenDeficiency(entity, gas, pos),
+            "oxygen-deficient air did not activate the living-entity warning");
+        helper.assertTrue(entity.hasEffect(net.minecraft.world.effect.MobEffects.WEAKNESS),
             "oxygen-deficient air did not apply the short Weakness warning effect");
         helper.succeed();
     }
