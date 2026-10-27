@@ -22,8 +22,8 @@
 
 ## CI and owner acceptance
 
-- Latest completed code CI before this command addition: run `40208054225` on `b5b55cc` passed, including core tests and NeoForge GameTests. The command addition and current release candidate must pass a fresh CI run before publication.
-- Owner's real-pack test should use the new commands below and record launch, RU/EN commands, chlorine transport/visibility, hydrogen rule output, save/restart, and any logs. An absent chlorine debuff or absent explosion is expected in this slice and must be recorded as a known gap, not as pass for full C1/C2.
+- GitHub CI run `40423379502` passed on `76848a4`, including the full build, `GasAtmosphereTest` (4 tests), core tests, GameTests, checksum generation, and CI artifact upload. The preceding run `40423236056` caught a Java/Kotlin default-argument bridge mismatch; the Java call now supplies pressure explicitly. The Release workflow was skipped; no release was created.
+- The `/chem gas release` and `/chem gas inspect` commands below exercise and report graph identity and dry-air-relative concentrations. The integrated real-pack review is scheduled after M0–M4 implementation is complete; the diagnostic does not claim chlorine exposure effects or an explosion model.
 - Remaining M4 implementation scope includes exposure effects, block-based ventilation/scrubbing, a validated LEL/explosion envelope, and target-pack performance profiling. The integrated M0–M4 real-pack review is scheduled after this implementation work is complete; F2 profiling remains an engineering task to include in that pass.
 
 ### Minimal world-field test commands
