@@ -5,6 +5,7 @@ import io.github.antonovichkorp.chemmod.core.Molecule;
 import io.github.antonovichkorp.chemmod.core.gas.GasCell;
 import io.github.antonovichkorp.chemmod.core.gas.GasMolecularAmount;
 import io.github.antonovichkorp.chemmod.gas.ChemAttachments;
+import io.github.antonovichkorp.chemmod.gas.GasExposureEffects;
 import io.github.antonovichkorp.chemmod.gas.WorldGasField;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
@@ -36,6 +37,31 @@ public class WorldGasFieldGameTests {
             "gas released into the level was not there to be read back");
         helper.assertTrue(gas.speciesAt(helper.absolutePos(HERE)).contains("CO2"),
             "the released species was not reported at its position");
+        helper.succeed();
+    }
+
+    @GameTest(template = "chemical_reactor_batch", timeoutTicks = 60)
+    public static void oxygenDeficiencyAppliesAPlayerWarningEffect(GameTestHelper helper) {
+        WorldGasField gas = helper.getLevel().getData(ChemAttachments.GAS_FIELD.get());
+        BlockPos pos = helper.absolutePos(HERE);
+        var player = helper.makeMockPlayer();
+        player.setPos(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
+
+        helper.assertTrue(!GasExposureEffects.applyOxygenDeficiency(player, gas, pos),
+            "normal dry air was classified as oxygen deficient");
+        helper.assertTrue(!player.hasEffect(net.minecraft.world.effect.MobEffects.WEAKNESS),
+            "normal dry air applied the oxygen-deficiency warning");
+
+        // One 4 m cell holds about 2,660 mol of dry air at 293.15 K and 1 atm;
+        // 400 mol of nitrogen lowers the calculated oxygen fraction below 19.5%.
+        gas.release(pos, Map.of("N2", 400.0));
+        double oxygenFraction = gas.atmosphereCompositionAt(pos).getOrDefault("O2", 0.0);
+        helper.assertTrue(oxygenFraction < 0.195,
+            "the test mixture did not cross the oxygen-deficient-atmosphere boundary");
+        helper.assertTrue(GasExposureEffects.applyOxygenDeficiency(player, gas, pos),
+            "oxygen-deficient air did not activate the player warning");
+        helper.assertTrue(player.hasEffect(net.minecraft.world.effect.MobEffects.WEAKNESS),
+            "oxygen-deficient air did not apply the short Weakness warning effect");
         helper.succeed();
     }
 
