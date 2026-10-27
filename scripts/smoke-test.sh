@@ -254,16 +254,18 @@ echo "NeoForge test jar: $mod_jar"
 ./scripts/server-smoke-test.sh standalone
 ./scripts/server-smoke-test.sh create
 
-# Run ChemMod's own in-world regression tests in both supported runtimes. The
-# GameTest run configuration filters discovery to the chemmod namespace, so an
-# optional Create runtime exercises the actual kinetic exhaust without adopting
-# Create's unrelated upstream fixtures as part of this project's release gate.
-# These checks remain supplementary to the owner player checklist and do not
-# award discovery or simulate survival through an in-game command path.
-echo "==> Running ChemMod GameTests in standalone runtime"
-./gradlew --no-daemon -Pchemmod.createRuntime=false :mod:runGameTestServer
-
+# Run ChemMod's in-world regression tests in both supported runtimes. Each
+# GameTest run starts from a clean world so the standalone pass cannot strip
+# Create registry entries from the Create-enabled fixture (or vice versa). The
+# run configuration filters discovery to the chemmod namespace, keeping
+# unrelated upstream Create fixtures out of this project's release gate.
+# These tests remain supplementary to the owner player checklist.
+rm -rf mod/run/world
 echo "==> Running ChemMod GameTests with optional Create integration"
 ./gradlew --no-daemon :mod:runGameTestServer
+
+rm -rf mod/run/world
+echo "==> Running ChemMod GameTests in standalone runtime"
+./gradlew --no-daemon -Pchemmod.createRuntime=false :mod:runGameTestServer
 
 echo "==> Smoke test passed"
