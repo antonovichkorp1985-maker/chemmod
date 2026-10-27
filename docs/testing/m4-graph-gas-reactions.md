@@ -24,7 +24,7 @@
 
 ## CI and owner acceptance
 
-- GitHub CI run `40425777564` passed on `6b46fdd`, including the full build, core tests, world GameTests, checksum generation, and CI artifact upload. The gas GameTests now cover oxygen-deficiency warning behavior and powered exhaust in a covered cell. `GasAtmosphereTest` has 4 tests. Earlier CI runs caught and corrected the Java/Kotlin default-argument bridge mismatch and an invalid GameTest mock-player call. The Release workflow was skipped; no release was created.
+- GitHub CI run `40427585280` passed on `1172a88`, including the full build, core tests, world GameTests, checksum generation, and CI artifact upload. The gas GameTests cover oxygen-deficiency warning behavior and powered exhaust activation/removal in the fixture cell. `GasAtmosphereTest` has 4 tests. Earlier CI runs caught and corrected the Java/Kotlin default-argument bridge mismatch and an invalid GameTest mock-player call. The Release workflow was skipped; no release was created.
 - The `/chem gas release` and `/chem gas inspect` commands below exercise and report graph identity and dry-air-relative concentrations. The integrated real-pack review is scheduled after M0–M4 implementation is complete; the diagnostic does not claim chlorine exposure effects or an explosion model.
 - Remaining M4 implementation scope includes validated chemical-specific exposure effects and protective equipment, a measured/ducted ventilation and selective-scrubbing model, a validated LEL/explosion envelope, and target-pack performance profiling. The integrated M0–M4 real-pack review is scheduled after this implementation work is complete; F2 profiling remains an engineering task to include in that pass.
 
