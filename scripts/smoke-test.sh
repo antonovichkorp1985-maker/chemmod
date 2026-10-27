@@ -246,6 +246,15 @@ echo "NeoForge test jar: $mod_jar"
 # It remains supplementary to the owner player checklist and does not award
 # discovery or simulate survival through an in-game command path.
 echo "==> Running ChemMod GameTests in standalone runtime"
-./gradlew --no-daemon -Pchemmod.createRuntime=false :mod:runGameTestServer
+if ! ./gradlew --no-daemon -Pchemmod.createRuntime=false :mod:runGameTestServer; then
+    # The Gradle task's top-level exception often omits the individual GameTest failure.
+    # Publish the runtime log into the CI step output so the smoke gate is diagnosable.
+    gametest_log="mod/run/logs/latest.log"
+    if [[ -f "$gametest_log" ]]; then
+        echo "==> GameTest runtime log (last 240 lines)"
+        tail -n 240 "$gametest_log"
+    fi
+    exit 1
+fi
 
 echo "==> Smoke test passed"
