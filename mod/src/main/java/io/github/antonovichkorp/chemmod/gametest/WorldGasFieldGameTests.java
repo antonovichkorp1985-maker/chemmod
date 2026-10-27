@@ -8,11 +8,18 @@ import io.github.antonovichkorp.chemmod.gas.ChemAttachments;
 import io.github.antonovichkorp.chemmod.gas.GasExposureEffects;
 import io.github.antonovichkorp.chemmod.gas.WorldGasField;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.gametest.framework.GameTest;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.neoforged.fml.ModList;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 
 import java.util.Map;
@@ -39,6 +46,76 @@ public class WorldGasFieldGameTests {
         helper.assertTrue(gas.speciesAt(helper.absolutePos(HERE)).contains("CO2"),
             "the released species was not reported at its position");
         helper.succeed();
+    }
+
+    /**
+     * Runs in the standalone GameTest suite as a skip, then in the optional-Create suite as a real
+     * shaft-to-world integration test. The creative motor is a deterministic test power source; the
+     * machine itself is only driven through its connected vertical Create kinetic network.
+     */
+    @GameTest(template = "chemical_reactor_batch", timeoutTicks = 100)
+    public static void connectedCreateShaftDrivesWorldGasExhaust(GameTestHelper helper) {
+        if (!ModList.get().isLoaded("create")) {
+            helper.succeed();
+            return;
+        }
+
+        Block motor = BuiltInRegistries.BLOCK.get(ResourceLocation.fromNamespaceAndPath("create", "creative_motor"));
+        Block exhaust = BuiltInRegistries.BLOCK.get(
+            ResourceLocation.fromNamespaceAndPath(ChemMod.MOD_ID, "kinetic_gas_exhaust"));
+        helper.assertTrue(motor != Blocks.AIR && exhaust != Blocks.AIR,
+            "Create is loaded but the kinetic gas exhaust or creative motor is not registered");
+
+        BlockPos exhaustPos = helper.absolutePos(HERE);
+        BlockPos motorPos = exhaustPos.below();
+        var level = helper.getLevel();
+        level.setBlock(exhaustPos, exhaust.defaultBlockState(), 3);
+        helper.assertTrue(level.getBlockEntity(exhaustPos) instanceof io.github.antonovichkorp.chemmod.gas.GasExhaustSource,
+            "the registered gas exhaust block entity does not expose its world ventilation contract");
+
+        WorldGasField gas = level.getData(ChemAttachments.GAS_FIELD.get());
+        GasCell cell = gas.cellOf(exhaustPos);
+        BlockPos corner = WorldGasField.representativeBlock(cell);
+        int cellSize = (int) WorldGasField.CELL_SIZE_METRES;
+        // Roof the target and neighbouring horizontal cells so ambient sky exchange cannot mask
+        // whether the shaft-driven sink is responsible for the measured removal.
+        for (int cellX = -1; cellX <= 1; cellX++) {
+            for (int cellZ = -1; cellZ <= 1; cellZ++) {
+                for (int dx = 0; dx < cellSize; dx++) {
+                    for (int dz = 0; dz < cellSize; dz++) {
+                        level.setBlock(corner.offset(cellX * cellSize + dx, cellSize, cellZ * cellSize + dz),
+                            Blocks.STONE.defaultBlockState(), 3);
+                    }
+                }
+            }
+        }
+
+        gas.release(exhaustPos, Map.of("N2", 100.0));
+        double beforeUnpoweredStep = gas.field().totalMoles();
+        gas.advance(level, 1.0);
+        helper.assertTrue(gas.field().totalMoles() >= beforeUnpoweredStep - 0.1,
+            "an unpowered exhaust removed more gas than the sealed-cell numerical tolerance allows");
+        helper.assertTrue(((io.github.antonovichkorp.chemmod.gas.GasExhaustSource)
+            level.getBlockEntity(exhaustPos)).gasRemovalRatePerSecond() == 0.0,
+            "an unpowered exhaust reported a positive removal rate");
+
+        BlockState motorState = motor.defaultBlockState();
+        helper.assertTrue(motorState.hasProperty(BlockStateProperties.FACING),
+            "Create creative motor no longer exposes its expected directional shaft state");
+        level.setBlock(motorPos, motorState.setValue(BlockStateProperties.FACING, Direction.UP), 3);
+        helper.startSequence()
+            .thenIdle(20)
+            .thenExecute(() -> {
+                var source = (io.github.antonovichkorp.chemmod.gas.GasExhaustSource)
+                    level.getBlockEntity(exhaustPos);
+                helper.assertTrue(source.gasRemovalRatePerSecond() > 0.0,
+                    "a connected Create shaft did not activate the mechanical gas exhaust");
+                double beforePoweredStep = gas.field().totalMoles();
+                gas.advance(level, 1.0);
+                helper.assertTrue(gas.field().totalMoles() < beforePoweredStep,
+                    "the powered mechanical exhaust did not remove gas from the world field");
+            })
+            .thenSucceed();
     }
 
     @GameTest(template = "chemical_reactor_batch", timeoutTicks = 60)

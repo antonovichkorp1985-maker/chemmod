@@ -133,6 +133,7 @@ public final class WorldGasField {
      * sky; unloaded cells are left alone rather than assumed open.
      */
     public void advance(Level level, double seconds) {
+        WorldCellFeatures cellFeatures = scanCellFeatures(level);
         field.advance(
             seconds,
             properties,
@@ -141,11 +142,11 @@ public final class WorldGasField {
                 return level.isLoaded(pos) && level.canSeeSky(pos);
             },
             OPEN_AIR_EXCHANGES_PER_SECOND,
-            (cell, species) -> 0.0,
+            (cell, species) -> cellFeatures.exhaustRatesPerSecond().getOrDefault(cell, 0.0D),
             GasField.DEFAULT_BUOYANT_DRIFT_METRES_PER_SECOND);
 
         field.applyEnvironmentalReactions(seconds, (cell, contents) -> {
-            if (!hasIgnitionSource(level, cell)) return null;
+            if (!cellFeatures.ignitedCells().contains(cell)) return null;
 
             double totalMoles = contents.stream().mapToDouble(GasMolecularAmount::getMoles).sum();
             if (totalMoles <= 0.0) return null;
@@ -156,27 +157,43 @@ public final class WorldGasField {
     }
 
     /**
-     * A cell reacts when any loaded block in its 4 m cube is an ignition source. Checking only the
-     * minimum-corner representative made ordinary player-placed fires elsewhere in the same cell
-     * chemically invisible. Stop at the first source and never force-load a neighbouring chunk.
+     * Scan the loaded portion of each occupied gas cell for environmental ignition and kinetic
+     * ventilation. This deliberately never force-loads neighbouring chunks. The common gas-field
+     * code sees only the small GasExhaustSource contract, not Create's optional kinetic API.
      */
-    private static boolean hasIgnitionSource(Level level, GasCell cell) {
-        BlockPos corner = representativeBlock(cell);
+    private WorldCellFeatures scanCellFeatures(Level level) {
+        Set<GasCell> ignitedCells = new LinkedHashSet<>();
+        Map<GasCell, Double> exhaustRatesPerSecond = new LinkedHashMap<>();
         int size = (int) CELL_SIZE_METRES;
-        for (int dx = 0; dx < size; dx++) {
-            for (int dy = 0; dy < size; dy++) {
-                for (int dz = 0; dz < size; dz++) {
-                    BlockPos pos = corner.offset(dx, dy, dz);
-                    if (!level.isLoaded(pos)) continue;
-                    var state = level.getBlockState(pos);
-                    if (state.is(Blocks.FIRE) || state.is(Blocks.SOUL_FIRE) || state.is(Blocks.LAVA)) {
-                        return true;
+
+        for (GasCell cell : field.occupiedCells()) {
+            BlockPos corner = representativeBlock(cell);
+            boolean ignited = false;
+            double exhaustRate = 0.0D;
+            for (int dx = 0; dx < size; dx++) {
+                for (int dy = 0; dy < size; dy++) {
+                    for (int dz = 0; dz < size; dz++) {
+                        BlockPos pos = corner.offset(dx, dy, dz);
+                        if (!level.isLoaded(pos)) continue;
+                        var state = level.getBlockState(pos);
+                        if (state.is(Blocks.FIRE) || state.is(Blocks.SOUL_FIRE) || state.is(Blocks.LAVA)) {
+                            ignited = true;
+                        }
+                        if (state.hasBlockEntity()
+                            && level.getBlockEntity(pos) instanceof GasExhaustSource source) {
+                            double rate = source.gasRemovalRatePerSecond();
+                            if (Double.isFinite(rate) && rate > 0.0D) exhaustRate += rate;
+                        }
                     }
                 }
             }
+            if (ignited) ignitedCells.add(cell);
+            if (exhaustRate > 0.0D) exhaustRatesPerSecond.put(cell, exhaustRate);
         }
-        return false;
+        return new WorldCellFeatures(ignitedCells, exhaustRatesPerSecond);
     }
+
+    private record WorldCellFeatures(Set<GasCell> ignitedCells, Map<GasCell, Double> exhaustRatesPerSecond) {}
 
     /** The block at the minimum corner of a cell; cell coordinates are in cells, not blocks. */
     public static BlockPos representativeBlock(GasCell cell) {

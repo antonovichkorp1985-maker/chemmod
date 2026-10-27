@@ -413,5 +413,6 @@
   "tooltip.chemmod.reference_book.usage": "Sneak-use while holding a filled reference vial in the other hand to read its modeled properties.",
   "tooltip.chemmod.reference_book.scope": "Reports only substances participating in authored reactions; model flags are not a safety assessment.",
   "substance.chemmod.reaction_derived": "Reaction-derived species",
-  "substance.chemmod.reaction_derived_with_formula": "Reaction-derived substance: %s"
+  "substance.chemmod.reaction_derived_with_formula": "Reaction-derived substance: %s",
+  "block.chemmod.kinetic_gas_exhaust": "Kinetic Gas Exhaust"
 }

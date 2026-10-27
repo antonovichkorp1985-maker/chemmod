@@ -413,5 +413,6 @@
   "tooltip.chemmod.reference_book.usage": "Используйте с приседанием, держа заполненную эталонную колбу в другой руке, чтобы прочитать модельные свойства.",
   "tooltip.chemmod.reference_book.scope": "Отчёт только по веществам, участвующим в заданных реакциях; признаки модели не являются оценкой безопасности.",
   "substance.chemmod.reaction_derived": "Вещество из реакции",
-  "substance.chemmod.reaction_derived_with_formula": "Вещество из реакции: %s"
+  "substance.chemmod.reaction_derived_with_formula": "Вещество из реакции: %s",
+  "block.chemmod.kinetic_gas_exhaust": "Механическая газовая вытяжка"
 }

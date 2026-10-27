@@ -21,6 +21,15 @@ public final class CreateCompatBlockEntities {
             ).build(null)
         );
 
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<KineticGasExhaustBlockEntity>>
+        KINETIC_GAS_EXHAUST = BLOCK_ENTITY_TYPES.register(
+            "kinetic_gas_exhaust",
+            () -> BlockEntityType.Builder.of(
+                KineticGasExhaustBlockEntity::new,
+                CreateCompatBlocks.KINETIC_GAS_EXHAUST.get()
+            ).build(null)
+        );
+
     private CreateCompatBlockEntities() {}
 
     public static void register(IEventBus eventBus) {

@@ -107,6 +107,22 @@ jar tf "$mod_jar" | grep -q '^assets/chemmod/models/item/kinetic_ore_separator.j
     echo "Smoke-test failure: Create kinetic separator item model is missing" >&2
     exit 1
 }
+jar tf "$mod_jar" | grep -q 'integration/create/KineticGasExhaustBlock.class$' || {
+    echo "Smoke-test failure: optional Create mechanical gas exhaust block is missing" >&2
+    exit 1
+}
+jar tf "$mod_jar" | grep -q 'integration/create/KineticGasExhaustBlockEntity.class$' || {
+    echo "Smoke-test failure: optional Create mechanical gas exhaust entity is missing" >&2
+    exit 1
+}
+jar tf "$mod_jar" | grep -q '^data/chemmod/recipe/kinetic_gas_exhaust.json$' || {
+    echo "Smoke-test failure: conditional Create gas exhaust recipe is missing" >&2
+    exit 1
+}
+jar tf "$mod_jar" | grep -q '^assets/chemmod/models/item/kinetic_gas_exhaust.json$' || {
+    echo "Smoke-test failure: Create gas exhaust item model is missing" >&2
+    exit 1
+}
 if jar tf "$mod_jar" | grep -q '^com/simibubi/create/'; then
     echo "Smoke-test failure: Create classes were embedded instead of remaining optional" >&2
     exit 1
@@ -238,14 +254,16 @@ echo "NeoForge test jar: $mod_jar"
 ./scripts/server-smoke-test.sh standalone
 ./scripts/server-smoke-test.sh create
 
-# Run ChemMod's own required in-world regression tests in the standalone runtime.
-# The Create adapter has its separate headless startup smoke above; loading all of
-# Create's unrelated GameTests here makes the release gate depend on third-party
-# test fixtures (for example, upstream TestItems.storages) rather than ChemMod.
-# This still exits non-zero if ChemMod's physical reactor/gas-field tests fail.
-# It remains supplementary to the owner player checklist and does not award
-# discovery or simulate survival through an in-game command path.
+# Run ChemMod's own in-world regression tests in both supported runtimes. The
+# GameTest run configuration filters discovery to the chemmod namespace, so an
+# optional Create runtime exercises the actual kinetic exhaust without adopting
+# Create's unrelated upstream fixtures as part of this project's release gate.
+# These checks remain supplementary to the owner player checklist and do not
+# award discovery or simulate survival through an in-game command path.
 echo "==> Running ChemMod GameTests in standalone runtime"
 ./gradlew --no-daemon -Pchemmod.createRuntime=false :mod:runGameTestServer
+
+echo "==> Running ChemMod GameTests with optional Create integration"
+./gradlew --no-daemon :mod:runGameTestServer
 
 echo "==> Smoke test passed"

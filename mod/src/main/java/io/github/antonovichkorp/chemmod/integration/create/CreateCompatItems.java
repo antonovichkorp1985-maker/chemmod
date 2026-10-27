@@ -20,6 +20,11 @@ public final class CreateCompatItems {
         () -> new BlockItem(CreateCompatBlocks.KINETIC_ORE_SEPARATOR.get(), new Item.Properties())
     );
 
+    public static final DeferredHolder<Item, BlockItem> KINETIC_GAS_EXHAUST = ITEMS.register(
+        "kinetic_gas_exhaust",
+        () -> new BlockItem(CreateCompatBlocks.KINETIC_GAS_EXHAUST.get(), new Item.Properties())
+    );
+
     private CreateCompatItems() {}
 
     public static void register(IEventBus eventBus) {
@@ -30,6 +35,7 @@ public final class CreateCompatItems {
     private static void addToChemModCreativeTab(BuildCreativeModeTabContentsEvent event) {
         if (event.getTab() == ChemItems.MAIN_TAB.get()) {
             event.accept(new ItemStack(KINETIC_ORE_SEPARATOR.get()));
+            event.accept(new ItemStack(KINETIC_GAS_EXHAUST.get()));
         }
     }
 }
