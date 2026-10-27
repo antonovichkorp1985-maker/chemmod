@@ -26,6 +26,7 @@
 ## CI and owner acceptance
 
 - GitHub CI run `40424889098` passed on `efeb5ea`, including the full build, core tests, world GameTests, checksum generation, and CI artifact upload. Gas GameTests cover oxygen-deficiency warning behavior; `GasAtmosphereTest` has 4 tests. Earlier CI runs caught and corrected the Java/Kotlin default-argument bridge mismatch and an invalid GameTest mock-player call. The Release workflow was skipped; no release was created.
+- The mechanical-exhaust revision (`80a3653`) passed push CI `40432119897` and PR CI `40432127260`. The smoke suite now runs ChemMod's world GameTests in both a clean Create-enabled runtime (including the shaft-driven exhaust test) and standalone mode; release publication remains skipped.
 - The `/chem gas release` and `/chem gas inspect` commands below exercise and report graph identity and dry-air-relative concentrations. The integrated real-pack review is scheduled after M0–M4 implementation is complete; the diagnostic does not claim chlorine exposure effects or an explosion model.
 - Remaining M4 implementation scope includes validated chemical-specific exposure effects and protective equipment, a ducted ventilation and selective-scrubbing model, a validated LEL/explosion envelope, and target-pack performance profiling. The integrated M0–M4 real-pack review is scheduled after this implementation work is complete; F2 profiling remains an engineering task to include in that pass.
 
