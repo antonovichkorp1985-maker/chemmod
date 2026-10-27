@@ -249,11 +249,11 @@ echo "==> Running ChemMod GameTests in standalone runtime"
 if ! ./gradlew --no-daemon -Pchemmod.createRuntime=false :mod:runGameTestServer; then
     # The Gradle task's top-level exception often omits the individual GameTest failure.
     # Publish the runtime log into the CI step output so the smoke gate is diagnosable.
-    gametest_log="mod/run/logs/latest.log"
-    if [[ -f "$gametest_log" ]]; then
-        echo "==> GameTest runtime log (last 240 lines)"
-        tail -n 240 "$gametest_log"
-    fi
+    echo "==> GameTest runtime logs and reports"
+    while IFS= read -r runtime_log; do
+        echo "--- $runtime_log (last 240 lines) ---"
+        tail -n 240 "$runtime_log"
+    done < <(find mod/run -type f \( -name '*.log' -o -iname '*gametest*report*' \) -print 2>/dev/null)
     exit 1
 fi
 
