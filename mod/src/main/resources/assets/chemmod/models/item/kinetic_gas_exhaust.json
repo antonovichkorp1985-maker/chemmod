@@ -1,3 +1,6 @@
 {
-  "parent": "chemmod:block/kinetic_gas_exhaust"
+  "parent": "chemmod:block/kinetic_gas_exhaust",
+  "display": {
+    "gui": { "rotation": [25, 225, 0], "translation": [0, -1, 0], "scale": [0.75, 0.75, 0.75] }
+  }
 }
