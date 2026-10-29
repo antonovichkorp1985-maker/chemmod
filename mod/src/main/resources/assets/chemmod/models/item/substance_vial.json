@@ -12,5 +12,9 @@
     { "from": [6, 12, 6], "to": [10, 13, 10], "faces": { "north": { "texture": "#cap", "uv": [0, 0, 4, 1] }, "south": { "texture": "#cap", "uv": [0, 0, 4, 1] }, "east": { "texture": "#cap", "uv": [0, 0, 4, 1] }, "west": { "texture": "#cap", "uv": [0, 0, 4, 1] }, "up": { "texture": "#cap", "uv": [0, 0, 4, 4] }, "down": { "texture": "#cap", "uv": [0, 0, 4, 4] } } },
     { "from": [5.95, 3, 5.95], "to": [10.05, 7, 10.05], "faces": { "north": { "texture": "#label", "uv": [0, 0, 4.1, 4] }, "south": { "texture": "#label", "uv": [0, 0, 4.1, 4] }, "east": { "texture": "#label", "uv": [0, 0, 4.1, 4] }, "west": { "texture": "#label", "uv": [0, 0, 4.1, 4] }, "up": { "texture": "#label", "uv": [0, 0, 4.1, 4.1] }, "down": { "texture": "#label", "uv": [0, 0, 4.1, 4.1] } } }
   ],
-  "display": { "gui": { "rotation": [0, 0, 0], "translation": [0, 1, 0], "scale": [1.1, 1.1, 1.1] } }
+  "display": { "gui": { "rotation": [0, 0, 0], "translation": [0, 1, 0], "scale": [1.1, 1.1, 1.1] } },
+  "overrides": [
+    { "predicate": { "chemmod:contents": 1 }, "model": "chemmod:item/substance_vial_pure" },
+    { "predicate": { "chemmod:contents": 2 }, "model": "chemmod:item/substance_vial_mixture" }
+  ]
 }
