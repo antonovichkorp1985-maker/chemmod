@@ -35,20 +35,22 @@ class MixtureReactionPlanner(private val engine: ReactionEngine) {
         val candidates = engine.apply(target.molecule, ruleId, physicalEnvironment)
         if (candidates.isEmpty()) return emptyList()
 
-        // All outcomes for one data rule have the same reactant identities;
-        // their product graphs may differ when several target bonds match.
-        val coReactants = candidates.first().reactants.drop(1).map { required ->
-            mixture.portion(required.molecule.canonicalKey()) ?: return emptyList()
-        }
-        return batchPlanner.plan(target, coReactants, ruleId, physicalEnvironment).mapNotNull { batchPlan ->
-            val withdrawals = withdrawals(batchPlan)
-            if (withdrawals.any { (key, amount) -> amount > mixture.micromolesOf(key) }) return@mapNotNull null
-            MixtureReactionPlan(
-                batchPlan = batchPlan,
-                residual = mixture.withdraw(withdrawals),
-                products = batchPlan.products,
-            )
-        }
+        // Every candidate outcome may need a different set of co-reactants; try each one so a
+        // rule that can trade with several partners is not limited to the first candidate's list.
+        return candidates.flatMap { candidate ->
+            val coReactants = candidate.reactants.drop(1).map { required ->
+                mixture.portion(required.molecule.canonicalKey()) ?: return@flatMap emptyList()
+            }
+            batchPlanner.plan(target, coReactants, ruleId, physicalEnvironment).mapNotNull { batchPlan ->
+                val withdrawals = withdrawals(batchPlan)
+                if (withdrawals.any { (key, amount) -> amount > mixture.micromolesOf(key) }) return@mapNotNull null
+                MixtureReactionPlan(
+                    batchPlan = batchPlan,
+                    residual = mixture.withdraw(withdrawals),
+                    products = batchPlan.products,
+                )
+            }
+        }.distinctBy { it.batchPlan.reaction.formatEquation() }
     }
 
     private fun withdrawals(batchPlan: ReactionBatchPlan): Map<String, Long> {

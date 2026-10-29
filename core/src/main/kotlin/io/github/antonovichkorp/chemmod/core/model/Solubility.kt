@@ -75,9 +75,43 @@ object Solubility {
         return !soluble
     }
 
-    /** True when the ion-class pairing leaves solution. */
+    /** True when the ion-class pairing leaves solution as a precipitate. */
     fun precipitates(cation: Cation, anion: AnionGroup): Boolean? {
         val soluble = isSoluble(cation, anion) ?: return null
         return !soluble
+    }
+
+    /**
+     * True when the ion-class pairing forms a gas that leaves the solution, which is what makes a
+     * metathesis proceed. Examples: H+ + carbonate -> CO2 + H2O, H+ + sulfide -> H2S,
+     * ammonium + hydroxide -> NH3 + H2O. Null where the pair is not a recognised gas former.
+     */
+    fun formsGas(cation: Cation, anion: AnionGroup): Boolean? = when (anion) {
+        AnionGroup.CARBONATE -> when (cation) {
+            is Cation.Elemental -> cation.element.symbol == "H"
+            Cation.Ammonium -> null
+        }
+        AnionGroup.SULFIDE -> when (cation) {
+            is Cation.Elemental -> cation.element.symbol == "H"
+            Cation.Ammonium -> null
+        }
+        AnionGroup.HYDROXIDE -> when (cation) {
+            Cation.Ammonium -> true
+            is Cation.Elemental -> null
+        }
+        else -> null
+    }
+
+    /**
+     * True when the ion-class pairing forms a weak electrolyte (mostly undissociated molecule),
+     * which is what makes a metathesis proceed. Example: H+ + hydroxide -> H2O (neutralisation).
+     * Null where the pair is not a recognised weak electrolyte.
+     */
+    fun formsWeakElectrolyte(cation: Cation, anion: AnionGroup): Boolean? = when (anion) {
+        AnionGroup.HYDROXIDE -> when (cation) {
+            is Cation.Elemental -> cation.element.symbol == "H"
+            Cation.Ammonium -> null
+        }
+        else -> null
     }
 }

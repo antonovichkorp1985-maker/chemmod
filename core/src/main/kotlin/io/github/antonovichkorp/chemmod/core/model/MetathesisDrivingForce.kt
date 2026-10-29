@@ -26,34 +26,54 @@ object MetathesisDrivingForce {
 
         /** Some ion has no solubility rule, so nothing may be asserted. */
         NO_MODEL,
+
+        /** Ions are locked in a solid lattice or absent as ions: no exchange can occur. */
+        NO_FREE_IONS,
     }
 
     /**
      * The two products of exchanging partners between two salts, used for display and for tests.
      */
     data class Exchange(
-        val firstCation: Element,
+        val firstCation: Solubility.Cation,
         val firstAnion: Solubility.AnionGroup,
-        val secondCation: Element,
+        val secondCation: Solubility.Cation,
         val secondAnion: Solubility.AnionGroup,
     ) {
-        val productOne: Pair<Element, Solubility.AnionGroup> get() = firstCation to secondAnion
-        val productTwo: Pair<Element, Solubility.AnionGroup> get() = secondCation to firstAnion
+        val productOne: Pair<Solubility.Cation, Solubility.AnionGroup> get() = firstCation to secondAnion
+        val productTwo: Pair<Solubility.Cation, Solubility.AnionGroup> get() = secondCation to firstAnion
     }
 
-    /** Whether exchanging the anions of two salts produces something that leaves solution. */
+    /**
+     * Whether exchanging the anions of two salts produces something that leaves solution, as a
+     * precipitate, a gas, or a weakly dissociating molecule.
+     *
+     * @param phase the physical phase of the mixture; only [Phase.AQUEOUS] and [Phase.MOLTEN] have
+     * free mobile ions, so any other phase yields [Outcome.NO_FREE_IONS].
+     */
     fun assess(
-        firstCation: Element,
+        firstCation: Solubility.Cation,
         firstAnion: Solubility.AnionGroup,
-        secondCation: Element,
+        secondCation: Solubility.Cation,
         secondAnion: Solubility.AnionGroup,
+        phase: Phase,
     ): Outcome {
+        if (!phase.hasFreeMobileIons) return Outcome.NO_FREE_IONS
+
         val products = listOf(
-            Solubility.precipitates(firstCation, secondAnion),
-            Solubility.precipitates(secondCation, firstAnion),
+            firstCation to secondAnion,
+            secondCation to firstAnion,
         )
-        if (products.any { it == null }) return Outcome.NO_MODEL
-        return if (products.any { it == true }) Outcome.PROCEEDS else Outcome.NO_DRIVING_FORCE
+
+        for ((cation, anion) in products) {
+            val soluble = Solubility.isSoluble(cation, anion)
+            if (soluble == null) return Outcome.NO_MODEL
+            if (!soluble) return Outcome.PROCEEDS
+            if (Solubility.formsGas(cation, anion) == true) return Outcome.PROCEEDS
+            if (Solubility.formsWeakElectrolyte(cation, anion) == true) return Outcome.PROCEEDS
+        }
+
+        return Outcome.NO_DRIVING_FORCE
     }
 
     /**
