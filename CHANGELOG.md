@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/en/lan
 
 ## Unreleased
 
+## v1.0.2-test.7
+
+### Added
+- E1: Real Kirchhoff circuit solver (G * V = I), electrochemical EMF, fuses, spark ignition
+  - `ElectricalNetwork`: nodal-analysis DC solver G * V = I via Gaussian elimination with partial pivoting
+  - `ElectricalNode` including ground node V = 0.0 V; supports multiple isolated subgraphs and floating nodes without NaN
+  - Branch elements: `ResistorBranch` (cable segment / load), `VoltageSourceBranch` (EMF + internal resistance)
+  - `CableSegment` extended: `conductorMeltingTemperatureKelvin` (Cu 1357.77 K, Al 933.47 K, Pb 600.61 K, Fe 1811.0 K, Au 1337.33 K, Pt 2041.4 K, Ag 1234.93 K), `OPEN_MELTED` fuse state, `groundFaultConductance()` for water/earth leakage
+  - `GalvanicCellModel`: EMF from standard electrode potentials (Daniel cell Cu/Zn ~1.10 V, lead-acid PbO2/Pb ~1.59 V); Faraday's law dn/dt = I/(z*F), F = 96485.33212 C/mol
+  - `SparkIgnitionEvaluator`: spark energy vs minimum ignition energy, fuel + O2 within flammability limits (LEL..UEL), short-circuit/overvoltage spark events
+- E1 NeoForge blocks (no redstone): `galvanic_battery`, `dynamo_generator`, `electric_heater`
+
+### Changed
+- `build.gradle.kts`: version `1.0.2-test.6` → `1.0.2-test.7`
+
 ## v1.0.2-test.6
 
 ### Added

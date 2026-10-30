@@ -2,7 +2,6 @@ package io.github.antonovichkorp.chemmod.core.geometry
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class CableSegmentTest {
@@ -66,7 +65,7 @@ class CableSegmentTest {
     }
 
     @Test
-    fun `bare wet conductor shorts`() {
+    fun `bare wet conductor has ground fault conductance`() {
         val seg = CableSegment(
             id = "short-1",
             lengthMetres = 5.0,
@@ -76,12 +75,13 @@ class CableSegmentTest {
             breakdownVoltageVolts = 1000.0,
             ambientTemperatureKelvin = 293.15,
             wetOrGrounded = true,
+            waterConductivityClass = 3,
         )
-        assertTrue(seg.shortCircuit())
+        assertTrue(seg.groundFaultConductance() > 0.0)
     }
 
     @Test
-    fun `dry bare conductor does not short`() {
+    fun `dry bare conductor has no ground fault`() {
         val seg = CableSegment(
             id = "short-2",
             lengthMetres = 5.0,
@@ -92,11 +92,11 @@ class CableSegmentTest {
             ambientTemperatureKelvin = 293.15,
             wetOrGrounded = false,
         )
-        assertFalse(seg.shortCircuit())
+        assertEquals(0.0, seg.groundFaultConductance(), 1e-12)
     }
 
     @Test
-    fun `insulated dry conductor does not short`() {
+    fun `insulated dry conductor has no ground fault`() {
         val seg = CableSegment(
             id = "short-3",
             lengthMetres = 5.0,
@@ -107,11 +107,11 @@ class CableSegmentTest {
             ambientTemperatureKelvin = 293.15,
             wetOrGrounded = true,
         )
-        assertFalse(seg.shortCircuit())
+        assertEquals(0.0, seg.groundFaultConductance(), 1e-12)
     }
 
     @Test
-    fun `breached wet conductor shorts`() {
+    fun `breached wet conductor has ground fault`() {
         val seg = CableSegment(
             id = "short-4",
             lengthMetres = 5.0,
@@ -121,7 +121,8 @@ class CableSegmentTest {
             breakdownVoltageVolts = 1000.0,
             ambientTemperatureKelvin = 293.15,
             wetOrGrounded = true,
+            waterConductivityClass = 3,
         )
-        assertTrue(seg.shortCircuit())
+        assertTrue(seg.groundFaultConductance() > 0.0)
     }
 }

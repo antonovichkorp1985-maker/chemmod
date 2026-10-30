@@ -16,6 +16,8 @@ enum class CableState {
     INSULATED,
     /** Insulation melted or ruptured by Joule heat or overvoltage; segment behaves as bare. */
     BREACHED,
+    /** Conductor melted open by Joule heat; infinite resistance, no current. */
+    OPEN_MELTED,
 }
 
 /** Physical state of a cable segment, including measured current and temperature. */
@@ -26,10 +28,14 @@ data class CableSegment(
     val state: CableState,
     val insulationBreakdownTemperatureKelvin: Double,
     val breakdownVoltageVolts: Double,
+    /** Conductor melting temperature in K (Cu=1357.77, Al=933.47, Pb=600.61, Fe=1811.0, etc.). Null = NO_MODEL. */
+    val conductorMeltingTemperatureKelvin: Double? = null,
     /** Ambient temperature in K for this segment's environment. */
     val ambientTemperatureKelvin: Double,
     /** Water/earth contact flag: true if segment is submerged or grounded. */
     val wetOrGrounded: Boolean = false,
+    /** Water type for ground-fault conductance: 0=none, 1=fresh, 2=brackish, 3=sea/electrolyte. */
+    val waterConductivityClass: Int = 0,
 ) {
     init {
         require(lengthMetres > 0.0) { "Cable length must be positive" }
@@ -37,6 +43,8 @@ data class CableSegment(
         require(insulationBreakdownTemperatureKelvin > 0.0) { "Breakdown temperature must be positive" }
         require(breakdownVoltageVolts > 0.0) { "Breakdown voltage must be positive" }
         require(ambientTemperatureKelvin > 0.0) { "Ambient temperature must be positive" }
+        conductorMeltingTemperatureKelvin?.let { require(it > 0.0) { "Melting temperature must be positive" } }
+        require(waterConductivityClass in 0..3) { "Water conductivity class must be 0..3" }
     }
 
     /** Total resistance of the segment. */
@@ -61,12 +69,26 @@ data class CableSegment(
     /** Whether voltage exceeds insulation breakdown. */
     fun overVoltage(voltageVolts: Double): Boolean = voltageVolts > breakdownVoltageVolts
 
-    /** Whether this segment shorts (bare or breached, in water/ground). */
-    fun shortCircuit(): Boolean = (state == CableState.BARE || state == CableState.BREACHED) && wetOrGrounded
+    /** Whether conductor has melted open (fuse action). */
+    fun conductorMelted(currentAmps: Double): Boolean =
+        conductorMeltingTemperatureKelvin != null && temperatureKelvin(currentAmps) >= conductorMeltingTemperatureKelvin!!
+
+    /** Ground-fault conductance to earth (Siemens) for water/ground contact. */
+    fun groundFaultConductance(): Double = when {
+        state == CableState.BARE || state == CableState.BREACHED -> when (waterConductivityClass) {
+            3 -> 1.0   // seawater / electrolyte ~1 S
+            2 -> 0.1   // brackish ~0.1 S
+            1 -> 0.01  // fresh water ~0.01 S
+            else -> 0.0
+        }
+        else -> 0.0
+    }
 
     /** Effective state after applying current/voltage stress. */
     fun effectiveState(currentAmps: Double, voltageVolts: Double): CableState {
         if (state == CableState.BARE) return CableState.BARE
+        if (state == CableState.OPEN_MELTED) return CableState.OPEN_MELTED
+        if (conductorMelted(currentAmps)) return CableState.OPEN_MELTED
         if (insulationFailed(currentAmps) || overVoltage(voltageVolts)) return CableState.BREACHED
         return state
     }

@@ -158,6 +158,45 @@ public final class ChemBlocks {
         )
     );
 
+    /** E1: galvanic battery block — electrochemical EMF source, no redstone. */
+    public static final DeferredHolder<Block, Block> GALVANIC_BATTERY = BLOCKS.register(
+        "galvanic_battery",
+        () -> new Block(
+            BlockBehaviour.Properties.of()
+                .mapColor(MapColor.METAL)
+                .requiresCorrectToolForDrops()
+                .strength(2.0F, 4.0F)
+                .sound(SoundType.METAL)
+                .noOcclusion()
+        )
+    );
+
+    /** E1: dynamo generator block — mechanical shaft input to EMF, no redstone. */
+    public static final DeferredHolder<Block, Block> DYNAMO_GENERATOR = BLOCKS.register(
+        "dynamo_generator",
+        () -> new Block(
+            BlockBehaviour.Properties.of()
+                .mapColor(MapColor.METAL)
+                .requiresCorrectToolForDrops()
+                .strength(3.0F, 5.0F)
+                .sound(SoundType.METAL)
+                .noOcclusion()
+        )
+    );
+
+    /** E1: electric heater block — converts I^2*R power to heat, no redstone. */
+    public static final DeferredHolder<Block, Block> ELECTRIC_HEATER = BLOCKS.register(
+        "electric_heater",
+        () -> new Block(
+            BlockBehaviour.Properties.of()
+                .mapColor(MapColor.METAL)
+                .requiresCorrectToolForDrops()
+                .strength(2.0F, 4.0F)
+                .sound(SoundType.METAL)
+                .noOcclusion()
+        )
+    );
+
     private ChemBlocks() {}
 
     public static void register(IEventBus eventBus) {
