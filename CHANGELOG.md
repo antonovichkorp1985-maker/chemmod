@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/en/lan
 
 ## Unreleased
 
+## v1.0.2-test.5
+
+### Added
+- CM-2: M4 gas system without redstone
+  - `ClosedVessel` constructor takes `wallStrengthPascals`; validates positive wall strength
+  - `releaseAtPressure(maxPressurePascals)`: proportional gas release when pressure exceeds threshold
+  - `ventMoles(requestedMoles)` and `empty()`: manual gas venting/emptying
+  - `RespiratorFilter` (in `GasTransport`): finite sorbent capacity model for respirator cartridges
+  - `RespiratorFilterTest`: unit tests for sorbent capacity, adsorption accumulation, and saturation
+
+### Changed
+- `GasTankBlockEntity` uses `WALL_STRENGTH_PASCALS` when constructing `ClosedVessel`
+- `build.gradle.kts`: version `1.0.2-test.4` → `1.0.2-test.5`
+
+## v1.0.2-test.4
+
 ### Added
 - CM-1: Full physicochemical core for ionic exchange (metathesis) reactions and solubility table
   - `Phase` enum (SOLID, LIQUID, AQUEOUS, MOLTEN, GAS) with `hasFreeMobileIons`

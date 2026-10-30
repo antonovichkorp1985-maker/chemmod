@@ -64,4 +64,21 @@ object GasTransport {
             0.19300 * exp(-0.47635 * reducedT) +
             1.03587 * exp(-1.52996 * reducedT) +
             1.76474 * exp(-3.89411 * reducedT)
+
+    /** Sorbent cartridge with finite capacity; removes reactive species by adsorption. */
+    data class RespiratorFilter(
+        val capacityMicromoles: Double,         // maximum moles the sorbent can hold
+        val consumedMicromoles: Double = 0.0,  // running total consumed
+    ) {
+        /** Attempt to adsorb the given moles; returns remaining capacity or null if over capacity. */
+        fun adsorb(requestedMicromoles: Double): RespiratorFilter? {
+            require(requestedMicromoles >= 0.0) { "Cannot adsorb negative amount" }
+            val newConsumed = this.consumedMicromoles + requestedMicromoles
+            if (newConsumed > this.capacityMicromoles) return null
+            return copy(consumedMicromoles = newConsumed)
+        }
+
+        /** Whether the filter still has capacity. */
+        fun remainingCapacity(): Double = capacityMicromoles - consumedMicromoles
+    }
 }
