@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/en/lan
 
 ## Unreleased
 
+## v1.0.2-test.8
+### Fixed
+- ElectricalNetwork: replaced placeholder transformer branch impedance across ideal transformers with physically coupled primary/secondary admittance stamping (turns ratio n = N1/N2, winding series resistance, magnetizing conductance); added unit tests proving V2/V1 = N2/N1 and power conservation
+- Grid equipment: completed Stage E2 with switches, breakers, multi-tap transformers, HV/MV/LV wire insulation breakdown → BREACHED state → arc heat/sparks (zero redstone)
+- AmbientGasApi: added dynamic blast wind velocity and total gas density from VolumetricGasCloud; exposed Rankine-Hugoniot blast shockwave model with overpressure peak, arrival time, impulse, Wilson cloud
+
+### Added
+- ElectricalNetwork: ideal transformer with turns ratio, primary/secondary winding resistance, core loss conductance integrated into G*V=I solver via admittance stamping
+- ElectricalNetworkTest: 7 new unit tests for transformer physics (voltage step-up/down, power conservation, impedance reflection, center-tap voltage splitting, load reflection)
+- GridEquipment: SwitchBranch with CLOSED/OPEN/WELDED states and voltage/current ratings
+- GridEquipment: MultiTapTransformerBranch with expandable taps for multi-winding transformers
+- GridEquipment: ArcFlashModel with arc voltage/power/incident energy and temperature estimation
+- GridEquipment: WireInsulationModel with HV/MV/LV insulation classes and breakdown evaluation
+- GroundFaultModel: soil resistivity models and ground rod resistance (Dwight's formula)
+- SurgeProtection: SparkGap and MetalOxideVaristor transient overvoltage protection
+- VolumetricGasCloud: spherical cloud with density, buoyancy, terminal velocity, concentration-at-point
+- BlastShockwaveModel: Rankine-Hugoniot overpressure peak, arrival time, impulse, dynamic pressure, Wilson cloud check
+- AmbientGasApi: peakBlastPressurePascalsAt, peakBlastWindMetersPerSecondAt, totalGasDensityAt methods
+
+### Changed
+- `build.gradle.kts`: version `1.0.2-test.7` → `1.0.2-test.8`
+
 ## v1.0.2-test.7
 
 ### Added
