@@ -2,6 +2,7 @@ package io.github.antonovichkorp.chemmod.gas;
 
 import com.mojang.serialization.Codec;
 import io.github.antonovichkorp.chemmod.core.Molecule;
+import io.github.antonovichkorp.chemmod.core.gas.Atmosphere;
 import io.github.antonovichkorp.chemmod.core.gas.GasAtmosphere;
 import io.github.antonovichkorp.chemmod.core.gas.GasCell;
 import io.github.antonovichkorp.chemmod.core.gas.GasField;
@@ -45,6 +46,9 @@ public final class WorldGasField {
 
     private final GasField field = new GasField(CELL_SIZE_METRES);
     private final GasSpeciesProperties properties = new GasSpeciesProperties(AMBIENT_TEMPERATURE_KELVIN);
+
+    /** Ambient gas API for barometric altitude correction and vacuum queries. */
+    public static final AmbientGasApi AMBIENT = new AmbientGasApi();
 
     public GasField field() {
         return field;
@@ -266,5 +270,54 @@ public final class WorldGasField {
             }
         }
         return gas;
+    }
+
+    /**
+     * Ambient gas environment query API for Aeronautics Plus and other consumers.
+     * Provides pressure, temperature, density, and mole fractions at a world position,
+     * corrected for barometric altitude decrease and vacuum.
+     */
+    public static final class AmbientGasApi {
+        /** Standard surface pressure at sea level. */
+        public static final double SURFACE_PRESSURE_PASCALS = 101325.0;
+
+        /** Standard surface temperature at sea level. */
+        public static final double SURFACE_TEMPERATURE_KELVIN = 288.15;
+
+        /** Vacuum threshold: below this pressure the medium is effectively vacuum. */
+        public static final double VACUUM_THRESHOLD_PASCALS = 1000.0;
+
+        /** Ambient gas mass at altitude for a given cell volume (4m cube = 64 m3). */
+        private static final double CELL_VOLUME_CUBIC_METRES = CELL_SIZE_METRES * CELL_SIZE_METRES * CELL_SIZE_METRES;
+
+        private AmbientGasApi() {
+        }
+
+        /** Pressure in pascals at geometric altitude above surface, with vacuum below threshold. */
+        public double pressurePascalsAt(double altitudeMetres) {
+            double pressure = Atmosphere.EARTH.pressurePascals(altitudeMetres);
+            if (pressure < VACUUM_THRESHOLD_PASCALS) return 0.0;
+            return pressure;
+        }
+
+        /** Temperature in kelvin at geometric altitude above surface. */
+        public double temperatureKelvinAt(double altitudeMetres) {
+            return Atmosphere.EARTH.temperatureKelvin(altitudeMetres);
+        }
+
+        /** Mass density in kg/m3 of ambient air at geometric altitude above surface. */
+        public double densityKilogramsPerCubicMetreAt(double altitudeMetres) {
+            return Atmosphere.EARTH.densityKilogramsPerCubicMetre(altitudeMetres);
+        }
+
+        /** Ambient mass in kilograms of air filling one gas cell at the given altitude. */
+        public double ambientMassKilogramsPerCell(double altitudeMetres) {
+            return densityKilogramsPerCubicMetreAt(altitudeMetres) * CELL_VOLUME_CUBIC_METRES;
+        }
+
+        /** Whether the given altitude is in vacuum (below threshold pressure). */
+        public boolean isVacuum(double altitudeMetres) {
+            return pressurePascalsAt(altitudeMetres) <= 0.0;
+        }
     }
 }

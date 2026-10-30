@@ -132,6 +132,32 @@ public final class ChemBlocks {
             .mapColor(MapColor.METAL).strength(1.0F).sound(SoundType.METAL).noOcclusion()
             .pushReaction(net.minecraft.world.level.material.PushReaction.BLOCK)));
 
+    /** E0: bare cable terminal block — contacts, shorts, arcs; no redstone ever. */
+    public static final DeferredHolder<Block, Block> CABLE_TERMINAL_BARE = BLOCKS.register(
+        "cable_terminal_bare",
+        () -> new Block(
+            BlockBehaviour.Properties.of()
+                .mapColor(MapColor.METAL)
+                .requiresCorrectToolForDrops()
+                .strength(1.0F, 3.0F)
+                .sound(SoundType.METAL)
+                .noOcclusion()
+        )
+    );
+
+    /** E0: insulated cable terminal block — safe to touch within insulation limits. */
+    public static final DeferredHolder<Block, Block> CABLE_TERMINAL_INSULATED = BLOCKS.register(
+        "cable_terminal_insulated",
+        () -> new Block(
+            BlockBehaviour.Properties.of()
+                .mapColor(MapColor.COLOR_GRAY)
+                .requiresCorrectToolForDrops()
+                .strength(1.0F, 3.0F)
+                .sound(SoundType.METAL)
+                .noOcclusion()
+        )
+    );
+
     private ChemBlocks() {}
 
     public static void register(IEventBus eventBus) {

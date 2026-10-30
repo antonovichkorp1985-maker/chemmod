@@ -6,5 +6,5 @@ plugins {
 
 allprojects {
     group = "io.github.antonovichkorp1985maker.chemmod"
-    version = "1.0.2-test.5"
+    version = "1.0.2-test.6"
 }

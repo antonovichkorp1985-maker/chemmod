@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/en/lan
 
 ## Unreleased
 
+## v1.0.2-test.6
+
+### Added
+- Material density registry and block mass API (Aeronautics Plus Centre of Mass)
+  - `MaterialDensityRegistry`: real-world kg/m³ densities keyed by MaterialId (copper 8960, steel 7850, aluminium 2700, etc.)
+  - `BlockMassApi`: solid/hollow/gas-tank mass from volume × effective density + ClosedVessel gas mass
+  - `MaterialDensity` with packingFactor (1.0 = solid cube, <1.0 = hollow/pipe/tank/shell)
+- WorldGasField public API (AmbientGasApi)
+  - `AmbientGasApi`: barometric pressure, temperature, density, vacuum threshold at geometric altitude
+- E0: Physical cables without redstone (catenary geometry)
+  - `CatenaryMath`: Newton-Raphson catenary solver (span, length, weight/metre → tension, sag, parameter a)
+  - `CableSegment` with 3 states: BARE (contacts/shorts/arcs), INSULATED (safe within limits), BREACHED (melted/ruptured)
+  - Joule heating I²R, temperature rise, overvoltage breakdown, short-circuit in water/ground
+  - `CableTerminal` endpoints with ground reference and flashover voltage
+
+### Changed
+- `MaterialCatalog` owns `MaterialDensityRegistry` and registers defaults at load
+- `GasTankBlockEntity` uses `ClosedVessel(volume, wallStrengthPascals)`
+- `build.gradle.kts`: version `1.0.2-test.5` → `1.0.2-test.6`
+- New blocks: `cable_terminal_bare`, `cable_terminal_insulated`
+
+### Fixed
+- Catenary solver returns `null` (NO_MODEL) for invalid inputs instead of throwing
+
 ## v1.0.2-test.5
 
 ### Added
