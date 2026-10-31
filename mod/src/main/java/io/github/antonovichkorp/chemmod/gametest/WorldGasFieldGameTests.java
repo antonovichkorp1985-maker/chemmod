@@ -1,12 +1,25 @@
 package io.github.antonovichkorp.chemmod.gametest;
 
 import io.github.antonovichkorp.chemmod.ChemMod;
+import io.github.antonovichkorp.chemmod.core.Molecule;
 import io.github.antonovichkorp.chemmod.core.gas.GasCell;
+import io.github.antonovichkorp.chemmod.core.gas.GasMolecularAmount;
 import io.github.antonovichkorp.chemmod.gas.ChemAttachments;
+import io.github.antonovichkorp.chemmod.gas.GasExposureEffects;
 import io.github.antonovichkorp.chemmod.gas.WorldGasField;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.gametest.framework.GameTest;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.nbt.NbtOps;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.neoforged.fml.ModList;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 
 import java.util.Map;
@@ -35,6 +48,85 @@ public class WorldGasFieldGameTests {
         helper.succeed();
     }
 
+    /**
+     * Runs in the standalone GameTest suite as a skip, then in the optional-Create suite as a real
+     * shaft-to-world integration test. The creative motor is a deterministic test power source; the
+     * machine itself is only driven through its connected vertical Create kinetic network.
+     */
+    @GameTest(template = "chemical_reactor_batch", timeoutTicks = 100)
+    public static void connectedCreateShaftDrivesWorldGasExhaust(GameTestHelper helper) {
+        if (!ModList.get().isLoaded("create")) {
+            helper.succeed();
+            return;
+        }
+
+        Block motor = BuiltInRegistries.BLOCK.get(ResourceLocation.fromNamespaceAndPath("create", "creative_motor"));
+        Block exhaust = BuiltInRegistries.BLOCK.get(
+            ResourceLocation.fromNamespaceAndPath(ChemMod.MOD_ID, "kinetic_gas_exhaust"));
+        helper.assertTrue(motor != Blocks.AIR && exhaust != Blocks.AIR,
+            "Create is loaded but the kinetic gas exhaust or creative motor is not registered");
+
+        BlockPos exhaustPos = helper.absolutePos(HERE);
+        BlockPos motorPos = exhaustPos.below();
+        var level = helper.getLevel();
+        level.setBlock(exhaustPos, exhaust.defaultBlockState(), 3);
+        helper.assertTrue(level.getBlockEntity(exhaustPos) instanceof io.github.antonovichkorp.chemmod.gas.GasExhaustSource,
+            "the registered gas exhaust block entity does not expose its world ventilation contract");
+
+        WorldGasField gas = level.getData(ChemAttachments.GAS_FIELD.get());
+        GasCell cell = gas.cellOf(exhaustPos);
+        BlockPos corner = WorldGasField.representativeBlock(cell);
+        // The solver tests sky access at the cell representative block; close that ray so the
+        // powered-step assertion isolates the mechanical sink from ambient exchange.
+        level.setBlock(corner.above((int) WorldGasField.CELL_SIZE_METRES), Blocks.STONE.defaultBlockState(), 3);
+        helper.assertTrue(((io.github.antonovichkorp.chemmod.gas.GasExhaustSource)
+            level.getBlockEntity(exhaustPos)).gasRemovalRatePerSecond() == 0.0,
+            "an unpowered exhaust reported a positive removal rate");
+
+        BlockState motorState = motor.defaultBlockState();
+        helper.assertTrue(motorState.hasProperty(BlockStateProperties.FACING),
+            "Create creative motor no longer exposes its expected directional shaft state");
+        level.setBlock(motorPos, motorState.setValue(BlockStateProperties.FACING, Direction.UP), 3);
+        helper.startSequence()
+            .thenIdle(20)
+            .thenExecute(() -> {
+                var source = (io.github.antonovichkorp.chemmod.gas.GasExhaustSource)
+                    level.getBlockEntity(exhaustPos);
+                helper.assertTrue(source.gasRemovalRatePerSecond() > 0.0,
+                    "a connected Create shaft did not activate the mechanical gas exhaust");
+                gas.release(exhaustPos, Map.of("N2", 100.0));
+                double beforePoweredStep = gas.field().totalMoles();
+                gas.advance(level, 1.0);
+                helper.assertTrue(gas.field().totalMoles() < beforePoweredStep,
+                    "the powered mechanical exhaust did not remove gas from the world field");
+            })
+            .thenSucceed();
+    }
+
+    @GameTest(template = "chemical_reactor_batch", timeoutTicks = 60)
+    public static void oxygenDeficiencyAppliesAWarningEffect(GameTestHelper helper) {
+        WorldGasField gas = helper.getLevel().getData(ChemAttachments.GAS_FIELD.get());
+        BlockPos pos = helper.absolutePos(HERE);
+        var entity = helper.spawn(EntityType.ZOMBIE, HERE);
+
+        helper.assertTrue(!GasExposureEffects.applyOxygenDeficiency(entity, gas, pos),
+            "normal dry air was classified as oxygen deficient");
+        helper.assertTrue(!entity.hasEffect(net.minecraft.world.effect.MobEffects.WEAKNESS),
+            "normal dry air applied the oxygen-deficiency warning");
+
+        // One 4 m cell holds about 2,660 mol of dry air at 293.15 K and 1 atm;
+        // 400 mol of nitrogen lowers the calculated oxygen fraction below 19.5%.
+        gas.release(pos, Map.of("N2", 400.0));
+        double oxygenFraction = gas.atmosphereCompositionAt(pos).getOrDefault("O2", 0.0);
+        helper.assertTrue(oxygenFraction < 0.195,
+            "the test mixture did not cross the oxygen-deficient-atmosphere boundary");
+        helper.assertTrue(GasExposureEffects.applyOxygenDeficiency(entity, gas, pos),
+            "oxygen-deficient air did not activate the living-entity warning");
+        helper.assertTrue(entity.hasEffect(net.minecraft.world.effect.MobEffects.WEAKNESS),
+            "oxygen-deficient air did not apply the short Weakness warning effect");
+        helper.succeed();
+    }
+
     @GameTest(template = "chemical_reactor_batch", timeoutTicks = 60)
     public static void heavyGasReleasedIntoTheWorldSettles(GameTestHelper helper) {
         WorldGasField gas = helper.getLevel().getData(ChemAttachments.GAS_FIELD.get());
@@ -50,6 +142,121 @@ public class WorldGasFieldGameTests {
 
         helper.assertTrue(gas.field().molesOf(below, "CO2") > 0.0,
             "carbon dioxide, which is denser than air, did not settle into the cell below");
+        helper.succeed();
+    }
+
+    @GameTest(template = "chemical_reactor_batch", timeoutTicks = 60)
+    public static void molecularChlorineLeakSettlesAndKeepsItsCompositionTint(GameTestHelper helper) {
+        WorldGasField gas = helper.getLevel().getData(ChemAttachments.GAS_FIELD.get());
+        BlockPos pos = helper.absolutePos(HERE.above(8));
+        Molecule chlorine = Molecule.Companion.fromSMILESlike("ClCl");
+        gas.releaseMolecules(pos, Map.of(chlorine, 4.0));
+        GasCell cell = gas.cellOf(pos);
+        GasCell below = new GasCell(cell.getX(), cell.getY() - 1, cell.getZ());
+
+        gas.advance(helper.getLevel(), 1.0);
+
+        helper.assertTrue(gas.molecularContentsIn(below).stream().anyMatch(amount ->
+                amount.getMolecule().canonicalKey().equals(chlorine.canonicalKey())),
+            "graph-identified chlorine did not settle into the lower gas cell");
+        Integer tint = io.github.antonovichkorp.chemmod.core.gas.GasAppearance.INSTANCE
+            .tintArgb(gas.contentsIn(cell));
+        helper.assertTrue(tint != null, "the chlorine composition did not retain its visible gas tint");
+        helper.succeed();
+    }
+
+    @GameTest(template = "chemical_reactor_batch", timeoutTicks = 60)
+    public static void molecularGasKeepsIsomerIdentityAcrossWorldPersistence(GameTestHelper helper) {
+        WorldGasField gas = helper.getLevel().getData(ChemAttachments.GAS_FIELD.get());
+        BlockPos pos = helper.absolutePos(HERE.above(12));
+        Molecule ethanol = Molecule.Companion.fromSMILESlike("CCO");
+        Molecule dimethylEther = Molecule.Companion.fromSMILESlike("COC");
+        gas.releaseMolecules(pos, Map.of(ethanol, 0.25, dimethylEther, 0.75));
+        GasCell cell = gas.cellOf(pos);
+        var before = gas.molecularContentsIn(cell);
+
+        var ops = helper.getLevel().registryAccess().createSerializationContext(NbtOps.INSTANCE);
+        var encoded = WorldGasField.CODEC.encodeStart(ops, gas).getOrThrow();
+        WorldGasField restored = WorldGasField.CODEC.parse(ops, encoded).getOrThrow();
+        var after = restored.molecularContentsIn(cell);
+
+        helper.assertTrue(ethanol.formula().equals(dimethylEther.formula()),
+            "the test is not using same-formula structural isomers");
+        helper.assertTrue(before.size() == 2 && after.size() == 2,
+            "molecular identity collapsed two structural isomers");
+        helper.assertTrue(after.stream().anyMatch(amount ->
+                amount.getMolecule().canonicalKey().equals(ethanol.canonicalKey()) && Math.abs(amount.getMoles() - 0.25) < 1e-12),
+            "ethanol graph or its amount changed across world persistence");
+        helper.assertTrue(after.stream().anyMatch(amount ->
+                amount.getMolecule().canonicalKey().equals(dimethylEther.canonicalKey()) && Math.abs(amount.getMoles() - 0.75) < 1e-12),
+            "dimethyl ether graph or its amount changed across world persistence");
+        helper.succeed();
+    }
+
+    @GameTest(template = "chemical_reactor_batch", timeoutTicks = 60)
+    public static void aWorldFireRunsTheOrdinaryHydrogenCombustionRule(GameTestHelper helper) {
+        WorldGasField gas = helper.getLevel().getData(ChemAttachments.GAS_FIELD.get());
+        BlockPos pos = helper.absolutePos(HERE.above(12));
+        Molecule hydrogen = Molecule.Companion.fromSMILESlike("[H][H]");
+        Molecule oxygen = Molecule.Companion.fromSMILESlike("O=O");
+        gas.releaseMolecules(pos, Map.of(hydrogen, 2.0, oxygen, 1.0));
+        GasCell cell = gas.cellOf(pos);
+        BlockPos ignition = WorldGasField.representativeBlock(cell).offset(1, 0, 1);
+        helper.getLevel().setBlock(ignition.below(), Blocks.NETHERRACK.defaultBlockState(), 3);
+        helper.getLevel().setBlock(ignition, Blocks.FIRE.defaultBlockState(), 3);
+        helper.assertTrue(helper.getLevel().getBlockState(ignition).is(Blocks.FIRE),
+            "the GameTest did not retain the supported in-cell ignition fire");
+
+        gas.advance(helper.getLevel(), 1.0);
+        var contents = gas.molecularContentsIn(cell);
+
+        helper.assertTrue(contents.stream().anyMatch(amount -> amount.getMolecule().formula().equals("H2O")
+                && amount.getMoles() > 0.0),
+            "world ignition did not execute the data-defined hydrogen + oxygen reaction; contents: " +
+                contents.stream().map(amount -> amount.getMolecule().formula() + "=" + amount.getMoles()).toList());
+        helper.assertTrue(contents.stream().allMatch(amount -> !amount.getMolecule().formula().equals("H2O")
+                || amount.getMolecule().validate().isEmpty()),
+            "the environmental reaction created an invalid molecular graph");
+        helper.succeed();
+    }
+
+    @GameTest(template = "chemical_reactor_batch", timeoutTicks = 60)
+    public static void aFireInAnotherGasCellDoesNotIgniteThisCell(GameTestHelper helper) {
+        WorldGasField gas = helper.getLevel().getData(ChemAttachments.GAS_FIELD.get());
+        BlockPos pos = helper.absolutePos(HERE.above(12));
+        Molecule hydrogen = Molecule.Companion.fromSMILESlike("[H][H]");
+        Molecule oxygen = Molecule.Companion.fromSMILESlike("O=O");
+        gas.releaseMolecules(pos, Map.of(hydrogen, 2.0, oxygen, 1.0));
+        GasCell cell = gas.cellOf(pos);
+        BlockPos ignition = WorldGasField.representativeBlock(cell).offset(8, 0, 0);
+        helper.getLevel().setBlock(ignition.below(), Blocks.NETHERRACK.defaultBlockState(), 3);
+        helper.getLevel().setBlock(ignition, Blocks.FIRE.defaultBlockState(), 3);
+
+        gas.advance(helper.getLevel(), 1.0);
+
+        boolean waterProduced = gas.occupiedCells().stream()
+            .flatMap(occupied -> gas.molecularContentsIn(occupied).stream())
+            .anyMatch(amount -> amount.getMolecule().formula().equals("H2O"));
+        helper.assertTrue(!waterProduced,
+            "ignition outside the hydrogen/oxygen cell triggered its reaction");
+        helper.succeed();
+    }
+
+    @GameTest(template = "chemical_reactor_batch", timeoutTicks = 60)
+    public static void hydrogenAndOxygenDoNotReactInTheWorldWithoutAnIgnitionSource(GameTestHelper helper) {
+        WorldGasField gas = helper.getLevel().getData(ChemAttachments.GAS_FIELD.get());
+        BlockPos pos = helper.absolutePos(HERE.above(12));
+        Molecule hydrogen = Molecule.Companion.fromSMILESlike("[H][H]");
+        Molecule oxygen = Molecule.Companion.fromSMILESlike("O=O");
+        gas.releaseMolecules(pos, Map.of(hydrogen, 2.0, oxygen, 1.0));
+
+        gas.advance(helper.getLevel(), 1.0);
+
+        boolean waterProduced = gas.occupiedCells().stream()
+            .flatMap(cell -> gas.molecularContentsIn(cell).stream())
+            .anyMatch(amount -> amount.getMolecule().formula().equals("H2O"));
+        helper.assertTrue(!waterProduced,
+            "ambient hydrogen and oxygen reacted without a fire, soul fire, or lava block in their cell");
         helper.succeed();
     }
 

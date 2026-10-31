@@ -33,7 +33,7 @@ lookup_output=$("$chem" lookup CCO)
 echo "$lookup_output"
 assert_contains "$lookup_output" "Formula:           C2H6O"
 assert_contains "$lookup_output" "Molar mass:        46.069 g/mol"
-assert_contains "$lookup_output" "Boiling point:     83.7 °C (hydroxyl-family+hydrogen-bond-network)"
+assert_contains "$lookup_output" "Boiling point:     78.1 °C (monohydric-alcohol-structure+dispersion+association)"
 
 echo "==> Checking isomer identity"
 ethanol_id=$("$chem" lookup CCO | awk -F': *' '/Canonical ID/ {print $2}')
@@ -105,6 +105,22 @@ jar tf "$mod_jar" | grep -q '^data/chemmod/recipe/kinetic_ore_separator.json$' |
 }
 jar tf "$mod_jar" | grep -q '^assets/chemmod/models/item/kinetic_ore_separator.json$' || {
     echo "Smoke-test failure: Create kinetic separator item model is missing" >&2
+    exit 1
+}
+jar tf "$mod_jar" | grep -q 'integration/create/KineticGasExhaustBlock.class$' || {
+    echo "Smoke-test failure: optional Create mechanical gas exhaust block is missing" >&2
+    exit 1
+}
+jar tf "$mod_jar" | grep -q 'integration/create/KineticGasExhaustBlockEntity.class$' || {
+    echo "Smoke-test failure: optional Create mechanical gas exhaust entity is missing" >&2
+    exit 1
+}
+jar tf "$mod_jar" | grep -q '^data/chemmod/recipe/kinetic_gas_exhaust.json$' || {
+    echo "Smoke-test failure: conditional Create gas exhaust recipe is missing" >&2
+    exit 1
+}
+jar tf "$mod_jar" | grep -q '^assets/chemmod/models/item/kinetic_gas_exhaust.json$' || {
+    echo "Smoke-test failure: Create gas exhaust item model is missing" >&2
     exit 1
 }
 if jar tf "$mod_jar" | grep -q '^com/simibubi/create/'; then
@@ -238,11 +254,18 @@ echo "NeoForge test jar: $mod_jar"
 ./scripts/server-smoke-test.sh standalone
 ./scripts/server-smoke-test.sh create
 
-# Required in-world M3 regression: this runs the dedicated GameTest server and
-# exits non-zero if the physical ethanol/copper/heat batch does not complete.
-# It is intentionally supplementary to the player acceptance checklist; it
-# does not use an in-game command path to award discovery or simulate survival.
-echo "==> Running Chemical Reactor GameTests"
+# Run ChemMod's in-world regression tests in both supported runtimes. Each
+# GameTest run starts from a clean world so the standalone pass cannot strip
+# Create registry entries from the Create-enabled fixture (or vice versa). The
+# run configuration filters discovery to the chemmod namespace, keeping
+# unrelated upstream Create fixtures out of this project's release gate.
+# These tests remain supplementary to the owner player checklist.
+rm -rf mod/run/world
+echo "==> Running ChemMod GameTests with optional Create integration"
 ./gradlew --no-daemon :mod:runGameTestServer
+
+rm -rf mod/run/world
+echo "==> Running ChemMod GameTests in standalone runtime"
+./gradlew --no-daemon -Pchemmod.createRuntime=false :mod:runGameTestServer
 
 echo "==> Smoke test passed"

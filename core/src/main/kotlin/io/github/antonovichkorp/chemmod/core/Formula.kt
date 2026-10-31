@@ -15,7 +15,11 @@ object FormulaCalculator {
 
     fun hillFormula(graph: MoleculeGraph): String {
         val counts = counts(graph)
-        val order = when {
+        val ionicOrder = io.github.antonovichkorp.chemmod.core.model.IonicSolubilityClassifier
+            .classify(graph)?.formulaElementOrder
+        val order = ionicOrder?.let { preferred ->
+            preferred + counts.keys.filterNot { it in preferred }.sorted()
+        } ?: when {
             "C" in counts -> listOf("C", "H") + counts.keys.filterNot { it == "C" || it == "H" }.sorted()
             else -> counts.keys.sorted()
         }

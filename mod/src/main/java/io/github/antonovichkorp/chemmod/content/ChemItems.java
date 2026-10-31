@@ -3,10 +3,14 @@ package io.github.antonovichkorp.chemmod.content;
 import io.github.antonovichkorp.chemmod.ChemMod;
 import io.github.antonovichkorp.chemmod.core.CommonSubstance;
 import io.github.antonovichkorp.chemmod.core.CommonSubstances;
+import io.github.antonovichkorp.chemmod.core.Molecule;
+import io.github.antonovichkorp.chemmod.core.chemistry.ReferenceMoleculeCatalog;
+import io.github.antonovichkorp.chemmod.core.chemistry.ReactionSpeciesCatalog;
 import io.github.antonovichkorp.chemmod.core.material.MaterialItemExports;
 import io.github.antonovichkorp.chemmod.core.material.MaterialItemSpec;
 import io.github.antonovichkorp.chemmod.core.mixture.MolecularMixture;
 import io.github.antonovichkorp.chemmod.core.reaction.MolecularPortion;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.BlockItem;
@@ -28,6 +32,16 @@ public final class ChemItems {
     public static final DeferredHolder<Item, SubstanceVialItem> SUBSTANCE_VIAL = ITEMS.register(
         "substance_vial",
         () -> new SubstanceVialItem(new Item.Properties().stacksTo(16))
+    );
+
+    public static final DeferredHolder<Item, SteelFlaskItem> STEEL_FLASK = ITEMS.register(
+        "steel_flask",
+        () -> new SteelFlaskItem(new Item.Properties().stacksTo(1))
+    );
+
+    public static final DeferredHolder<Item, ChemicalReferenceBookItem> REFERENCE_BOOK = ITEMS.register(
+        "chemical_reference_book",
+        () -> new ChemicalReferenceBookItem(new Item.Properties().stacksTo(1))
     );
 
     public static final DeferredHolder<Item, BlockItem> NATIVE_COPPER_ORE = ITEMS.register(
@@ -138,7 +152,13 @@ public final class ChemItems {
             .icon(() -> vial("вода"))
             .displayItems((parameters, output) -> {
                 output.accept(new ItemStack(SUBSTANCE_VIAL.get()));
-                CommonSubstances.INSTANCE.all().forEach(substance -> output.accept(vial(substance.getCanonicalName())));
+                output.accept(new ItemStack(STEEL_FLASK.get()));
+                output.accept(new ItemStack(REFERENCE_BOOK.get()));
+                // Show only participants in actual applications of authored reaction rules,
+                // plus explicit rule co-reactants and products. The name directory is not the
+                // source of this user-facing list; generic rules are not treated as infinite lists.
+                ReferenceMoleculeCatalog.INSTANCE.sortedMolecules(ReactionSpeciesCatalog.INSTANCE.all())
+                    .forEach(molecule -> output.accept(reactionSample(molecule)));
                 output.accept(mixtureVial("вода", "этанол"));
                 output.accept(new ItemStack(NATIVE_COPPER_ORE.get()));
                 output.accept(copperStorageBlockStack(CopperStorageBlockEntity.defaultBatch()));
@@ -207,6 +227,8 @@ public final class ChemItems {
         long massMicrograms = switch (spec.getFormName()) {
             case "NUGGET" -> 125_000_000L;
             case "BLOCK" -> CopperStorageBlockEntity.MASS_MICROGRAMS;
+            // A coupon is a one-gram reference sample; it is not a kilogram ingot alias.
+            case "CATALYST_COUPON" -> 1_000_000L;
             default -> 1_000_000_000L;
         };
         return new MaterialBatchContents(spec.getMaterialId(), spec.getFormName(), massMicrograms);
@@ -223,6 +245,15 @@ public final class ChemItems {
         CommonSubstance common = CommonSubstances.INSTANCE.find(input);
         String structure = common == null ? CommonSubstances.INSTANCE.resolve(input) : common.getStructure();
         return vialFromStructure(structure, 1_000_000L, 1_000_000);
+    }
+
+    private static ItemStack reactionSample(Molecule molecule) {
+        ItemStack sample = vialFromStructure(molecule.structuralWitness(), 1_000_000L, 1_000_000);
+        if (CommonSubstances.INSTANCE.findByCanonicalKey(molecule.canonicalKey()) == null) {
+            sample.set(DataComponents.CUSTOM_NAME, Component.translatable(
+                "substance.chemmod.reaction_derived_with_formula", molecule.formula()));
+        }
+        return sample;
     }
 
     public static ItemStack vialFromStructure(String structure, long micromoles, int purityPpm) {

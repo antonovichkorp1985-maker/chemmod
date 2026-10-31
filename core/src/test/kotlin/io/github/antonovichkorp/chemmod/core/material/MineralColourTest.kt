@@ -10,8 +10,8 @@ import kotlin.test.assertTrue
  * that is genuinely multicoloured must carry no colour at all, rather than one arbitrary hue.
  */
 class MineralColourTest {
-    private val catalogue = MaterialCatalog.loadDefault()
-    private val minerals = catalogue.minerals.associateBy { it.id.value }
+    private val catalogue = MaterialCatalog.bundled()
+    private val minerals = catalogue.minerals.values.associateBy { it.id.value }
 
     private fun colour(id: String) = minerals.getValue("chemmod:$id").colourArgb
 
@@ -30,7 +30,7 @@ class MineralColourTest {
 
     @Test
     fun `a colour is always opaque`() {
-        catalogue.minerals.forEach { mineral ->
+        catalogue.minerals.values.forEach { mineral ->
             val value = mineral.colourArgb ?: return@forEach
             assertEquals(0xFF, (value ushr 24) and 0xFF, "${mineral.id} was not opaque")
         }
@@ -45,7 +45,7 @@ class MineralColourTest {
 
     @Test
     fun `most of the catalogue is coloured`() {
-        val coloured = catalogue.minerals.count { it.colourArgb != null }
+        val coloured = catalogue.minerals.values.count { it.colourArgb != null }
         assertEquals(28, coloured)
         assertEquals(32, catalogue.minerals.size)
     }

@@ -17,10 +17,15 @@ data class ReactionEnvironment @JvmOverloads constructor(
     val availableCanonicalKeys: Set<String> = emptySet(),
     /** Capabilities the present catalyst earns from its composition, see `CatalystModel`. */
     val catalystCapabilities: Set<String> = emptySet(),
+    /** Accessible catalytic surface-site amounts, in moles of sites, from a characterized surface. */
+    val catalystSurfaceSiteMoles: Map<String, Double> = emptyMap(),
 ) {
     init {
         require(temperatureKelvin > 0.0 && temperatureKelvin.isFinite()) { "Temperature must be finite and positive" }
         require(pressureKilopascals > 0.0 && pressureKilopascals.isFinite()) { "Pressure must be finite and positive" }
+        require(catalystSurfaceSiteMoles.all { (id, moles) ->
+            id.matches(Regex("[a-z][a-z0-9_.-]*:[a-z0-9_./-]+")) && moles.isFinite() && moles >= 0.0
+        }) { "Catalyst surface-site amounts need namespaced IDs and finite non-negative amounts" }
     }
 }
 
@@ -105,6 +110,7 @@ class ReactionEngine(private val ruleSet: ReactionRuleSet) {
         is FormulaPattern -> if (matchesFormula(target, matcher)) listOf(null) else emptyList()
         is BondOrderPattern -> matchingBondProducts(target, matcher, requireNotNull(rule.targetProductBondOrder))
         is BondAdditionPattern -> additionProducts(target, rule, matcher)
+        is AtomTransferPattern -> atomTransferProducts(target, rule, matcher)
     }
 
     /**
@@ -172,6 +178,54 @@ class ReactionEngine(private val ruleSet: ReactionRuleSet) {
         if (reversed) add(bond.second)
     }.distinct()
 
+    /**
+     * Incorporates one selected atom from the co-reactant into the matched target graph.
+     * Other donor atoms are not copied; exact whole-reaction balancing verifies that they
+     * are accounted for by the other target/product molecules in the stoichiometry.
+     */
+    private fun atomTransferProducts(
+        target: Molecule,
+        rule: ReactionRule,
+        pattern: AtomTransferPattern,
+    ): List<Molecule> {
+        val graph = target.graph
+        if (pattern.requireNeutral && graph.atoms.any { it.formalCharge != 0 }) return emptyList()
+        val donor = Molecule.fromSMILESlike(rule.coReactantStructures.single()).graph
+        val transferredAtoms = donor.atoms.filter { it.element.symbol == pattern.attachElement }
+
+        return graph.bonds.asSequence()
+            .filter { it.order == pattern.bondOrder }
+            .flatMap { bond ->
+                val firstEndpoints = buildList {
+                    if (endpointMatches(graph, bond.first, pattern.firstElement, pattern.firstMinimumHydrogens) &&
+                        endpointMatches(graph, bond.second, pattern.secondElement, pattern.secondMinimumHydrogens)
+                    ) add(bond.first)
+                    if (endpointMatches(graph, bond.second, pattern.firstElement, pattern.firstMinimumHydrogens) &&
+                        endpointMatches(graph, bond.first, pattern.secondElement, pattern.secondMinimumHydrogens)
+                    ) add(bond.second)
+                }.distinct()
+                transferredAtoms.asSequence().flatMap { donorAtom ->
+                    firstEndpoints.asSequence().map { endpoint ->
+                        val newAtomId = (graph.atoms.maxOfOrNull { it.id } ?: -1) + 1
+                        Molecule.fromGraph(
+                            MoleculeGraph(
+                                atoms = graph.atoms + Atom(
+                                    newAtomId,
+                                    donorAtom.element,
+                                    donorAtom.formalCharge,
+                                    donorAtom.explicitHydrogens,
+                                ),
+                                bonds = graph.bonds + Bond(endpoint, newAtomId, BondOrder.SINGLE),
+                            ),
+                        )
+                    }
+                }
+            }
+            .filter { it.validate().isEmpty() }
+            .distinctBy(Molecule::canonicalKey)
+            .toList()
+    }
+
     private fun matchingBondProducts(
         target: Molecule,
         pattern: BondOrderPattern,
@@ -228,7 +282,7 @@ class ReactionEngine(private val ruleSet: ReactionRuleSet) {
         if (!formula.keys.all { it in pattern.allowedElements }) return false
         if (!pattern.requiredElements.all { formula.getOrDefault(it, 0) > 0 }) return false
         if (!pattern.requirePositiveOxygenDemand) return true
-        val carbon = formula["C"] ?: return false
+        val carbon = formula["C"] ?: 0
         val hydrogen = formula["H"] ?: 0
         val oxygen = formula["O"] ?: 0
         return 4 * carbon + hydrogen - 2 * oxygen > 0
@@ -239,7 +293,10 @@ class ReactionEngine(private val ruleSet: ReactionRuleSet) {
             (conditions.maximumTemperatureKelvin == null || environment.temperatureKelvin <= conditions.maximumTemperatureKelvin) &&
             (conditions.minimumPressureKilopascals == null || environment.pressureKilopascals >= conditions.minimumPressureKilopascals) &&
             environment.catalystTags.containsAll(conditions.catalystTags) &&
-            environment.catalystCapabilities.containsAll(conditions.catalystCapabilities)
+            environment.catalystCapabilities.containsAll(conditions.catalystCapabilities) &&
+            conditions.minimumCatalystSurfaceSiteMoles.all { (siteType, minimum) ->
+                (environment.catalystSurfaceSiteMoles[siteType] ?: 0.0) >= minimum
+            }
 
     companion object {
         @JvmStatic

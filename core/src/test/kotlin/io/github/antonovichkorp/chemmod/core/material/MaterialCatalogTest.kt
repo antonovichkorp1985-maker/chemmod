@@ -29,6 +29,7 @@ class MaterialCatalogTest {
         assertTrue(MaterialForm.INGOT in copper.supportedForms)
         assertTrue(MaterialForm.BLOCK in copper.supportedForms)
         assertTrue(MaterialForm.GEAR in copper.supportedForms)
+        assertTrue(MaterialForm.CATALYST_COUPON in copper.supportedForms)
         assertTrue(MaterialForm.LIQUID in copper.supportedForms)
 
         val melting = catalog.compiledProcesses.getValue(ProcessId.of("chemmod:melt_copper"))
@@ -38,8 +39,9 @@ class MaterialCatalogTest {
         assertEquals(1357.77, melting.conditions.minimumTemperatureKelvin)
 
         val itemForms = MaterialItemExports.bundledSolidForms()
-        assertEquals(11, itemForms.size)
+        assertEquals(12, itemForms.size)
         assertTrue(itemForms.any { it.registryPath == "copper_ingot" })
+        assertTrue(itemForms.any { it.registryPath == "copper_catalyst_coupon" })
         assertTrue(itemForms.any { it.registryPath == "copper_purified_crushed_ore" })
         assertTrue(itemForms.any { it.registryPath == "silicate_gangue_dust" })
         assertTrue(itemForms.none { it.formName == MaterialForm.LIQUID.name })

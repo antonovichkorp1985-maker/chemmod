@@ -212,7 +212,7 @@ public final class ChemicalReactorThermalGameTests {
     }
 
     private static net.minecraft.world.item.Item copperItem() {
-        return BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(ChemMod.MOD_ID, "copper_ingot"));
+        return BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(ChemMod.MOD_ID, "copper_catalyst_coupon"));
     }
 
     private static ItemStack emptyVial() {

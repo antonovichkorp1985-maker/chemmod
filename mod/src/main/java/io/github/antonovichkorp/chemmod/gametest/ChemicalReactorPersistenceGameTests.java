@@ -255,7 +255,7 @@ public final class ChemicalReactorPersistenceGameTests {
         ChemicalReactorBlockEntity reactor = reactor(helper);
         reactor.setItem(ChemicalReactorBlockEntity.TARGET_SLOT, vial("CCO", AMOUNT));
         reactor.setItem(ChemicalReactorBlockEntity.CATALYST_SLOT, new ItemStack(
-            BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(ChemMod.MOD_ID, "copper_ingot"))));
+            BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(ChemMod.MOD_ID, "copper_catalyst_coupon"))));
         reactor.setItem(ChemicalReactorBlockEntity.OUTPUT_FIRST_SLOT, new ItemStack(ChemItems.SUBSTANCE_VIAL.get()));
         reactor.setItem(ChemicalReactorBlockEntity.OUTPUT_SECOND_SLOT, new ItemStack(ChemItems.SUBSTANCE_VIAL.get()));
         return reactor;
@@ -343,6 +343,6 @@ public final class ChemicalReactorPersistenceGameTests {
             new SubstanceContents("[H][H]", 1, 1_000_000).canonicalKey())), "unexpected product identities");
         helper.assertTrue(reactor.getItem(ChemicalReactorBlockEntity.CATALYST_SLOT).getCount() == 1
             && reactor.getItem(ChemicalReactorBlockEntity.CATALYST_SLOT).is(BuiltInRegistries.ITEM.get(
-                ResourceLocation.fromNamespaceAndPath(ChemMod.MOD_ID, "copper_ingot"))), "copper catalyst was changed");
+                ResourceLocation.fromNamespaceAndPath(ChemMod.MOD_ID, "copper_catalyst_coupon"))), "copper catalyst was changed");
     }
 }

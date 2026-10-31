@@ -1,5 +1,6 @@
 package io.github.antonovichkorp.chemmod.core.gas
 
+import io.github.antonovichkorp.chemmod.core.Molecule
 import kotlin.math.abs
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -18,6 +19,10 @@ class GasFieldPhysicsTest {
             molarMass[species] ?: error("no molar mass for $species")
 
         override fun diffusionSquareMetersPerSecond(species: String): Double? = diffusion[species]
+
+        override fun molarMassGramsPerMole(species: Molecule): Double = species.molarMass()
+
+        override fun diffusionSquareMetersPerSecond(species: Molecule): Double? = diffusion[species.formula()]
     }
 
     private val air = mapOf(
@@ -49,6 +54,27 @@ class GasFieldPhysicsTest {
             "the cloud did not spread: ${field.occupiedCells().size} cells",
         )
         assertEquals(1.0, field.totalMoles("Cl2"), 1e-6, "diffusion created or destroyed gas")
+    }
+
+    @Test
+    fun `a sparse concentration gradient diffuses symmetrically in all six directions`() {
+        val field = GasField(cellSizeMetres = 1.0)
+        val origin = GasCell(0, 0, 0)
+        field.addMoles(origin, "Cl2", 1.0)
+        val properties = Props(air, mapOf("Cl2" to 0.1))
+
+        field.advance(1.0, properties, buoyantDriftMetresPerSecond = 0.0)
+
+        val neighbours = listOf(
+            GasCell(1, 0, 0), GasCell(-1, 0, 0),
+            GasCell(0, 1, 0), GasCell(0, -1, 0),
+            GasCell(0, 0, 1), GasCell(0, 0, -1),
+        )
+        neighbours.forEach { neighbour ->
+            assertEquals(0.1, field.molesOf(neighbour, "Cl2"), 1e-12, "diffusion was directionally biased at $neighbour")
+        }
+        assertEquals(0.4, field.molesOf(origin, "Cl2"), 1e-12)
+        assertEquals(1.0, field.totalMoles("Cl2"), 1e-12)
     }
 
     @Test

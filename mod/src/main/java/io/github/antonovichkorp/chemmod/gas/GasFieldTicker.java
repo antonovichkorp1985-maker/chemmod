@@ -7,6 +7,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.world.level.Level;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.tick.LevelTickEvent;
@@ -42,7 +43,14 @@ public final class GasFieldTicker {
         WorldGasField gas = level.getData(ChemAttachments.GAS_FIELD.get());
         gas.advance(level, TICKS_PER_STEP / 20.0);
         if (level instanceof ServerLevel server) {
+            applyPlayerExposure(server, gas);
             draw(server, gas);
+        }
+    }
+
+    private static void applyPlayerExposure(ServerLevel level, WorldGasField gas) {
+        for (ServerPlayer player : level.players()) {
+            GasExposureEffects.applyOxygenDeficiency(player, gas, player.blockPosition());
         }
     }
 

@@ -155,7 +155,7 @@ public final class ChemicalReactorMenuGameTests {
     }
 
     private static ItemStack copper(int count) {
-        return new ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(ChemMod.MOD_ID, "copper_ingot")), count);
+        return new ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(ChemMod.MOD_ID, "copper_catalyst_coupon")), count);
     }
 
     private static void assertOperator(GameTestHelper helper, ChemicalReactorBlockEntity reactor, String field, FakePlayer expected) {

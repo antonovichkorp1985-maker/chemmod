@@ -2,7 +2,6 @@ package io.github.antonovichkorp.chemmod.core.catalysis
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 /**
@@ -13,11 +12,11 @@ class CatalystModelTest {
     private val model = CatalystModel.bundled()
 
     @Test
-    fun `copper earns hydrogenation and dehydrogenation from its composition`() {
+    fun `copper earns hydrogenation dehydrogenation and oxidation from its composition`() {
         val earned = model.earnedBy(setOf("Cu"))
         assertTrue("chemmod:hydrogenation_metal" in earned)
         assertTrue("chemmod:dehydrogenation_metal" in earned)
-        assertFalse("chemmod:oxidation_metal" in earned)
+        assertTrue("chemmod:oxidation_metal" in earned)
     }
 
     @Test

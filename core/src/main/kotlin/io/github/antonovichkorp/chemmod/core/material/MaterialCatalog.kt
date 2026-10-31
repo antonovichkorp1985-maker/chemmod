@@ -15,6 +15,7 @@ class MaterialCatalog private constructor(
     deposits: List<DepositDefinition>,
     materials: List<MaterialDefinition>,
     processes: List<ProcessDefinition>,
+    val materialDensityRegistry: MaterialDensityRegistry
 ) {
     val species: Map<SpeciesId, ChemicalSpecies> = uniqueById("species", species) { it.id }
     val minerals: Map<MineralId, MineralDefinition> = uniqueById("minerals", minerals) { it.id }
@@ -29,6 +30,7 @@ class MaterialCatalog private constructor(
         validateCompositeCycles()
         val compiler = ProcessCompiler(this.materials.values)
         compiledProcesses = this.processes.mapValues { (_, process) -> compiler.compile(process) }
+        materialDensityRegistry.registerDefaults()
     }
 
     private fun validateReferences() {
@@ -87,6 +89,7 @@ class MaterialCatalog private constructor(
                 deposits = document.deposits.map { it.toDomain() },
                 materials = document.materials.map { it.toDomain() },
                 processes = document.processes.map { it.toDomain() },
+                materialDensityRegistry = MaterialDensityRegistry.withDefaults(),
             )
         }
 

@@ -109,9 +109,9 @@ class SmilesLikeParser(private val elements: ElementTable = ElementTable.default
             match.groupValues[3].isEmpty() -> 1
             else -> match.groupValues[3].toInt()
         }
-        val charge = when (match.groupValues[4]) {
-            "+" -> match.groupValues[5].ifEmpty { "1" }.toInt()
-            "-" -> -match.groupValues[5].ifEmpty { "1" }.toInt()
+        val charge = when (match.groupValues[4].firstOrNull()) {
+            '+' -> match.groupValues[5].ifEmpty { "1" }.toInt()
+            '-' -> -match.groupValues[5].ifEmpty { "1" }.toInt()
             else -> 0
         }
         return Atom(id, element, charge, hydrogens)

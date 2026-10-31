@@ -13,12 +13,15 @@ import kotlin.math.roundToInt
  * converts stoichiometrically to products, releases its heat of combustion into the gas, and the
  * resulting temperature and mole-count change produce the pressure spike that ruptures weak tanks.
  */
-class ClosedVessel(val volumeCubicMeters: Double) {
+class ClosedVessel(val volumeCubicMeters: Double, val wallStrengthPascals: Double) {
     private val moles = linkedMapOf<String, Double>()
     var temperatureKelvin: Double = 293.15
         private set
 
-    init { require(volumeCubicMeters > 0.0) { "A vessel must have positive volume" } }
+    init {
+        require(volumeCubicMeters > 0.0) { "A vessel must have positive volume" }
+        require(wallStrengthPascals > 0.0) { "Wall strength must be positive" }
+    }
 
     fun addMoles(species: String, amount: Double) {
         require(amount >= 0.0) { "Cannot add a negative amount" }
@@ -39,6 +42,42 @@ class ClosedVessel(val volumeCubicMeters: Double) {
 
     /** A wall fails when the internal pressure exceeds what its material and shape carry. */
     fun bursts(wallStrengthPascals: Double): Boolean = pressurePascals() > wallStrengthPascals
+
+    /** Release gas when pressure exceeds a threshold in pascals; returns moles released or 0. */
+    fun releaseAtPressure(maxPressurePascals: Double): Double {
+        val current = pressurePascals()
+        if (current <= maxPressurePascals) return 0.0
+        // Ideal gas: P * V = n * R * T, so n at max pressure = P_max * V / (R * T)
+        val targetMoles = maxPressurePascals * volumeCubicMeters / (GasPhase.UNIVERSAL_GAS_CONSTANT * temperatureKelvin)
+        val releaseAmount = totalMoles() - targetMoles
+        if (releaseAmount <= 0.0) return 0.0
+        // Proportional release from all species
+        val factor = releaseAmount / totalMoles()
+        moles.keys.toList().forEach { species ->
+            val currentAmount = moles[species] ?: 0.0
+            val newAmount = currentAmount * (1.0 - factor)
+            moles[species] = if (newAmount < 1e-12) { moles.remove(species); 0.0 } else newAmount
+        }
+        return releaseAmount
+    }
+
+    /** Manual vent: remove the given moles proportionally from all species; returns moles actually removed. */
+    fun ventMoles(requestedMoles: Double): Double {
+        require(requestedMoles >= 0.0) { "Cannot vent negative moles" }
+        val available = totalMoles()
+        if (available <= 0.0) return 0.0
+        val actual = minOf(requestedMoles, available)
+        val factor = actual / available
+        moles.keys.toList().forEach { species ->
+            val currentAmount = moles[species] ?: 0.0
+            val newAmount = currentAmount * (1.0 - factor)
+            moles[species] = if (newAmount < 1e-12) { moles.remove(species); 0.0 } else newAmount
+        }
+        return actual
+    }
+
+    /** Empty the vessel completely; returns the total moles removed. */
+    fun empty(): Double = ventMoles(totalMoles())
 
     /**
      * Ignite every flammable species that has oxygen within its flammability envelope. Returns the

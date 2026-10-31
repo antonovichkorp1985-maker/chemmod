@@ -99,11 +99,27 @@ data class BoilingRuleSet(
     val ringCelsius: Double,
     val aromaticRingCelsius: Double,
     /**
-     * Alcohols and polyols: the same dispersion term plus the hydrogen-bond network, so a
-     * diol or a triol boils higher because of the sites it actually has.
+     * Legacy polyol family: dispersion plus the hydrogen-bond network. Monohydric alcohols use
+     * the separate structure model below; the ethylene-glycol residual remains open.
      */
     val hydroxylBaseCelsius: Double,
     val hydroxylDispersionCelsius: Double,
+    val monohydricAlcoholBaseCelsius: Double,
+    /** Dispersion by molar mass plus explicit carbon-skeleton size. */
+    val monohydricAlcoholDispersionCelsius: Double,
+    val monohydricAlcoholCarbonCelsius: Double,
+    /** Cohesion contribution normalized by carbon count, so one OH site dilutes with chain size. */
+    val monohydricAlcoholHydrogenBondDensityCelsiusPerKilojoulePerCarbon: Double,
+    /** Steric shielding at a secondary/tertiary OH centre, derived from its carbon neighbours. */
+    val monohydricAlcoholHydroxylSubstitutionCelsius: Double,
+    val monohydricAlcoholHydroxylSubstitutionPerCarbonCelsius: Double,
+    /** Carbon-skeleton branch penalty excluding the OH-bearing carbon. */
+    val monohydricAlcoholBranchPointCelsius: Double,
+    /** Smaller additional penalty for a branch point at least two C-C bonds from OH. */
+    val monohydricAlcoholDistalBranchPointCelsius: Double,
+    /** Long-secondary C5-C6 baseline correction and per-carbon-arm length imbalance. */
+    val monohydricAlcoholLongSecondaryBaseCelsius: Double,
+    val monohydricAlcoholArmImbalanceCelsiusPerCarbon: Double,
     val hydrogenBondCelsiusPerKilojoulePerMole: Double,
     /**
      * Amines: dispersion plus one term per hydrogen the nitrogen can donate, which is what
@@ -187,6 +203,22 @@ private data class BoilingRuleSetDocument(
     val aromaticRingCelsius: Double,
     val hydroxylBaseCelsius: Double,
     val hydroxylDispersionCelsius: Double,
+    val monohydricAlcoholBaseCelsius: Double,
+    /** Dispersion by molar mass plus explicit carbon-skeleton size. */
+    val monohydricAlcoholDispersionCelsius: Double,
+    val monohydricAlcoholCarbonCelsius: Double,
+    /** Cohesion contribution normalized by carbon count, so one OH site dilutes with chain size. */
+    val monohydricAlcoholHydrogenBondDensityCelsiusPerKilojoulePerCarbon: Double,
+    /** Steric shielding at a secondary/tertiary OH centre, derived from its carbon neighbours. */
+    val monohydricAlcoholHydroxylSubstitutionCelsius: Double,
+    val monohydricAlcoholHydroxylSubstitutionPerCarbonCelsius: Double,
+    /** Carbon-skeleton branch penalty excluding the OH-bearing carbon. */
+    val monohydricAlcoholBranchPointCelsius: Double,
+    /** Smaller additional penalty for a branch point at least two C-C bonds from OH. */
+    val monohydricAlcoholDistalBranchPointCelsius: Double,
+    /** Long-secondary C5-C6 baseline correction and per-carbon-arm length imbalance. */
+    val monohydricAlcoholLongSecondaryBaseCelsius: Double,
+    val monohydricAlcoholArmImbalanceCelsiusPerCarbon: Double,
     val hydrogenBondCelsiusPerKilojoulePerMole: Double,
     val amineBaseCelsius: Double,
     val amineDispersionCelsius: Double,
@@ -214,6 +246,16 @@ private data class BoilingRuleSetDocument(
             aromaticRingCelsius,
             hydroxylBaseCelsius,
             hydroxylDispersionCelsius,
+            monohydricAlcoholBaseCelsius,
+            monohydricAlcoholDispersionCelsius,
+            monohydricAlcoholCarbonCelsius,
+            monohydricAlcoholHydrogenBondDensityCelsiusPerKilojoulePerCarbon,
+            monohydricAlcoholHydroxylSubstitutionCelsius,
+            monohydricAlcoholHydroxylSubstitutionPerCarbonCelsius,
+            monohydricAlcoholBranchPointCelsius,
+            monohydricAlcoholDistalBranchPointCelsius,
+            monohydricAlcoholLongSecondaryBaseCelsius,
+            monohydricAlcoholArmImbalanceCelsiusPerCarbon,
             hydrogenBondCelsiusPerKilojoulePerMole,
             amineDispersionCelsius,
             amineHydrogenBondDonorCelsius,
@@ -226,6 +268,19 @@ private data class BoilingRuleSetDocument(
             branchPointCelsius,
         ) + exactFormulaCelsius.values + halideCelsiusPerAtom.values
         require(values.all { it.isFinite() }) { "Boiling rule coefficients must be finite" }
+        require(monohydricAlcoholDispersionCelsius > 0.0 && monohydricAlcoholCarbonCelsius > 0.0 &&
+            monohydricAlcoholHydrogenBondDensityCelsiusPerKilojoulePerCarbon > 0.0
+        ) { "Alcohol dispersion, carbon skeleton and association density contributions must be positive" }
+        require(monohydricAlcoholDistalBranchPointCelsius >= 0.0 &&
+            monohydricAlcoholBranchPointCelsius + monohydricAlcoholDistalBranchPointCelsius <= 0.0
+        ) { "A distal skeleton branch still lowers boiling point, but less than a proximal branch" }
+        require(monohydricAlcoholLongSecondaryBaseCelsius <= 0.0 &&
+            monohydricAlcoholArmImbalanceCelsiusPerCarbon > 0.0
+        ) { "Long-secondary alcohol correction and arm-asymmetry direction must match their measured family" }
+        require(monohydricAlcoholHydroxylSubstitutionCelsius <= 0.0 &&
+            monohydricAlcoholHydroxylSubstitutionPerCarbonCelsius <= 0.0 &&
+            monohydricAlcoholBranchPointCelsius <= 0.0
+        ) { "OH shielding and carbon skeleton branching cannot raise a monohydric alcohol boiling point" }
         require(hydrogenBondCelsiusPerKilojoulePerMole >= 0.0) {
             "A hydrogen bond cannot lower the boiling point"
         }
@@ -252,6 +307,18 @@ private data class BoilingRuleSetDocument(
             aromaticRingCelsius = aromaticRingCelsius,
             hydroxylBaseCelsius = hydroxylBaseCelsius,
             hydroxylDispersionCelsius = hydroxylDispersionCelsius,
+            monohydricAlcoholBaseCelsius = monohydricAlcoholBaseCelsius,
+            monohydricAlcoholDispersionCelsius = monohydricAlcoholDispersionCelsius,
+            monohydricAlcoholCarbonCelsius = monohydricAlcoholCarbonCelsius,
+            monohydricAlcoholHydrogenBondDensityCelsiusPerKilojoulePerCarbon =
+                monohydricAlcoholHydrogenBondDensityCelsiusPerKilojoulePerCarbon,
+            monohydricAlcoholHydroxylSubstitutionCelsius = monohydricAlcoholHydroxylSubstitutionCelsius,
+            monohydricAlcoholHydroxylSubstitutionPerCarbonCelsius =
+                monohydricAlcoholHydroxylSubstitutionPerCarbonCelsius,
+            monohydricAlcoholBranchPointCelsius = monohydricAlcoholBranchPointCelsius,
+            monohydricAlcoholDistalBranchPointCelsius = monohydricAlcoholDistalBranchPointCelsius,
+            monohydricAlcoholLongSecondaryBaseCelsius = monohydricAlcoholLongSecondaryBaseCelsius,
+            monohydricAlcoholArmImbalanceCelsiusPerCarbon = monohydricAlcoholArmImbalanceCelsiusPerCarbon,
             hydrogenBondCelsiusPerKilojoulePerMole = hydrogenBondCelsiusPerKilojoulePerMole,
             amineBaseCelsius = amineBaseCelsius,
             amineDispersionCelsius = amineDispersionCelsius,

@@ -132,6 +132,71 @@ public final class ChemBlocks {
             .mapColor(MapColor.METAL).strength(1.0F).sound(SoundType.METAL).noOcclusion()
             .pushReaction(net.minecraft.world.level.material.PushReaction.BLOCK)));
 
+    /** E0: bare cable terminal block — contacts, shorts, arcs; no redstone ever. */
+    public static final DeferredHolder<Block, Block> CABLE_TERMINAL_BARE = BLOCKS.register(
+        "cable_terminal_bare",
+        () -> new Block(
+            BlockBehaviour.Properties.of()
+                .mapColor(MapColor.METAL)
+                .requiresCorrectToolForDrops()
+                .strength(1.0F, 3.0F)
+                .sound(SoundType.METAL)
+                .noOcclusion()
+        )
+    );
+
+    /** E0: insulated cable terminal block — safe to touch within insulation limits. */
+    public static final DeferredHolder<Block, Block> CABLE_TERMINAL_INSULATED = BLOCKS.register(
+        "cable_terminal_insulated",
+        () -> new Block(
+            BlockBehaviour.Properties.of()
+                .mapColor(MapColor.COLOR_GRAY)
+                .requiresCorrectToolForDrops()
+                .strength(1.0F, 3.0F)
+                .sound(SoundType.METAL)
+                .noOcclusion()
+        )
+    );
+
+    /** E1: galvanic battery block — electrochemical EMF source, no redstone. */
+    public static final DeferredHolder<Block, Block> GALVANIC_BATTERY = BLOCKS.register(
+        "galvanic_battery",
+        () -> new Block(
+            BlockBehaviour.Properties.of()
+                .mapColor(MapColor.METAL)
+                .requiresCorrectToolForDrops()
+                .strength(2.0F, 4.0F)
+                .sound(SoundType.METAL)
+                .noOcclusion()
+        )
+    );
+
+    /** E1: dynamo generator block — mechanical shaft input to EMF, no redstone. */
+    public static final DeferredHolder<Block, Block> DYNAMO_GENERATOR = BLOCKS.register(
+        "dynamo_generator",
+        () -> new Block(
+            BlockBehaviour.Properties.of()
+                .mapColor(MapColor.METAL)
+                .requiresCorrectToolForDrops()
+                .strength(3.0F, 5.0F)
+                .sound(SoundType.METAL)
+                .noOcclusion()
+        )
+    );
+
+    /** E1: electric heater block — converts I^2*R power to heat, no redstone. */
+    public static final DeferredHolder<Block, Block> ELECTRIC_HEATER = BLOCKS.register(
+        "electric_heater",
+        () -> new Block(
+            BlockBehaviour.Properties.of()
+                .mapColor(MapColor.METAL)
+                .requiresCorrectToolForDrops()
+                .strength(2.0F, 4.0F)
+                .sound(SoundType.METAL)
+                .noOcclusion()
+        )
+    );
+
     private ChemBlocks() {}
 
     public static void register(IEventBus eventBus) {

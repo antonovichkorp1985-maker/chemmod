@@ -24,7 +24,7 @@ public class GasTankBlockEntity extends BlockEntity {
     public static final double VOLUME_CUBIC_METERS = 0.05;
     public static final double WALL_STRENGTH_PASCALS = 500_000.0;
 
-    private final ClosedVessel vessel = new ClosedVessel(VOLUME_CUBIC_METERS);
+    private final ClosedVessel vessel = new ClosedVessel(VOLUME_CUBIC_METERS, WALL_STRENGTH_PASCALS);
 
     public GasTankBlockEntity(BlockPos pos, BlockState state) {
         super(ChemBlockEntities.GAS_TANK.get(), pos, state);

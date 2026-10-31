@@ -31,7 +31,30 @@
         "preExponentialFactorPerSecond": 1000.0,
         "activationEnergyJoulesPerMole": 35000.0
       },
-      "displayDescriptionKey": "reaction.chemmod.complete_combustion.description"
+      "displayDescriptionKey": "reaction.chemmod.complete_combustion.description",
+      "environmental": true
+    },
+    {
+      "id": "chemmod:hydrogen_combustion",
+      "matcher": {
+        "kind": "formula",
+        "allowedElements": ["H", "O"],
+        "requiredElements": ["H"],
+        "requireNeutral": true,
+        "requirePositiveOxygenDemand": true
+      },
+      "coReactantStructures": ["O=O"],
+      "productStructures": ["O"],
+      "conditions": {
+        "minimumTemperatureKelvin": 500.0
+      },
+      "displayNameKey": "reaction.chemmod.hydrogen_combustion",
+      "kinetics": {
+        "preExponentialFactorPerSecond": 1000.0,
+        "activationEnergyJoulesPerMole": 35000.0
+      },
+      "displayDescriptionKey": "reaction.chemmod.hydrogen_combustion.description",
+      "environmental": true
     },
     {
       "id": "chemmod:alkene_hydrogenation",
@@ -126,16 +149,48 @@
       ],
       "conditions": {
         "minimumTemperatureKelvin": 550.0,
-        "catalystTags": [
-          "chemmod:copper"
-        ]
+        "catalystCapabilities": [
+          "chemmod:dehydrogenation_metal"
+        ],
+        "minimumCatalystSurfaceSiteMoles": {
+          "chemmod:cu110_step_site": 5.6e-10
+        }
       },
       "displayNameKey": "reaction.chemmod.alcohol_dehydrogenation",
       "kinetics": {
         "preExponentialFactorPerSecond": 900.0,
-        "activationEnergyJoulesPerMole": 45000.0
+        "activationEnergyJoulesPerMole": 45000.0,
+        "surfaceSiteType": "chemmod:cu110_step_site",
+        "referenceSurfaceSiteMoles": 5.631149772978659e-10
       },
       "displayDescriptionKey": "reaction.chemmod.alcohol_dehydrogenation.description"
+    },
+    {
+      "id": "chemmod:aldehyde_oxidation",
+      "matcher": {
+        "kind": "atom_transfer",
+        "firstElement": "C",
+        "secondElement": "O",
+        "bondOrder": "DOUBLE",
+        "firstMinimumHydrogens": 1,
+        "attachElement": "O",
+        "requireNeutral": true
+      },
+      "coReactantStructures": [
+        "O=O"
+      ],
+      "conditions": {
+        "minimumTemperatureKelvin": 423.0,
+        "catalystCapabilities": [
+          "chemmod:oxidation_metal"
+        ]
+      },
+      "displayNameKey": "reaction.chemmod.aldehyde_oxidation",
+      "kinetics": {
+        "preExponentialFactorPerSecond": 900.0,
+        "activationEnergyJoulesPerMole": 53500.0
+      },
+      "displayDescriptionKey": "reaction.chemmod.aldehyde_oxidation.description"
     },
     {
       "id": "chemmod:complete_combustion_with_nitrogen",

@@ -388,7 +388,8 @@
         "plate",
         "rod",
         "wire",
-        "gear"
+        "gear",
+        "catalyst_coupon"
       ]
     },
     {

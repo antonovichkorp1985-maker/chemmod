@@ -11,7 +11,7 @@
     },
     {
       "id": "chemmod:oxidation_metal",
-      "anyElements": ["V", "Mo", "W", "Mn", "Cr"]
+      "anyElements": ["V", "Mo", "W", "Mn", "Cr", "Cu"]
     }
   ]
 }

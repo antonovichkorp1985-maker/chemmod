@@ -204,6 +204,118 @@ object FunctionalGroups {
     }
 
     /**
+     * Count how many carbon neighbours beyond a primary alcohol centre are attached to the
+     * hydroxyl-bearing carbon. Primary alcohols (and methanol) contribute zero, secondary centres
+     * one, tertiary centres two. This is a graph-derived steric descriptor, not an alcohol list.
+     */
+    fun hydroxylCarbonSubstitution(graph: MoleculeGraph): Int =
+        groups(graph).asSequence()
+            .filter { it.kind == HYDROXYL }
+            .mapNotNull { hydroxyl ->
+                graph.neighbors(hydroxyl.atomId)
+                    .firstOrNull { it.first.element.symbol == "C" }
+                    ?.first?.id
+            }
+            .sumOf { carbonId ->
+                (graph.neighbors(carbonId).count { it.first.element.symbol == "C" } - 1).coerceAtLeast(0)
+            }
+
+    /**
+     * Difference between the largest and smallest carbon-arm sizes attached to each OH-bearing
+     * carbon, measured after cutting the OH centre out of the carbon skeleton. A linear secondary
+     * alcohol therefore distinguishes 2-pentanol (1 vs 3 carbons) from 3-pentanol (2 vs 2).
+     * This is a graph descriptor; it contains no names or formula-specific cases.
+     */
+    fun hydroxylCarbonArmLengthImbalance(graph: MoleculeGraph): Int =
+        groups(graph).asSequence()
+            .filter { it.kind == HYDROXYL }
+            .mapNotNull { hydroxyl ->
+                graph.neighbors(hydroxyl.atomId)
+                    .firstOrNull { it.first.element.symbol == "C" }
+                    ?.first?.id
+            }
+            .sumOf { hydroxylCarbonId ->
+                val arms = graph.neighbors(hydroxylCarbonId)
+                    .filter { it.first.element.symbol == "C" }
+                    .map { (start, _) ->
+                        val visited = mutableSetOf(hydroxylCarbonId)
+                        val pending = ArrayDeque<Int>()
+                        pending.add(start.id)
+                        while (pending.isNotEmpty()) {
+                            val atomId = pending.removeFirst()
+                            if (!visited.add(atomId)) continue
+                            graph.neighbors(atomId)
+                                .filter { it.first.element.symbol == "C" }
+                                .forEach { (neighbor, _) -> if (neighbor.id !in visited) pending.add(neighbor.id) }
+                        }
+                        visited.count { it != hydroxylCarbonId && graph.atom(it).element.symbol == "C" }
+                    }
+                if (arms.size < 2) 0 else arms.maxOrNull()!! - arms.minOrNull()!!
+            }
+
+    /**
+     * Saturated carbon branch points away from hydroxyl-bearing carbons. Excluding the OH centre
+     * keeps alcohol steric shielding separate from carbon-skeleton compactness.
+     */
+    fun carbonBranchPointsOutsideHydroxylCentres(graph: MoleculeGraph): Int {
+        val hydroxylCentres = groups(graph).asSequence()
+            .filter { it.kind == HYDROXYL }
+            .mapNotNull { hydroxyl ->
+                graph.neighbors(hydroxyl.atomId)
+                    .firstOrNull { it.first.element.symbol == "C" }
+                    ?.first?.id
+            }
+            .toSet()
+        return graph.atoms.count { atom ->
+            atom.element.symbol == "C" && atom.id !in hydroxylCentres &&
+                graph.bondsOf(atom.id).all { it.order == BondOrder.SINGLE } &&
+                graph.neighbors(atom.id).count { it.first.element.symbol == "C" } >= 3
+        }
+    }
+
+    /**
+     * Count branch points at least two C-C bonds from an OH-bearing carbon. The OH-centre
+     * distance distinguishes the proximal and distal skeleton branches of primary alcohols.
+     */
+    fun carbonBranchPointsDistalToHydroxylCentres(graph: MoleculeGraph): Int {
+        val hydroxylCentres = groups(graph).asSequence()
+            .filter { it.kind == HYDROXYL }
+            .mapNotNull { hydroxyl ->
+                graph.neighbors(hydroxyl.atomId)
+                    .firstOrNull { it.first.element.symbol == "C" }
+                    ?.first?.id
+            }
+            .toSet()
+        if (hydroxylCentres.isEmpty()) return 0
+
+        val distances = mutableMapOf<Int, Int>()
+        val pending = ArrayDeque<Int>()
+        hydroxylCentres.forEach { centre ->
+            distances[centre] = 0
+            pending.add(centre)
+        }
+        while (pending.isNotEmpty()) {
+            val atomId = pending.removeFirst()
+            val nextDistance = distances.getValue(atomId) + 1
+            graph.neighbors(atomId)
+                .filter { it.first.element.symbol == "C" }
+                .forEach { (neighbor, _) ->
+                    if (neighbor.id !in distances) {
+                        distances[neighbor.id] = nextDistance
+                        pending.add(neighbor.id)
+                    }
+                }
+        }
+
+        return graph.atoms.count { atom ->
+            atom.element.symbol == "C" && atom.id !in hydroxylCentres &&
+                graph.bondsOf(atom.id).all { it.order == BondOrder.SINGLE } &&
+                graph.neighbors(atom.id).count { it.first.element.symbol == "C" } >= 3 &&
+                (distances[atom.id]?.let { it > 1 } ?: false)
+        }
+    }
+
+    /**
      * Cycle-basis rank: bonds - atoms + components. One for cyclohexane, two for naphthalene,
      * zero for anything acyclic. Shared with the boiling-point model so a ring means one thing.
      */

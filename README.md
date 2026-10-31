@@ -424,3 +424,26 @@ ChemMod распространяется на условиях **All Rights Rese
 Сторонние компоненты не перелицензируются ChemMod и остаются под собственными
 лицензиями; перечень приведён в
 [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
+
+## prerelease v1.0.2-test.4
+
+Центральный модуль CM-1: полный физико-химический ядер для ионного обмена (метатезис)
+и таблица растворимости.
+
+**Изменения:**
+- Добавлен enum [Phase] (SOLID, LIQUID, AQUEOUS, MOLTEN, GAS) с `hasFreeMobileIons`
+- [MetathesisDrivingForce] поддержка [Solubility.Cation], NH4⁺, три типа двигающих сил:
+  осадок, газ, слабый электролит
+- [MetathesisDrivingForce] проверка фазы: только AQUEOUS/MOLTEN могут обменивать ионы;
+  SOLID → NO_FREE_IONS, GAS → NO_FREE_IONS
+- [Solubility] добавлены `formsGas()` и `formsWeakElectrolyte()` для детектирования
+  газообразующих и нейтрализаций реакций
+- [MixtureReactionPlanner] исправлен итератор пар: теперь пробует всех кандидатов,
+  а не только первый
+- Таблица растворимости расширена: типичные осадки (AgCl, BaSO₄), газовые реакции
+  (H⁺ + CO₃²⁻ → CO₂ + H₂O), нейтрализация (H⁺ + OH⁻ → H₂O)
+
+**Зависимости:** `Element` должен иметь `commonIonCharges` с валидными зарядами
+(например, H⁺ через `Cation.Elemental`).
+
+Обновление до `v1.0.2-test.4` (пре-release) с привязкой к `.jar`.

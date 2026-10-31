@@ -91,6 +91,30 @@ data class BondAdditionPattern(
     }
 }
 
+/**
+ * Transfers one atom of a co-reactant onto the first endpoint of a matched target bond,
+ * without transferring any of the donor's other atoms or bonds. This represents selective
+ * atom incorporation (for example aldehyde oxidation with O2) without retaining an O-O bond.
+ */
+data class AtomTransferPattern(
+    val firstElement: String,
+    val secondElement: String,
+    val bondOrder: BondOrder,
+    val attachElement: String,
+    val firstMinimumHydrogens: Int = 0,
+    val secondMinimumHydrogens: Int = 0,
+    val requireNeutral: Boolean = true,
+) : ReactionMatcher {
+    init {
+        require(listOf(firstElement, secondElement, attachElement).all { ELEMENT_SYMBOL_PATTERN.matches(it) }) {
+            "Atom-transfer elements must be symbols"
+        }
+        require(firstMinimumHydrogens >= 0 && secondMinimumHydrogens >= 0) {
+            "Atom-transfer hydrogen requirements cannot be negative"
+        }
+    }
+}
+
 data class ReactionConditions(
     val minimumTemperatureKelvin: Double? = null,
     val maximumTemperatureKelvin: Double? = null,
@@ -102,6 +126,8 @@ data class ReactionConditions(
      * this never enumerates acceptable items.
      */
     val catalystCapabilities: Set<String> = emptySet(),
+    /** Minimum accessible moles of each characterized surface-site type. */
+    val minimumCatalystSurfaceSiteMoles: Map<String, Double> = emptyMap(),
 ) {
     init {
         listOfNotNull(minimumTemperatureKelvin, maximumTemperatureKelvin, minimumPressureKilopascals).forEach {
@@ -116,6 +142,9 @@ data class ReactionConditions(
         require(catalystCapabilities.all { REACTION_RULE_ID_PATTERN.matches(it) }) {
             "Catalyst capabilities must use namespace:path"
         }
+        require(minimumCatalystSurfaceSiteMoles.all { (siteType, moles) ->
+            REACTION_RULE_ID_PATTERN.matches(siteType) && moles.isFinite() && moles > 0.0
+        }) { "Catalyst surface-site requirements need namespaced IDs and finite positive amounts" }
     }
 }
 
@@ -128,6 +157,10 @@ data class ReactionConditions(
 data class ReactionKinetics(
     val preExponentialFactorPerSecond: Double,
     val activationEnergyJoulesPerMole: Double,
+    /** Optional characterized site type whose accessible amount scales this rate. */
+    val surfaceSiteType: String? = null,
+    /** Accessible site amount (mol) at which the data-defined Arrhenius rate is normalized. */
+    val referenceSurfaceSiteMoles: Double? = null,
 ) {
     init {
         require(preExponentialFactorPerSecond.isFinite() && preExponentialFactorPerSecond > 0.0) {
@@ -136,16 +169,38 @@ data class ReactionKinetics(
         require(activationEnergyJoulesPerMole.isFinite() && activationEnergyJoulesPerMole >= 0.0) {
             "Activation energy must be finite and non-negative"
         }
+        require((surfaceSiteType == null) == (referenceSurfaceSiteMoles == null)) {
+            "Surface-dependent kinetics must define both a site type and its reference amount"
+        }
+        require(surfaceSiteType == null || REACTION_RULE_ID_PATTERN.matches(surfaceSiteType)) {
+            "Kinetic surface-site type must use namespace:path"
+        }
+        require(referenceSurfaceSiteMoles == null ||
+            (referenceSurfaceSiteMoles.isFinite() && referenceSurfaceSiteMoles > 0.0)
+        ) { "Reference surface-site amount must be finite and positive" }
     }
 
     /** Exact condition checks remain the engine's responsibility; this only supplies the progress rate. */
-    fun ratePerSecond(temperatureKelvin: Double): Double {
+    fun ratePerSecond(temperatureKelvin: Double): Double = ratePerSecond(temperatureKelvin, emptyMap())
+
+    /**
+     * Arrhenius rate multiplied by accessible sites / the measured reference site amount when
+     * this kinetic record declares a surfaceSiteType. No declared surface model means no surface
+     * correction; a declared but absent site population gives zero rate.
+     */
+    fun ratePerSecond(temperatureKelvin: Double, catalystSurfaceSiteMoles: Map<String, Double>): Double {
         require(temperatureKelvin.isFinite() && temperatureKelvin > 0.0) {
             "Temperature must be finite and positive"
         }
-        return preExponentialFactorPerSecond * kotlin.math.exp(
+        val arrhenius = preExponentialFactorPerSecond * kotlin.math.exp(
             -activationEnergyJoulesPerMole / (GAS_CONSTANT_JOULES_PER_MOLE_KELVIN * temperatureKelvin)
         )
+        val siteType = surfaceSiteType ?: return arrhenius
+        val available = catalystSurfaceSiteMoles[siteType] ?: 0.0
+        require(available.isFinite() && available >= 0.0) {
+            "Accessible surface-site amount must be finite and non-negative"
+        }
+        return arrhenius * (available / requireNotNull(referenceSurfaceSiteMoles))
     }
 
     private companion object {
@@ -171,12 +226,15 @@ data class ReactionRule(
     val displayDescriptionKey: String = "reaction.chemmod.unnamed.description",
     /** Null means the rule is valid but has no timed machine execution model yet. */
     val kinetics: ReactionKinetics? = null,
+    /** This ordinary chemistry rule may run in an exposed environmental gas mixture. */
+    val environmental: Boolean = false,
 ) {
     init {
         val bondMatcher = matcher as? BondOrderPattern
         val additionMatcher = matcher as? BondAdditionPattern
+        val atomTransferMatcher = matcher as? AtomTransferPattern
         require((bondMatcher != null) == (targetProductBondOrder != null)) {
-            "Rule $id must define a target bond transformation exactly when it uses a bond matcher"
+            "Rule $id must define a target bond transformation exactly when it uses a bond-order matcher"
         }
         if (bondMatcher != null) {
             require(targetProductBondOrder != bondMatcher.bondOrder) {
@@ -192,7 +250,18 @@ data class ReactionRule(
                 "Rule $id attaches '${additionMatcher.attachElement}', absent from its co-reactant"
             }
         }
-        require(productStructures.isNotEmpty() || bondMatcher != null || additionMatcher != null) {
+        if (atomTransferMatcher != null) {
+            require(coReactantStructures.size == 1) {
+                "Rule $id transfers an atom from exactly one co-reactant"
+            }
+            val coReactant = Molecule.fromSMILESlike(coReactantStructures.single())
+            require(coReactant.graph.atoms.any { it.element.symbol == atomTransferMatcher.attachElement }) {
+                "Rule $id transfers '${atomTransferMatcher.attachElement}', absent from its co-reactant"
+            }
+        }
+        require(
+            productStructures.isNotEmpty() || bondMatcher != null || additionMatcher != null || atomTransferMatcher != null,
+        ) {
             "Rule $id needs a static product or a transformed target"
         }
         require(displayNameKey.matches(Regex("[a-z][a-z0-9_.-]*(\\.[a-z0-9_.-]+)+"))) {
@@ -200,6 +269,10 @@ data class ReactionRule(
         }
         require(displayDescriptionKey.matches(Regex("[a-z][a-z0-9_.-]*(\\.[a-z0-9_.-]+)+"))) {
             "Rule $id needs a lowercase display-description localization key"
+        }
+        val surfaceKineticSite = kinetics?.surfaceSiteType
+        require(surfaceKineticSite == null || surfaceKineticSite in conditions.minimumCatalystSurfaceSiteMoles) {
+            "Rule $id uses surface-dependent kinetics but does not require that active-site inventory"
         }
         (coReactantStructures + productStructures).forEach { structure ->
             val molecule = Molecule.fromSMILESlike(structure)
@@ -258,6 +331,7 @@ private data class ReactionRuleDocument(
     val displayNameKey: String = "reaction.chemmod.unnamed",
     val displayDescriptionKey: String = "reaction.chemmod.unnamed.description",
     val kinetics: ReactionKineticsDocument? = null,
+    val environmental: Boolean = false,
 ) {
     fun toDomain() = ReactionRule(
         id = ReactionRuleId.of(id),
@@ -269,6 +343,7 @@ private data class ReactionRuleDocument(
         displayNameKey = displayNameKey,
         displayDescriptionKey = displayDescriptionKey,
         kinetics = kinetics?.toDomain(),
+        environmental = environmental,
     )
 }
 
@@ -312,6 +387,15 @@ private data class ReactionMatcherDocument(
             attachElement = requireNotNull(attachElement) { "Addition matcher needs attachElement" },
             requireNeutral = requireNeutral,
         )
+        "atom_transfer" -> AtomTransferPattern(
+            firstElement = requireNotNull(firstElement) { "Atom-transfer matcher needs firstElement" },
+            secondElement = requireNotNull(secondElement) { "Atom-transfer matcher needs secondElement" },
+            bondOrder = parseBondOrder(requireNotNull(bondOrder) { "Atom-transfer matcher needs bondOrder" }),
+            attachElement = requireNotNull(attachElement) { "Atom-transfer matcher needs attachElement" },
+            firstMinimumHydrogens = firstMinimumHydrogens,
+            secondMinimumHydrogens = secondMinimumHydrogens,
+            requireNeutral = requireNeutral,
+        )
         else -> throw IllegalArgumentException("Unknown reaction matcher kind '$kind'")
     }
 }
@@ -323,6 +407,7 @@ private data class ReactionConditionsDocument(
     val minimumPressureKilopascals: Double? = null,
     val catalystTags: Set<String> = emptySet(),
     val catalystCapabilities: Set<String> = emptySet(),
+    val minimumCatalystSurfaceSiteMoles: Map<String, Double> = emptyMap(),
 ) {
     fun toDomain() = ReactionConditions(
         minimumTemperatureKelvin,
@@ -330,6 +415,7 @@ private data class ReactionConditionsDocument(
         minimumPressureKilopascals,
         catalystTags,
         catalystCapabilities,
+        minimumCatalystSurfaceSiteMoles,
     )
 }
 
@@ -337,10 +423,14 @@ private data class ReactionConditionsDocument(
 private data class ReactionKineticsDocument(
     val preExponentialFactorPerSecond: Double,
     val activationEnergyJoulesPerMole: Double,
+    val surfaceSiteType: String? = null,
+    val referenceSurfaceSiteMoles: Double? = null,
 ) {
     fun toDomain() = ReactionKinetics(
         preExponentialFactorPerSecond = preExponentialFactorPerSecond,
         activationEnergyJoulesPerMole = activationEnergyJoulesPerMole,
+        surfaceSiteType = surfaceSiteType,
+        referenceSurfaceSiteMoles = referenceSurfaceSiteMoles,
     )
 }
 

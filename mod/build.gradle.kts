@@ -25,8 +25,11 @@ neoForge {
         create("gameTestServer") {
             // ModDevGradle has client/data/server convenience methods, but a
             // game-test server is selected through the documented run type.
+            // Restrict discovery to ChemMod's namespace so optional-mod tests
+            // do not turn this project harness into an upstream Create test run.
             // It exits with the required failed-test count on its own.
             type = "gameTestServer"
+            systemProperty("neoforge.enabledGameTestNamespaces", "chemmod")
         }
     }
 

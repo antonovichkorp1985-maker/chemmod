@@ -1,5 +1,12 @@
 package io.github.antonovichkorp.chemmod.core.mixture
 
+import io.github.antonovichkorp.chemmod.core.Molecule
+import io.github.antonovichkorp.chemmod.core.model.IonicSolubilityClassifier
+import io.github.antonovichkorp.chemmod.core.model.MetathesisDrivingForce
+import io.github.antonovichkorp.chemmod.core.model.MoleculeGraph
+import io.github.antonovichkorp.chemmod.core.model.Phase
+import io.github.antonovichkorp.chemmod.core.model.Solubility
+import io.github.antonovichkorp.chemmod.core.model.ElementTable
 import io.github.antonovichkorp.chemmod.core.reaction.MolecularPortion
 import io.github.antonovichkorp.chemmod.core.reaction.ReactionBatchPlan
 import io.github.antonovichkorp.chemmod.core.reaction.ReactionBatchPlanner
@@ -13,6 +20,23 @@ data class MixtureReactionPlan(
     val residual: MolecularMixture,
     val products: List<MolecularPortion>,
 )
+
+/**
+ * Assess whether ionic exchange can proceed given the physical phase and ion pair.
+ * CM-1.2: Dynamic planning - uses the existing MetathesisDrivingForce and Phase.gate
+ * rather than hardcoded reaction tables. Returns the driving force outcome, or
+ * NO_FREE_IONS if the phase does not permit ion exchange (SOLID/GAS).
+ */
+fun assessIonicExchange(
+    cation1: Solubility.Cation,
+    anion1: Solubility.AnionGroup,
+    cation2: Solubility.Cation,
+    anion2: Solubility.AnionGroup,
+    phase: Phase,
+): MetathesisDrivingForce.Outcome = when {
+    phase != Phase.AQUEOUS && phase != Phase.MOLTEN -> MetathesisDrivingForce.Outcome.NO_FREE_IONS
+    else -> MetathesisDrivingForce.assess(cation1, anion1, cation2, anion2, phase)
+}
 
 /**
  * Selects a target identity from a mixture and uses only identities physically
@@ -35,20 +59,22 @@ class MixtureReactionPlanner(private val engine: ReactionEngine) {
         val candidates = engine.apply(target.molecule, ruleId, physicalEnvironment)
         if (candidates.isEmpty()) return emptyList()
 
-        // All outcomes for one data rule have the same reactant identities;
-        // their product graphs may differ when several target bonds match.
-        val coReactants = candidates.first().reactants.drop(1).map { required ->
-            mixture.portion(required.molecule.canonicalKey()) ?: return emptyList()
-        }
-        return batchPlanner.plan(target, coReactants, ruleId, physicalEnvironment).mapNotNull { batchPlan ->
-            val withdrawals = withdrawals(batchPlan)
-            if (withdrawals.any { (key, amount) -> amount > mixture.micromolesOf(key) }) return@mapNotNull null
-            MixtureReactionPlan(
-                batchPlan = batchPlan,
-                residual = mixture.withdraw(withdrawals),
-                products = batchPlan.products,
-            )
-        }
+        // Every candidate outcome may need a different set of co-reactants; try each one so a
+        // rule that can trade with several partners is not limited to the first candidate's list.
+        return candidates.flatMap { candidate ->
+            val coReactants = candidate.reactants.drop(1).map { required ->
+                mixture.portion(required.molecule.canonicalKey()) ?: return@flatMap emptyList()
+            }
+            batchPlanner.plan(target, coReactants, ruleId, physicalEnvironment).mapNotNull { batchPlan ->
+                val withdrawals = withdrawals(batchPlan)
+                if (withdrawals.any { (key, amount) -> amount > mixture.micromolesOf(key) }) return@mapNotNull null
+                MixtureReactionPlan(
+                    batchPlan = batchPlan,
+                    residual = mixture.withdraw(withdrawals),
+                    products = batchPlan.products,
+                )
+            }
+        }.distinctBy { it.batchPlan.reaction.formatEquation() }
     }
 
     private fun withdrawals(batchPlan: ReactionBatchPlan): Map<String, Long> {

@@ -1,9 +1,11 @@
 package io.github.antonovichkorp.chemmod.core.properties
 
+import io.github.antonovichkorp.chemmod.core.CommonSubstances
 import io.github.antonovichkorp.chemmod.core.Molecule
 import io.github.antonovichkorp.chemmod.core.chemistry.FunctionalGroups
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
@@ -17,11 +19,25 @@ import kotlin.test.assertTrue
 class BoilingPointModelTest {
     private val engine = PropertyEngine(PropertyRuleSet.bundled())
 
+    private fun referenceMolecule(structure: String): Molecule {
+        assertNotNull(
+            CommonSubstances.findByStructure(structure),
+            "every molecule used to validate the property model must have a finite creative reference sample: $structure",
+        )
+        return Molecule.fromSMILESlike(structure)
+    }
+
     private fun boiling(structure: String): Double? =
+        engine.predict(referenceMolecule(structure).graph).boilingPointC
+
+    private fun boilingDirect(structure: String): Double? =
         engine.predict(Molecule.fromSMILESlike(structure).graph).boilingPointC
 
-    private fun basis(structure: String): String =
+    private fun basisDirect(structure: String): String =
         engine.predict(Molecule.fromSMILESlike(structure).graph).boilingPointBasis
+
+    private fun basis(structure: String): String =
+        engine.predict(referenceMolecule(structure).graph).boilingPointBasis
 
     private fun assertNear(expected: Double, actual: Double, tolerance: Double = 1.0) =
         assertTrue(kotlin.math.abs(expected - actual) <= tolerance, "expected $expected ± $tolerance, got $actual")
@@ -54,12 +70,125 @@ class BoilingPointModelTest {
     }
 
     @Test
-    fun `alcohols rise with the chain and with their hydrogen-bond network`() {
-        assertNear(64.3, boiling("CO")!!)
-        assertNear(83.7, boiling("CCO")!!)
-        assertNear(101.2, boiling("CCCO")!!)
-        assertNear(117.3, boiling("CCCCO")!!)
-        assertEquals("hydroxyl-family+hydrogen-bond-network", basis("CCO"))
+    fun `monohydric alcohol graph model tracks measured homologous series`() {
+        // NIST Chemistry WebBook normal-boiling measurements: methanol 337.69 K, ethanol
+        // 351.44 K, 1-propanol 370.26 K, 1-butanol 390.75 K, 1-pentanol 410.9 K,
+        // and 1-hexanol 430.5 K. These six homologues constrain one structure-based rule.
+        assertNear(64.54, boilingDirect("CO")!!, 0.1)
+        assertNear(78.29, boilingDirect("CCO")!!, 0.2)
+        assertNear(97.11, boilingDirect("CCCO")!!, 0.35)
+        assertNear(117.60, boilingDirect("CCCCO")!!, 0.1)
+        assertNear(137.75, boilingDirect("CCCCCO")!!, 0.2)
+        assertNear(157.35, boilingDirect("CCCCCCO")!!, 0.15)
+        assertEquals("monohydric-alcohol-structure+dispersion+association", basis("CCO"))
+    }
+
+    @Test
+    fun `alcohol graph descriptors separate hydroxyl shielding and carbon branching`() {
+        assertNear(82.27, boilingDirect("CC(O)C")!!, 0.1)       // 2-propanol
+        assertNear(99.51, boilingDirect("CCC(O)C")!!, 0.4)     // 2-butanol
+        assertNear(107.65, boilingDirect("CC(C)CO")!!, 0.6)   // 2-methyl-1-propanol; NIST AVG
+        assertNear(82.45, boilingDirect("CC(C)(C)O")!!, 0.2)  // 2-methyl-2-propanol
+        assertEquals(1, FunctionalGroups.hydroxylCarbonSubstitution(Molecule.fromSMILESlike("CC(O)C").graph))
+        assertEquals(2, FunctionalGroups.hydroxylCarbonSubstitution(Molecule.fromSMILESlike("CC(C)(C)O").graph))
+        assertEquals(
+            1,
+            FunctionalGroups.carbonBranchPointsOutsideHydroxylCentres(
+                Molecule.fromSMILESlike("CC(C)CO").graph,
+            ),
+        )
+    }
+
+    @Test
+    fun `branch distance separates primary alcohol isomers and predicts a C6 holdout`() {
+        // Fit proximal/distal penalties on C4 isobutanol and C5 2-/3-methyl-1-butanol.
+        // 2-methyl-1-pentanol is the C6 holdout: NIST 421 ± 2 K, predicted residual +0.29 K.
+        assertNear(107.65, boilingDirect("CC(C)CO")!!, 0.6)       // isobutanol, NIST AVG 380.8 ± 0.9 K
+        assertNear(128.85, boilingDirect("CCC(C)CO")!!, 0.6)    // 2-methyl-1-butanol, fit
+        assertNear(130.85, boilingDirect("CC(C)CCO")!!, 0.05)   // 3-methyl-1-butanol, fit
+        assertNear(147.85, boilingDirect("CCCC(C)CO")!!, 0.5)   // 2-methyl-1-pentanol, holdout
+        assertEquals(
+            "monohydric-alcohol-structure+dispersion+association+branch-distance",
+            basisDirect("CC(C)CCO"),
+        )
+        assertEquals(
+            1,
+            FunctionalGroups.carbonBranchPointsDistalToHydroxylCentres(
+                Molecule.fromSMILESlike("CC(C)CCO").graph,
+            ),
+        )
+        assertEquals(
+            0,
+            FunctionalGroups.carbonBranchPointsDistalToHydroxylCentres(
+                Molecule.fromSMILESlike("CCC(C)CO").graph,
+            ),
+        )
+    }
+
+    @Test
+    fun `unvalidated primary C6 distal branch topologies are refused`() {
+        // Both received 150.70 C from the binary proximal/distal rule, but NIST reports 152.85 C
+        // (3-methyl-1-pentanol, 426 ± 2 K) and 149.85 C (4-methyl-1-pentanol, 423 ± 4 K).
+        // This unresolved position effect is not hidden behind a widened tolerance.
+        listOf("CCC(C)CCO", "CC(C)CCCO").forEach { structure ->
+            assertEquals(1, FunctionalGroups.carbonBranchPointsDistalToHydroxylCentres(
+                Molecule.fromSMILESlike(structure).graph,
+            ))
+            assertNull(boilingDirect(structure), structure)
+            assertEquals(
+                "no-model:monohydric-alcohol-distal-branch-C6-not-validated",
+                basisDirect(structure),
+            )
+        }
+    }
+
+    @Test
+    fun `monohydric alcohol model refuses structures outside its measured family`() {
+        assertNull(boilingDirect("C1CCCCC1O")) // cyclic
+        assertEquals(
+            "no-model:monohydric-alcohol-fit-covers-C1-C6-saturated-acyclic-C-H-O",
+            basisDirect("C1CCCCC1O"),
+        )
+        assertNull(boilingDirect("C=CCO")) // unsaturated
+        assertNull(boilingDirect("CCCCCCCO")) // outside the C1-C6 calibration domain
+    }
+
+    @Test
+    fun `linear secondary C5 fit predicts the independent C6 positional-isomer holdout`() {
+        // Fit the graph-derived long-secondary correction on NIST C5 data: 2-pentanol 392 K,
+        // 3-pentanol 388 K. Then validate it, without refitting, on C6: 2-hexanol 411 K and
+        // 3-hexanol 407 K. The C6 errors are both +0.37 K; the NIST averages carry ±2–3 K.
+        assertNear(118.85, boilingDirect("CC(O)CCC")!!, 0.05)  // 2-pentanol, fit point
+        assertNear(114.85, boilingDirect("CCC(O)CC")!!, 0.05)  // 3-pentanol, fit point
+        assertNear(137.85, boilingDirect("CC(O)CCCC")!!, 0.5)  // 2-hexanol, holdout
+        assertNear(133.85, boilingDirect("CCC(O)CCC")!!, 0.5)  // 3-hexanol, holdout
+        assertEquals(
+            "monohydric-alcohol-structure+dispersion+association+OH-arm-topology",
+            basisDirect("CCC(O)CCC"),
+        )
+        assertEquals(2, FunctionalGroups.hydroxylCarbonArmLengthImbalance(Molecule.fromSMILESlike("CC(O)CCC").graph))
+        assertEquals(0, FunctionalGroups.hydroxylCarbonArmLengthImbalance(Molecule.fromSMILESlike("CCC(O)CC").graph))
+        assertEquals(3, FunctionalGroups.hydroxylCarbonArmLengthImbalance(Molecule.fromSMILESlike("CC(O)CCCC").graph))
+        assertEquals(1, FunctionalGroups.hydroxylCarbonArmLengthImbalance(Molecule.fromSMILESlike("CCC(O)CCC").graph))
+    }
+
+    @Test
+    fun `branched or tertiary OH-substituted C5-C6 alcohols remain refused`() {
+        // Under the old fit, 2-methyl-2-butanol missed its NIST point by 4.6 K and
+        // 2-methyl-2-pentanol by 9.6 K. The linear-secondary correction does not validate those
+        // topologies, so they and a branched secondary alcohol must not inherit its number.
+        val unsupportedStructures = listOf(
+            "CC(O)(C)CC",   // 2-methyl-2-butanol
+            "CC(O)(C)CCC",  // 2-methyl-2-pentanol
+            "CC(O)C(C)C",   // branched secondary C5 alcohol
+        )
+        unsupportedStructures.forEach { structure ->
+            assertNull(boilingDirect(structure), structure)
+            assertEquals(
+                "no-model:monohydric-alcohol-fit-excludes-branched-or-tertiary-C5-C6",
+                basisDirect(structure),
+            )
+        }
     }
 
     @Test
@@ -167,11 +296,11 @@ class BoilingPointModelTest {
         // Same formula, same mass, 14 K apart: n-butane boils at -0.5 and isobutane at -11.8, so
         // compactness matters and molar mass alone cannot see it.
         assertTrue(boiling("CCCC#N")!! > boiling("CC(C)C#N")!!)
-        assertEquals(1, FunctionalGroups.branchPoints(Molecule.fromSMILESlike("CC(C)C#N").graph))
-        assertEquals(0, FunctionalGroups.branchPoints(Molecule.fromSMILESlike("CCCC#N").graph))
+        assertEquals(1, FunctionalGroups.branchPoints(referenceMolecule("CC(C)C#N").graph))
+        assertEquals(0, FunctionalGroups.branchPoints(referenceMolecule("CCCC#N").graph))
         // An aromatic carbon carrying the cyano group has three heavy neighbours but is not a
         // branch: counting it would drop benzonitrile by 14 K.
-        assertEquals(0, FunctionalGroups.branchPoints(Molecule.fromSMILESlike("N#CC1=CC=CC=C1").graph))
+        assertEquals(0, FunctionalGroups.branchPoints(referenceMolecule("N#CC1=CC=CC=C1").graph))
     }
 
     @Test
@@ -180,12 +309,12 @@ class BoilingPointModelTest {
         // with the C#N is worth some 20 K that dispersion has no term for, so the model declines.
         assertNull(boiling("C=CC#N"))
         assertEquals("no-model:nitrile-fit-excludes-conjugated-alkenenitriles", basis("C=CC#N"))
-        assertTrue(FunctionalGroups.hasConjugatedNitrile(Molecule.fromSMILESlike("C=CC#N").graph))
-        assertTrue(!FunctionalGroups.hasConjugatedNitrile(Molecule.fromSMILESlike("CCCC#N").graph))
+        assertTrue(FunctionalGroups.hasConjugatedNitrile(referenceMolecule("C=CC#N").graph))
+        assertTrue(!FunctionalGroups.hasConjugatedNitrile(referenceMolecule("CCCC#N").graph))
         // Benzonitrile is conjugated with its ring, but the ring is a different electronic
         // situation and the branch predicts it to within 0.6 K. Counting an aromatic double bond
         // here would refuse a molecule the model actually gets right.
-        assertTrue(!FunctionalGroups.hasConjugatedNitrile(Molecule.fromSMILESlike("N#CC1=CC=CC=C1").graph))
+        assertTrue(!FunctionalGroups.hasConjugatedNitrile(referenceMolecule("N#CC1=CC=CC=C1").graph))
     }
 
     @Test
@@ -221,10 +350,10 @@ class BoilingPointModelTest {
         // not - CH4 sums to 4.34 A^3 against 2.66 A^3 measured, because hydrogen bound to
         // carbon is far less polarizable than a free hydrogen atom. So the sum is a fitted
         // descriptor whose branch carries its own intercept, never a measured molecular value.
-        assertNear(10.33, engine.predict(Molecule.fromSMILESlike("C(Cl)(Cl)(Cl)Cl").graph)
+        assertNear(10.33, engine.predict(referenceMolecule("C(Cl)(Cl)(Cl)Cl").graph)
             .polarizibilityCubicAngstroms!!, 0.01)
         // Methane counts its four implicit hydrogens: 1.674 + 4 * 0.667.
-        assertNear(4.34, engine.predict(Molecule.fromSMILESlike("C").graph)
+        assertNear(4.34, engine.predict(referenceMolecule("C").graph)
             .polarizibilityCubicAngstroms!!, 0.01)
         // Livermorium is the single element the source table leaves without a value, and a
         // gap must stay a gap instead of quietly turning into zero.

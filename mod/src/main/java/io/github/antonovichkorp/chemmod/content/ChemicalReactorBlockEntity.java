@@ -1,6 +1,8 @@
 package io.github.antonovichkorp.chemmod.content;
 
 import io.github.antonovichkorp.chemmod.core.catalysis.CatalystModel;
+import io.github.antonovichkorp.chemmod.core.catalysis.CatalystSurfaceModel;
+import io.github.antonovichkorp.chemmod.core.reaction.FormulaPattern;
 import io.github.antonovichkorp.chemmod.core.reaction.ReactionEnvironment;
 import io.github.antonovichkorp.chemmod.core.reaction.ReactionKinetics;
 import io.github.antonovichkorp.chemmod.core.reaction.ReactionRule;
@@ -72,6 +74,7 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
     private static final String TEMPERATURE_KEY = "body_temperature_kelvin";
 
     private static final ReactionRuleSet RULE_SET = ReactionRuleSet.bundled();
+    private static final CatalystSurfaceModel SURFACE_MODEL = CatalystSurfaceModel.bundled();
     private static final PureSubstanceReactionPlanner PLANNER = PureSubstanceReactionPlanner.bundled();
     private static final List<ReactionRule> TIMED_RULES = RULE_SET.getRules().values().stream()
         .filter(rule -> rule.getKinetics() != null)
@@ -249,7 +252,11 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
             resetProgress(ReactorStatus.NO_TIMED_MODEL);
             return;
         }
-        reactionProgress = Math.min(1.0, reactionProgress + kinetics.ratePerSecond(environment().getTemperatureKelvin()));
+        ReactionEnvironment reactionEnvironment = environment();
+        reactionProgress = Math.min(1.0, reactionProgress + kinetics.ratePerSecond(
+            reactionEnvironment.getTemperatureKelvin(),
+            reactionEnvironment.getCatalystSurfaceSiteMoles()
+        ));
         status = ReactorStatus.PROCESSING;
         setVisualActive(true);
         setChanged();
@@ -297,7 +304,9 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
     /**
      * Selects a machine operation from the data set. The physical contents are
      * supplied to the core planner; no item or GUI claim can invent a
-     * co-reactant. An ambiguous structural match is deliberately not selected.
+     * co-reactant. Structural graph rules take precedence over broad formula
+     * rules (such as complete combustion); ambiguity among equally specific
+     * structural rules is deliberately not selected.
      */
     private Candidate findCandidate() {
         ReactorInputs inputs = reactorInputs();
@@ -312,11 +321,33 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
     private Candidate findPotentialCandidate() {
         ReactorInputs inputs = reactorInputs();
         if (inputs == null) return null;
-        List<Candidate> candidates = new ArrayList<>();
-        for (ReactionRule rule : TIMED_RULES) {
-            candidates.addAll(candidates(inputs, rule, conditionSatisfyingEnvironment(rule)));
+
+        // Use the catalyst's capabilities/tags to disambiguate rules that could
+        // otherwise match the same molecular graph. The candidate environment
+        // still supplies the rule's required surface inventory so the diagnostic
+        // can report a missing characterized site below.
+        java.util.Set<String> presentTags = catalystTags();
+        java.util.Set<String> presentCapabilities = catalystCapabilities();
+        List<ReactionRule> catalystCompatibleRules = TIMED_RULES.stream()
+            .filter(rule -> presentTags.containsAll(rule.getConditions().getCatalystTags()))
+            .filter(rule -> presentCapabilities.containsAll(rule.getConditions().getCatalystCapabilities()))
+            .toList();
+        List<Candidate> catalystCompatibleCandidates = new ArrayList<>();
+        for (ReactionRule rule : catalystCompatibleRules) {
+            catalystCompatibleCandidates.addAll(candidates(inputs, rule, conditionSatisfyingEnvironment(rule)));
         }
-        return uniqueCandidate(candidates);
+        Candidate compatibleCandidate = uniqueCandidate(catalystCompatibleCandidates);
+        if (compatibleCandidate != null) return compatibleCandidate;
+
+        // If the currently present catalyst rules out every graph match, use the
+        // condition-satisfying fallback to name the chemistry that is waiting for
+        // a catalyst rather than reporting that no reaction exists.
+        if (catalystCompatibleRules.size() == TIMED_RULES.size()) return null;
+        List<Candidate> allCandidates = new ArrayList<>();
+        for (ReactionRule rule : TIMED_RULES) {
+            allCandidates.addAll(candidates(inputs, rule, conditionSatisfyingEnvironment(rule)));
+        }
+        return uniqueCandidate(allCandidates);
     }
 
     private ReactorInputs reactorInputs() {
@@ -358,7 +389,12 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
     }
 
     private static Candidate uniqueCandidate(List<Candidate> candidates) {
-        return candidates.size() == 1 ? candidates.getFirst() : null;
+        if (candidates.isEmpty()) return null;
+        List<Candidate> structural = candidates.stream()
+            .filter(candidate -> !(candidate.rule().getMatcher() instanceof FormulaPattern))
+            .toList();
+        List<Candidate> preferred = structural.isEmpty() ? candidates : structural;
+        return preferred.size() == 1 ? preferred.getFirst() : null;
     }
 
     private static ReactionEnvironment conditionSatisfyingEnvironment(ReactionRule rule) {
@@ -378,7 +414,8 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
                 : conditions.getMinimumPressureKilopascals(),
             conditions.getCatalystTags(),
             java.util.Set.of(),
-            conditions.getCatalystCapabilities()
+            conditions.getCatalystCapabilities(),
+            conditions.getMinimumCatalystSurfaceSiteMoles()
         );
     }
 
@@ -388,7 +425,8 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
             ATMOSPHERIC_PRESSURE_KILOPASCALS,
             catalystTags(),
             java.util.Set.of(),
-            catalystCapabilities()
+            catalystCapabilities(),
+            catalystSurfaceSiteMoles()
         );
     }
 
@@ -450,6 +488,20 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
         return java.util.Set.of();
     }
 
+    /** Accessible active-site inventory from a characterized material/form profile, not bulk elements. */
+    private java.util.Map<String, Double> catalystSurfaceSiteMoles() {
+        ItemStack catalyst = items.get(CATALYST_SLOT);
+        if (catalyst.isEmpty()) return java.util.Map.of();
+        MaterialBatchContents batch = catalyst.get(ChemComponents.MATERIAL_BATCH.get());
+        if (batch == null) return java.util.Map.of();
+        return SURFACE_MODEL.siteMolesForMaterialForm(
+            batch.materialId(),
+            batch.form(),
+            batch.primaryMassMicrograms(),
+            java.util.Map.of()
+        );
+    }
+
     private java.util.Set<String> catalystTags() {
         ItemStack catalyst = items.get(CATALYST_SLOT);
         if (catalyst.isEmpty()) return java.util.Set.of();
@@ -488,6 +540,11 @@ public final class ChemicalReactorBlockEntity extends BlockEntity implements Con
             return ReactorStatus.NEEDS_CATALYST;
         }
         if (!catalystCapabilities().containsAll(conditions.getCatalystCapabilities())) {
+            return ReactorStatus.NEEDS_CATALYST;
+        }
+        java.util.Map<String, Double> surfaceSites = catalystSurfaceSiteMoles();
+        if (conditions.getMinimumCatalystSurfaceSiteMoles().entrySet().stream()
+            .anyMatch(required -> surfaceSites.getOrDefault(required.getKey(), 0.0) < required.getValue())) {
             return ReactorStatus.NEEDS_CATALYST;
         }
         if (conditions.getMinimumPressureKilopascals() != null

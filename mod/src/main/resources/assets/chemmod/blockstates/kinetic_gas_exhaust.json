@@ -1,0 +1,5 @@
+{
+  "variants": {
+    "": {"model": "chemmod:block/kinetic_gas_exhaust"}
+  }
+}

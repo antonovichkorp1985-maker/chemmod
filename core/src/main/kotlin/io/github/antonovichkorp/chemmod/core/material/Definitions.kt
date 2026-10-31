@@ -116,6 +116,7 @@ enum class MaterialForm {
     LIQUID,
     GAS,
     SOLUTION,
+    CATALYST_COUPON,
 }
 
 /** A processable bulk material and the physical forms ChemMod owns for it. */

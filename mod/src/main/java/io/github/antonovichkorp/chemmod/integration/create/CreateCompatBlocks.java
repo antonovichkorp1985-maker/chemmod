@@ -26,6 +26,17 @@ public final class CreateCompatBlocks {
         )
     );
 
+    public static final DeferredHolder<Block, KineticGasExhaustBlock> KINETIC_GAS_EXHAUST = BLOCKS.register(
+        "kinetic_gas_exhaust",
+        () -> new KineticGasExhaustBlock(
+            BlockBehaviour.Properties.of()
+                .mapColor(MapColor.METAL)
+                .requiresCorrectToolForDrops()
+                .strength(3.5F, 6.0F)
+                .sound(SoundType.METAL)
+        )
+    );
+
     private CreateCompatBlocks() {}
 
     public static void register(IEventBus eventBus) {

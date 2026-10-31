@@ -12,6 +12,7 @@ import io.github.antonovichkorp.chemmod.core.mixture.MolecularMixture;
 import io.github.antonovichkorp.chemmod.core.reaction.MolecularPortion;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.chat.Component;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.neoforged.neoforge.gametest.GameTestHolder;
@@ -115,6 +116,31 @@ public final class ChemicalReactorGameTests {
             helper.assertTrue(reactor.reactionProgress() == 0.0, "missing catalyst accumulated reactor progress");
             helper.assertTrue(reactor.getItem(ChemicalReactorBlockEntity.CATALYST_SLOT).isEmpty(),
                 "a missing catalyst was unexpectedly introduced");
+            helper.succeed();
+        });
+    }
+
+    @GameTest(template = "chemical_reactor_batch", timeoutTicks = 80)
+    public static void unpreparedCopperIngotCannotStandInForCu110SurfaceSites(GameTestHelper helper) {
+        ChemicalReactorBlockEntity reactor = setupBatch(
+            helper,
+            Blocks.BLAST_FURNACE.defaultBlockState().setValue(AbstractFurnaceBlock.LIT, true),
+            false
+        );
+        ItemStack ordinaryIngot = new ItemStack(BuiltInRegistries.ITEM.get(
+            ResourceLocation.fromNamespaceAndPath(ChemMod.MOD_ID, "copper_ingot")));
+        reactor.setItem(ChemicalReactorBlockEntity.CATALYST_SLOT, ordinaryIngot);
+
+        helper.runAfterDelay(45, () -> {
+            assertEthanolRetained(helper, reactor, "uncharacterized copper ingot consumed ethanol");
+            assertEmptyOutputs(helper, reactor, "uncharacterized copper ingot created a product");
+            helper.assertTrue(reactor.reactionProgress() == 0.0,
+                "uncharacterized copper ingot accumulated surface-dependent progress");
+            helper.assertTrue(reactor.getItem(ChemicalReactorBlockEntity.CATALYST_SLOT).is(ordinaryIngot.getItem()),
+                "uncharacterized copper ingot was consumed");
+            Component actualStatus = ChemicalReactorBlockEntity.statusComponent(reactor.menuData().get(1));
+            helper.assertTrue(actualStatus.equals(Component.translatable("reactor_status.chemmod.needs_catalyst")),
+                "reactor did not report missing characterized active sites; actual status: " + actualStatus.getString());
             helper.succeed();
         });
     }
@@ -243,7 +269,7 @@ public final class ChemicalReactorGameTests {
     }
 
     private static net.minecraft.world.item.Item copperItem() {
-        return BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(ChemMod.MOD_ID, "copper_ingot"));
+        return BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(ChemMod.MOD_ID, "copper_catalyst_coupon"));
     }
 
     private static ItemStack emptyVial() {

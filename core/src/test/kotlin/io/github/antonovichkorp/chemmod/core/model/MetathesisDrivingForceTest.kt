@@ -16,8 +16,11 @@ class MetathesisDrivingForceTest {
         anionA: Solubility.AnionGroup,
         cationB: String,
         anionB: Solubility.AnionGroup,
+        phase: Phase = Phase.AQUEOUS,
     ) = MetathesisDrivingForce.assess(
-        table.require(cationA), anionA, table.require(cationB), anionB,
+        Solubility.Cation.Elemental(table.require(cationA)), anionA,
+        Solubility.Cation.Elemental(table.require(cationB)), anionB,
+        phase,
     )
 
     @Test
@@ -74,5 +77,99 @@ class MetathesisDrivingForceTest {
     fun `a cation with no electronegativity reports no model`() {
         val unknown = table.all().first { it.electronegativity == null }
         assertEquals(null, MetathesisDrivingForce.partnersCanExchange(unknown, table.require("Na")))
+    }
+
+    @Test
+    fun `acid plus carbonate forms gas and proceeds`() {
+        assertEquals(
+            MetathesisDrivingForce.Outcome.PROCEEDS,
+            MetathesisDrivingForce.assess(
+                Solubility.Cation.Elemental(table.require("Na")),
+                Solubility.AnionGroup.CARBONATE,
+                Solubility.Cation.Elemental(table.require("H")),
+                Solubility.AnionGroup.HALIDE,
+                Phase.AQUEOUS,
+            ),
+        )
+    }
+
+    @Test
+    fun `acid plus sulfide forms gas and proceeds`() {
+        assertEquals(
+            MetathesisDrivingForce.Outcome.PROCEEDS,
+            MetathesisDrivingForce.assess(
+                Solubility.Cation.Elemental(table.require("Na")),
+                Solubility.AnionGroup.SULFIDE,
+                Solubility.Cation.Elemental(table.require("H")),
+                Solubility.AnionGroup.HALIDE,
+                Phase.AQUEOUS,
+            ),
+        )
+    }
+
+    @Test
+    fun `neutralisation forms weak electrolyte and proceeds`() {
+        assertEquals(
+            MetathesisDrivingForce.Outcome.PROCEEDS,
+            MetathesisDrivingForce.assess(
+                Solubility.Cation.Elemental(table.require("Na")),
+                Solubility.AnionGroup.HYDROXIDE,
+                Solubility.Cation.Elemental(table.require("H")),
+                Solubility.AnionGroup.HALIDE,
+                Phase.AQUEOUS,
+            ),
+        )
+    }
+
+    @Test
+    fun `ammonium hydroxide forms gas and proceeds`() {
+        assertEquals(
+            MetathesisDrivingForce.Outcome.PROCEEDS,
+            MetathesisDrivingForce.assess(
+                Solubility.Cation.Elemental(table.require("Na")),
+                Solubility.AnionGroup.HYDROXIDE,
+                Solubility.Cation.Ammonium,
+                Solubility.AnionGroup.HALIDE,
+                Phase.AQUEOUS,
+            ),
+        )
+    }
+
+    @Test
+    fun `solid phase has no free ions and cannot exchange`() {
+        assertEquals(
+            MetathesisDrivingForce.Outcome.NO_FREE_IONS,
+            MetathesisDrivingForce.assess(
+                Solubility.Cation.Elemental(table.require("Ag")),
+                Solubility.AnionGroup.NITRATE,
+                Solubility.Cation.Elemental(table.require("Na")),
+                Solubility.AnionGroup.HALIDE,
+                Phase.SOLID,
+            ),
+        )
+        assertEquals(
+            MetathesisDrivingForce.Outcome.NO_FREE_IONS,
+            MetathesisDrivingForce.assess(
+                Solubility.Cation.Elemental(table.require("Ag")),
+                Solubility.AnionGroup.NITRATE,
+                Solubility.Cation.Elemental(table.require("Na")),
+                Solubility.AnionGroup.HALIDE,
+                Phase.GAS,
+            ),
+        )
+    }
+
+    @Test
+    fun `molten phase permits exchange`() {
+        assertEquals(
+            MetathesisDrivingForce.Outcome.PROCEEDS,
+            MetathesisDrivingForce.assess(
+                Solubility.Cation.Elemental(table.require("Ag")),
+                Solubility.AnionGroup.NITRATE,
+                Solubility.Cation.Elemental(table.require("Na")),
+                Solubility.AnionGroup.HALIDE,
+                Phase.MOLTEN,
+            ),
+        )
     }
 }

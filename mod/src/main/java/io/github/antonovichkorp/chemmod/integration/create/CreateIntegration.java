@@ -16,6 +16,7 @@ public final class CreateIntegration {
     public static final String MOD_ID = "create";
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final double KINETIC_SEPARATOR_STRESS_PER_RPM = 4.0D;
+    private static final double KINETIC_GAS_EXHAUST_STRESS_PER_RPM = 4.0D;
 
     private CreateIntegration() {}
 
@@ -25,7 +26,7 @@ public final class CreateIntegration {
         CreateCompatItems.register(eventBus);
         eventBus.addListener(CreateIntegration::registerCapabilities);
         eventBus.addListener(CreateIntegration::registerStressImpact);
-        LOGGER.info("ChemMod Create compatibility adapter enabled: kinetic ore separator available");
+        LOGGER.info("ChemMod Create compatibility adapter enabled: kinetic ore separator and gas exhaust available");
     }
 
     private static void registerCapabilities(RegisterCapabilitiesEvent event) {
@@ -37,9 +38,15 @@ public final class CreateIntegration {
     }
 
     private static void registerStressImpact(FMLCommonSetupEvent event) {
-        event.enqueueWork(() -> BlockStressValues.IMPACTS.register(
-            CreateCompatBlocks.KINETIC_ORE_SEPARATOR.get(),
-            () -> KINETIC_SEPARATOR_STRESS_PER_RPM
-        ));
+        event.enqueueWork(() -> {
+            BlockStressValues.IMPACTS.register(
+                CreateCompatBlocks.KINETIC_ORE_SEPARATOR.get(),
+                () -> KINETIC_SEPARATOR_STRESS_PER_RPM
+            );
+            BlockStressValues.IMPACTS.register(
+                CreateCompatBlocks.KINETIC_GAS_EXHAUST.get(),
+                () -> KINETIC_GAS_EXHAUST_STRESS_PER_RPM
+            );
+        });
     }
 }

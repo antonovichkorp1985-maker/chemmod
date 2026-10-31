@@ -1,0 +1,21 @@
+{
+  "textures": {
+    "steel": "chemmod:block/lab/steel",
+    "dark": "chemmod:block/lab/dark",
+    "panel": "chemmod:block/lab/panel",
+    "particle": "chemmod:block/lab/steel"
+  },
+  "elements": [
+    {
+      "from": [0, 0, 0], "to": [16, 16, 16],
+      "faces": {
+        "north": {"texture": "#panel", "uv": [0, 0, 16, 16]},
+        "south": {"texture": "#steel", "uv": [0, 0, 16, 16]},
+        "east": {"texture": "#steel", "uv": [0, 0, 16, 16]},
+        "west": {"texture": "#steel", "uv": [0, 0, 16, 16]},
+        "up": {"texture": "#dark", "uv": [0, 0, 16, 16]},
+        "down": {"texture": "#dark", "uv": [0, 0, 16, 16]}
+      }
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "profiles": [
+    {
+      "id": "chemmod:prepared_cu110_coupon",
+      "materialId": "chemmod:copper",
+      "formName": "CATALYST_COUPON",
+      "phaseId": "chemmod:metallic_copper_fcc_cu110",
+      "specificSurfaceAreaSquareMetersPerGram": 0.000447589058277345,
+      "facet": "FCC_110",
+      "latticeParameterMeters": 3.6147e-10,
+      "activeSiteFractions": {
+        "chemmod:cu110_step_site": 0.07
+      },
+      "siteDisplayNameKeys": {
+        "chemmod:cu110_step_site": "surface_site.chemmod.cu110_step"
+      },
+      "displayNameKey": "catalyst_surface.chemmod.prepared_cu110",
+      "displayDescriptionKey": "catalyst_surface.chemmod.prepared_cu110.description",
+      "evidence": "Wang et al., J. Phys. Chem. C 121 (2017), 12800-12806, DOI:10.1021/acs.jpcc.7b02957; clean Cu(110) UHV profile reports about 7% effective active sites for higher alcohols including ethanol. Active site density is derived from the FCC Cu(110) atomic density and that measured fraction. The nominal area is geometric, derived from a two-sided 0.5 mm coupon using Cu's FCC cell and molar mass; it is not a BET measurement. UHV surface data are not a direct ambient-pressure reactor rate calibration."
+    }
+  ]
+}

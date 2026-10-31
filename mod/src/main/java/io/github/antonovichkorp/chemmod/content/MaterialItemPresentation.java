@@ -1,5 +1,7 @@
 package io.github.antonovichkorp.chemmod.content;
 
+import io.github.antonovichkorp.chemmod.core.catalysis.CatalystSurfaceModel;
+import io.github.antonovichkorp.chemmod.core.catalysis.CatalystSurfaceProfile;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.Item;
@@ -62,6 +64,28 @@ final class MaterialItemPresentation {
                 String.format(Locale.ROOT, "%.4f", ppm / 10_000.0),
                 String.format(Locale.ROOT, "%.3f", batch.impurityMassMicrograms().get(id) / 1_000_000.0)
             ).withStyle(ChatFormatting.DARK_GRAY)));
+        }
+
+        CatalystSurfaceModel surfaceModel = CatalystSurfaceModel.bundled();
+        CatalystSurfaceProfile surfaceProfile = surfaceModel.profileForMaterialForm(batch.materialId(), batch.form());
+        if (surfaceProfile != null) {
+            var inventory = surfaceModel.inventory(
+                surfaceProfile.getId(),
+                batch.primaryMassMicrograms(),
+                java.util.Map.of()
+            );
+            tooltip.add(Component.translatable(surfaceProfile.getDisplayNameKey()).withStyle(ChatFormatting.AQUA));
+            tooltip.add(Component.translatable(
+                "tooltip.chemmod.catalyst.surface.area",
+                String.format(Locale.ROOT, "%.6g", inventory.getExposedAreaSquareMeters())
+            ).withStyle(ChatFormatting.GRAY));
+            inventory.getAccessibleSiteMoles().forEach((site, moles) -> tooltip.add(Component.translatable(
+                "tooltip.chemmod.catalyst.surface.sites",
+                Component.translatable(surfaceProfile.getSiteDisplayNameKeys().get(site)),
+                String.format(Locale.ROOT, "%.6e", moles)
+            ).withStyle(ChatFormatting.GRAY)));
+            tooltip.add(Component.translatable(surfaceProfile.getDisplayDescriptionKey())
+                .withStyle(ChatFormatting.DARK_GRAY));
         }
 
         if (flag.isAdvanced()) {

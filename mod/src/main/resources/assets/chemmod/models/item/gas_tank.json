@@ -1,1 +1,7 @@
-{ "parent": "chemmod:block/gas_tank" }
+{
+  "parent": "chemmod:block/gas_tank",
+  "display": {
+    "gui": { "rotation": [25, 225, 0], "translation": [0, -1, 0], "scale": [0.65, 0.65, 0.65] },
+    "ground": { "translation": [0, 3, 0], "scale": [0.4, 0.4, 0.4] }
+  }
+}

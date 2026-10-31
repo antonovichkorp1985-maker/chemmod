@@ -1,6 +1,7 @@
 package io.github.antonovichkorp.chemmod.gas;
 
 import io.github.antonovichkorp.chemmod.core.gas.GasFieldProperties;
+import io.github.antonovichkorp.chemmod.core.Molecule;
 import io.github.antonovichkorp.chemmod.core.gas.GasTransport;
 import io.github.antonovichkorp.chemmod.core.model.ElementTable;
 
@@ -51,8 +52,22 @@ public final class GasSpeciesProperties implements GasFieldProperties {
         } catch (RuntimeException unknownElementOrFormula) {
             return null;
         }
+        return diffusionFor(species, molarMass);
+    }
+
+    @Override
+    public double molarMassGramsPerMole(Molecule species) {
+        return species.molarMass();
+    }
+
+    @Override
+    public Double diffusionSquareMetersPerSecond(Molecule species) {
+        return diffusionFor(species.formula(), species.molarMass());
+    }
+
+    private Double diffusionFor(String transportClass, double molarMass) {
         return GasTransport.INSTANCE.binaryDiffusionSquareMetersPerSecond(
-            species, AIR_PROXY, molarMass, AIR_PROXY_MOLAR_MASS,
+            transportClass, AIR_PROXY, molarMass, AIR_PROXY_MOLAR_MASS,
             temperatureKelvin, STANDARD_PRESSURE_PASCALS);
     }
 
