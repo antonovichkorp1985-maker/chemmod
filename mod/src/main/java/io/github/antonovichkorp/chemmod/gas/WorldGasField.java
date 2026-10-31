@@ -3,12 +3,17 @@ package io.github.antonovichkorp.chemmod.gas;
 import com.mojang.serialization.Codec;
 import io.github.antonovichkorp.chemmod.core.Molecule;
 import io.github.antonovichkorp.chemmod.core.gas.Atmosphere;
+import io.github.antonovichkorp.chemmod.core.gas.BlastShockwaveModel;
 import io.github.antonovichkorp.chemmod.core.gas.GasAtmosphere;
 import io.github.antonovichkorp.chemmod.core.gas.GasCell;
 import io.github.antonovichkorp.chemmod.core.gas.GasField;
 import io.github.antonovichkorp.chemmod.core.gas.GasMolecularAmount;
 import io.github.antonovichkorp.chemmod.core.gas.GasPhase;
+import io.github.antonovichkorp.chemmod.core.gas.VolumetricGasCloud;
+import io.github.antonovichkorp.chemmod.core.gas.VolumetricGasCloudManager;
 import io.github.antonovichkorp.chemmod.core.reaction.ReactionEnvironment;
+import io.github.antonovichkorp.chemmod.core.reaction.ReactionEngine;
+import io.github.antonovichkorp.chemmod.core.reaction.ReactionRuleSet;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -47,8 +52,17 @@ public final class WorldGasField {
     private final GasField field = new GasField(CELL_SIZE_METRES);
     private final GasSpeciesProperties properties = new GasSpeciesProperties(AMBIENT_TEMPERATURE_KELVIN);
 
+    /** Volumetric gas clouds (explosions, large releases). */
+    private final VolumetricGasCloudManager cloudManager = new VolumetricGasCloudManager();
+
+    /** Active explosive sources for blast wave computation. */
+    private final java.util.List<BlastShockwaveModel.ExplosiveSource> blastSources = new java.util.ArrayList<>();
+
+    /** Current simulation time (seconds). */
+    private double simulationTimeSeconds = 0.0;
+
     /** Ambient gas API for barometric altitude correction and vacuum queries. */
-    public static final AmbientGasApi AMBIENT = new AmbientGasApi();
+    public final AmbientGasApi AMBIENT = new AmbientGasApi();
 
     public GasField field() {
         return field;
@@ -137,6 +151,8 @@ public final class WorldGasField {
      * sky; unloaded cells are left alone rather than assumed open.
      */
     public void advance(Level level, double seconds) {
+        simulationTimeSeconds += seconds;
+        cloudManager.advanceAll(seconds, Atmosphere.EARTH, 0.0, 0.0);
         WorldCellFeatures cellFeatures = scanCellFeatures(level);
         field.advance(
             seconds,
@@ -209,6 +225,103 @@ public final class WorldGasField {
         return new LinkedHashSet<>(field.occupiedCells());
     }
 
+    /**
+     * Ignite a volumetric gas cloud at the given position with a spark.
+     * Consumes the fuel gas and stoichiometric O2 from the cell, adds combustion products (CO2, H2O),
+     * and registers an explosive source for blast wave computation.
+     *
+     * @param pos position of the spark/ignition
+     * @param cloud the volumetric gas cloud to ignite
+     * @return true if ignition occurred, false if no fuel or no oxidizer
+     */
+    public boolean igniteVolumetricCloud(BlockPos pos, VolumetricGasCloud cloud) {
+        GasCell cell = cellOf(pos);
+        double fuelMoles = cloud.getTotalMoles();
+        if (fuelMoles <= 0.0) return false;
+
+        // Get available O2 in the cell
+        double oxygenMoles = field.molesOf(cell, "O2");
+        if (oxygenMoles <= 0.0) return false;
+
+        // Estimate stoichiometric O2 needed based on fuel formula
+        // For simple hydrocarbons CxHy: CxHy + (x + y/4) O2 -> x CO2 + (y/2) H2O
+        String formula = cloud.getSpeciesKey();
+        Map<String, Integer> elements = parseFormula(formula);
+        int c = elements.getOrDefault("C", 0);
+        int h = elements.getOrDefault("H", 0);
+        int o = elements.getOrDefault("O", 0);
+        double o2NeededPerFuelMole = c + h / 4.0 - o / 2.0;
+        if (o2NeededPerFuelMole < 0) o2NeededPerFuelMole = 0;
+
+        double o2Needed = fuelMoles * o2NeededPerFuelMole;
+        double o2Available = Math.min(oxygenMoles, o2Needed);
+        double fuelConsumed = o2Available / o2NeededPerFuelMole;
+        if (fuelConsumed <= 0.0) return false;
+
+        // Consume fuel from cloud (reduce cloud totalMoles)
+        // Note: VolumetricGasCloud is immutable, so we need to remove and re-add with updated moles
+        cloudManager.removeCloud(cloud.getId());
+        if (fuelMoles - fuelConsumed > 1e-6) {
+            VolumetricGasCloud remaining = new VolumetricGasCloud(
+                cloud.getId(), cloud.getCenterX(), cloud.getCenterY(), cloud.getCenterZ(),
+                cloud.getRadiusMetres(), fuelMoles - fuelConsumed,
+                cloud.getMolarMassKgPerMol(), cloud.getReleaseTemperatureKelvin(),
+                cloud.getReleaseTimeSeconds(), cloud.getSpeciesKey()
+            );
+            cloudManager.addCloud(remaining);
+        }
+
+        // Consume O2 from cell
+        field.setMoles(cell, "O2", oxygenMoles - o2Available);
+
+        // Add combustion products: CO2 and H2O
+        double co2Produced = fuelConsumed * c;
+        double h2oProduced = fuelConsumed * h / 2.0;
+        if (co2Produced > 0.0) field.addMoles(cell, "CO2", co2Produced);
+        if (h2oProduced > 0.0) field.addMoles(cell, "H2O", h2oProduced);
+
+        // Estimate heat of combustion (rough approximation for hydrocarbons)
+        // ~47 MJ/kg for typical hydrocarbons, convert to J/mol
+        double molarMassKg = cloud.getMolarMassKgPerMol();
+        double heatOfCombustionJPerMol = 47e6 * molarMassKg; // J/mol
+        double energyReleased = fuelConsumed * heatOfCombustionJPerMol;
+
+        // Create explosive source for blast wave
+        BlastShockwaveModel.ExplosiveSource source = BlastShockwaveModel.INSTANCE.fromFuelAir(
+            fuelConsumed, heatOfCombustionJPerMol,
+            Atmosphere.EARTH.pressurePascals(0.0),
+            Atmosphere.EARTH.temperatureKelvin(0.0)
+        );
+        blastSources.add(source);
+
+        return true;
+    }
+
+    /** Simple formula parser for stoichiometry estimation. */
+    private Map<String, Integer> parseFormula(String formula) {
+        Map<String, Integer> counts = new LinkedHashMap<>();
+        int i = 0;
+        while (i < formula.length()) {
+            char c = formula.charAt(i);
+            if (!Character.isUpperCase(c)) { i++; continue; }
+            StringBuilder element = new StringBuilder();
+            element.append(c);
+            i++;
+            if (i < formula.length() && Character.isLowerCase(formula.charAt(i))) {
+                element.append(formula.charAt(i));
+                i++;
+            }
+            int count = 0;
+            while (i < formula.length() && Character.isDigit(formula.charAt(i))) {
+                count = count * 10 + (formula.charAt(i) - '0');
+                i++;
+            }
+            if (count == 0) count = 1;
+            counts.merge(element.toString(), count, Integer::sum);
+        }
+        return counts;
+    }
+
     // ------------------------------------------------------------ persistence
 
     public CompoundTag toTag() {
@@ -277,16 +390,13 @@ public final class WorldGasField {
      * Provides pressure, temperature, density, and mole fractions at a world position,
      * corrected for barometric altitude decrease and vacuum.
      */
-    public static final class AmbientGasApi {
+    public final class AmbientGasApi {
         /** Standard surface pressure at sea level. */
         public static final double SURFACE_PRESSURE_PASCALS = 101325.0;
-
         /** Standard surface temperature at sea level. */
         public static final double SURFACE_TEMPERATURE_KELVIN = 288.15;
-
         /** Vacuum threshold: below this pressure the medium is effectively vacuum. */
         public static final double VACUUM_THRESHOLD_PASCALS = 1000.0;
-
         /** Ambient gas mass at altitude for a given cell volume (4m cube = 64 m3). */
         private static final double CELL_VOLUME_CUBIC_METRES = CELL_SIZE_METRES * CELL_SIZE_METRES * CELL_SIZE_METRES;
 
@@ -296,8 +406,7 @@ public final class WorldGasField {
         /** Pressure in pascals at geometric altitude above surface, with vacuum below threshold. */
         public double pressurePascalsAt(double altitudeMetres) {
             double pressure = Atmosphere.EARTH.pressurePascals(altitudeMetres);
-            if (pressure < VACUUM_THRESHOLD_PASCALS) return 0.0;
-            return pressure;
+            return (pressure < VACUUM_THRESHOLD_PASCALS) ? 0.0 : pressure;
         }
 
         /** Temperature in kelvin at geometric altitude above surface. */
@@ -310,9 +419,32 @@ public final class WorldGasField {
             return Atmosphere.EARTH.densityKilogramsPerCubicMetre(altitudeMetres);
         }
 
-        /** Ambient mass in kilograms of air filling one gas cell at the given altitude. */
+        /** Ambient gas mass in kilograms of air filling one gas cell at the given altitude. */
         public double ambientMassKilogramsPerCell(double altitudeMetres) {
             return densityKilogramsPerCubicMetreAt(altitudeMetres) * CELL_VOLUME_CUBIC_METRES;
+        }
+
+        /** Peak blast dynamic pressure at altitude from last explosion simulation step (Pa). */
+        public double peakBlastPressurePascalsAt(BlockPos pos) {
+            double maxP = 0.0;
+            for (BlastShockwaveModel.ExplosiveSource source : blastSources) {
+                // Compute distance to source (assuming center for now)
+                double dist = Math.sqrt(pos.distSqr(new BlockPos(0, 0, 0))); // FIXME: source location
+                maxP = Math.max(maxP, BlastShockwaveModel.INSTANCE.compute(source, dist).getPeakOverpressurePascals());
+            }
+            return maxP;
+        }
+
+        /** Peak blast wind velocity at a position from active clouds/blasts (m/s). */
+        public double peakBlastWindMetersPerSecondAt(BlockPos pos) {
+            return cloudManager.blastWindAt(pos.getX(), pos.getY(), pos.getZ(), blastSources, simulationTimeSeconds);
+        }
+
+        /** Total gas density including volatiles from all active gas clouds (kg/m3). */
+        public double totalGasDensityAt(BlockPos pos) {
+            double ambient = densityKilogramsPerCubicMetreAt(pos.getY());
+            double cloud = cloudManager.totalDensityAt(pos.getX(), pos.getY(), pos.getZ());
+            return ambient + cloud;
         }
 
         /** Whether the given altitude is in vacuum (below threshold pressure). */

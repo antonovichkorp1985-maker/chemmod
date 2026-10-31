@@ -304,7 +304,7 @@ class GasField(val cellSizeMetres: Double = DEFAULT_CELL_SIZE_METRES) {
         if (before <= TRACE_MOLES && before + amount > TRACE_MOLES) announce(cell, species, entered = true)
     }
 
-    private fun setMoles(cell: GasCell, species: String, amount: Double) {
+    public fun setMoles(cell: GasCell, species: String, amount: Double) {
         val contents = cells.getOrPut(cell) { linkedMapOf() }
         val before = contents[species] ?: 0.0
         if (amount > TRACE_MOLES) {
